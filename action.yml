@@ -96,7 +96,9 @@ runs:
         if [ "$PH_BASE" != "none" ] && [ -n "$PH_BASE" ]; then diff=(--diff "$PH_BASE"); fi
         if [ "$PH_FIX" = "true" ]; then diff+=(--fix); fi
         set +e
-        eval "extra=($PH_ARGS)"
+        # split the extra args like a shell would (quotes honoured) without evaluating them
+        extra=()
+        if [ -n "$PH_ARGS" ]; then mapfile -t extra < <(printf '%s' "$PH_ARGS" | xargs printf '%s\n'); fi
         node "$GITHUB_ACTION_PATH/bin/proofhound.js" "${diff[@]}" --model "$PH_MODEL" --budget "$PH_BUDGET" \
           --max-modules "$PH_MAX_MODULES" --summary-file "$RUNNER_TEMP/proofhound-summary.md" \
           --report-url "$PH_REPORT_URL" "${extra[@]}"

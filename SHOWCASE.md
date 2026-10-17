@@ -5,7 +5,8 @@ proofhound (the repro failed 3/3 in fresh processes), confirmed by its independe
 and then **re-run by hand** against the library's latest `main` on 2026-10-17.
 None of these have been reported upstream yet.
 
-Run: 25 libraries, 46 modules, 204 functions, Claude Sonnet, about 32 minutes of machine time and $9 in total
+Run: 25 libraries, 46 modules, 204 functions, Claude Sonnet, about 32 minutes of machine time and $9 in total.
+For this batch and the Go/Rust batch below only the HTML reports of the libraries with findings were kept (`showcase-runs/<lib>/report.html`); the raw `results.json` files are only available from the third batch on
 (23 reported → 21 reproduced → 20 confirmed; 1 rejected by review, 2 dropped as broken tests).
 Hand-checking the 20 confirmed findings: 17 are clear bugs, 3 are debatable (listed separately below), none were wrong.
 
