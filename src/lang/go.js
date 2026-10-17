@@ -234,6 +234,10 @@ export const go = {
     return { code: r.code, timedOut: r.timedOut, ms: r.ms, tests, output: `${detail}\n${r.stdout.split('\n').filter((l) => !l.startsWith('{')).join('\n')}` };
   },
 
+  suite(repo, cfg = {}) {
+    return { cmd: 'go', args: ['test', '-count=1', './...'], cwd: moduleDir(repo, repo), env: { GOWORK: 'off', GOFLAGS: '-mod=mod' } };
+  },
+
   testErrorTypes: ['GoTestTimeout'],
 
   isExplicitRaise(frame) { return /^\s*(panic\(|log\.(Fatal|Panic))/.test(frame?.code || ''); },

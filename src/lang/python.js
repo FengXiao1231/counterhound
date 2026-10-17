@@ -110,6 +110,14 @@ export const python = {
     return { code: r.code, timedOut: r.timedOut, ms: r.ms, tests, output: `${r.stdout}\n${r.stderr}` };
   },
 
+  suite(repo, cfg = {}) {
+    const hasTests = ['tests', 'test', 'testing'].some((d) => fs.existsSync(path.join(repo, d)))
+      || ['pytest.ini', 'tox.ini', 'setup.cfg', 'pyproject.toml'].some((f) => fs.existsSync(path.join(repo, f)) && /pytest/.test(fs.readFileSync(path.join(repo, f), 'utf8')));
+    if (!hasTests) return null;
+    const parts = [repo, ...['src', 'lib'].map((d) => path.join(repo, d)).filter((p) => fs.existsSync(p))];
+    return { cmd: interpreter(repo, cfg), args: ['-m', 'pytest', '-q', '-x', '-p', 'no:cacheprovider', '--no-header'], env: { PYTHONPATH: parts.join(path.delimiter), PYTHONDONTWRITEBYTECODE: '1' } };
+  },
+
   /** Exception types that mean the test itself is broken, not the code under test. */
   testErrorTypes: [
     'NameError', 'ImportError', 'ModuleNotFoundError', 'SyntaxError', 'IndentationError', 'UnboundLocalError',

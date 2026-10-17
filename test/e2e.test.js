@@ -141,3 +141,25 @@ test('end to end on Java: exceptions are attributed, documented throws rejected'
   assert.ok(!fs.existsSync(path.join(dir, 'target')), 'must not build into target/');
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('--fix: a patch is kept only if the repro passes in a sandbox; the project is untouched', { skip: !hasHypothesis && 'needs python3 with pytest + hypothesis' }, () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-e2e-fix-'));
+  fs.cpSync(path.join(ROOT, 'test', 'fixtures', 'pylib'), dir, { recursive: true });
+  const before = fs.readFileSync(path.join(dir, 'textkit', 'lists.py'), 'utf8');
+  const r = spawnSync(process.execPath, [BIN, '--agent', 'fake', '--runs', '1', '--fix', '--json', '-q'], {
+    cwd: dir, encoding: 'utf8', env: { ...process.env, PROOFHOUND_FAKE_AGENT: path.join(ROOT, 'test', 'helpers', 'fake-agent.mjs') },
+  });
+  const result = JSON.parse(r.stdout);
+  const bug = result.findings.find((f) => f.status === 'confirmed');
+  assert.equal(bug.fix.status, 'verified', JSON.stringify(bug.fix));
+  assert.deepEqual(bug.fix.files, ['textkit/lists.py']);
+  assert.match(bug.fix.patch, /^--- a\/textkit\/lists\.py$/m);
+  assert.match(bug.fix.patch, /^\+.*range\(0, len\(xs\), size\)/m);
+  assert.equal(result.counts.fixed, 1);
+  assert.equal(fs.readFileSync(path.join(dir, 'textkit', 'lists.py'), 'utf8'), before, 'project must not change');
+  assert.ok(fs.existsSync(path.join(dir, bug.bugDir, 'fix.patch')));
+  // the patch applies cleanly to the project
+  const apply = spawnSync('git', ['apply', '--check', path.join(dir, bug.bugDir, 'fix.patch')], { cwd: dir, encoding: 'utf8' });
+  assert.equal(apply.status, 0, apply.stderr);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

@@ -60,6 +60,7 @@ export function bugMarkdown(b, result) {
     `Fails with \`${v.error.type}: ${String(v.error.message).split('\n')[0].slice(0, 200)}\``,
     HOW_TO_RUN[result.lang] ? `\n${HOW_TO_RUN[result.lang](v.reproFile)}` : '',
     '',
+    b.fix?.status === 'verified' ? `## Suggested fix\n\nThe repro passes with this patch; the project's tests ${b.fix.suite}. Apply it with \`git apply fix.patch\`.\n\n\`\`\`diff\n${b.fix.patch.trim()}\n\`\`\`\n` : null,
     '## Why this is a bug',
     '',
     b.evidence || '',
@@ -90,6 +91,7 @@ export function writeBugs(repo, runRel, result) {
     if (result.lang === 'javascript') src = relocateImports(src, workdir, dir);
     b.reproSource = src;
     writeFile(path.join(dir, b.verification.reproFile), src);
+    if (b.fix?.status === 'verified') writeFile(path.join(dir, 'fix.patch'), b.fix.patch);
     writeFile(path.join(dir, 'BUG.md'), bugMarkdown(b, result));
     b.bugDir = path.relative(repo, dir).split(path.sep).join('/');
     written.push(b.bugDir);

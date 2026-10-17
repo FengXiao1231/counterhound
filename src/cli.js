@@ -52,6 +52,8 @@ Options
   --diff [ref]              only hunt in functions changed since ref (default: the
                             PR base in GitHub Actions, else origin's default branch)
   --summary-file <path>     also write a Markdown summary (for PR comments / CI)
+  --fix                     also write a patch for each confirmed bug, kept only if the
+                            repro then passes and the project's own tests still pass
   --json                    print results as JSON on stdout
   -q, --quiet               less output
   -h, --help / -v, --version
@@ -86,6 +88,8 @@ export function parseArgs(argv) {
         else o.diff = true;
         break;
       case '--summary-file': o.summaryFile = val(); break;
+      case '--fix': o.fix = true; break;
+      case '--keep-sandbox': o.keepSandbox = true; break;
       case '--report-url': o.reportUrl = val(); break;
       case '--json': o.json = true; break;
       case '-q': case '--quiet': o.quiet = true; break;
@@ -124,14 +128,17 @@ function loadConfig(repo, opts) {
 }
 
 /** `proofhound _test <files>`: the test runner the hunter agent calls. Human-readable output. */
-async function testCommand(files) {
-  const repo = process.cwd();
+async function testCommand(argv) {
+  // --repo <dir>: run against another copy of the project (the --fix sandbox)
+  const ri = argv.indexOf('--repo');
+  const repo = ri >= 0 ? path.resolve(argv[ri + 1]) : process.cwd();
+  const files = ri >= 0 ? argv.filter((_, i) => i !== ri && i !== ri + 1) : argv;
   if (!files.length) { console.log('usage: ph-test <test file> [more files]'); return 2; }
   const cfg = loadConfig(repo, {});
   const byExt = { '.py': python, '.go': go, '.rs': rust, '.java': java };
   const lang = byExt[path.extname(files[0])] || javascript;
   const ts = lang === javascript;
-  const abs = files.map((f) => path.resolve(repo, f));
+  const abs = files.map((f) => path.resolve(process.cwd(), f));
   const r = await lang.runTests(repo, cfg, abs, { cwd: repo, timeoutMs: (cfg.testTimeoutSec || lang.testTimeoutSec || 300) * 1000, ts });
   if (r.timedOut) console.log('TIMEOUT: tests took too long and were killed. Use smaller inputs or fewer examples.');
   let passed = 0, failed = 0;
@@ -187,6 +194,7 @@ function printSummary(result, written, htmlPath) {
     log(`    input: ${String(b.input).slice(0, 160)}`);
     log(`    expected ${String(b.expected).slice(0, 120)}`);
     log(`    actual   ${b.verification.kind === 'assertion' ? String(b.actual).slice(0, 120) : `${b.verification.error.type}: ${String(b.verification.error.message).split('\n')[0].slice(0, 100)}`}`);
+    if (b.fix) log(b.fix.status === 'verified' ? c.green(`    fix      verified patch to ${b.fix.files.join(', ')} (project tests ${b.fix.suite.split(' (')[0]})`) : c.dim(`    fix      none: ${b.fix.reason}`));
   }
   if (look.length) log(c.yellow(`\n  ${look.length} more reproduced but the reviewer was not sure; see needs-look/ in the report.`));
   if (written.length || htmlPath) {

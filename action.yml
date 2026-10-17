@@ -36,6 +36,10 @@ inputs:
     description: '"always" posts or updates a PR comment on every run, "bugs" (default) only when bugs are found (an earlier comment is still updated), "never" never comments.'
     required: false
     default: bugs
+  fix:
+    description: Also propose a patch for each confirmed bug (verified in a sandbox) and include it in the comment.
+    required: false
+    default: 'false'
   fail-on-bugs:
     description: Fail the check when a bug is confirmed.
     required: false
@@ -82,6 +86,7 @@ runs:
         PH_ARGS: ${{ inputs.args }}
         PH_REPORT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         PH_WD: ${{ inputs.working-directory }}
+        PH_FIX: ${{ inputs.fix }}
       run: |
         if [ -z "$ANTHROPIC_API_KEY" ] && [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
           echo "::error::proofhound needs anthropic-api-key or claude-code-oauth-token (pull requests from forks do not get secrets)"
@@ -89,6 +94,7 @@ runs:
         fi
         diff=()
         if [ "$PH_BASE" != "none" ] && [ -n "$PH_BASE" ]; then diff=(--diff "$PH_BASE"); fi
+        if [ "$PH_FIX" = "true" ]; then diff+=(--fix); fi
         set +e
         eval "extra=($PH_ARGS)"
         node "$GITHUB_ACTION_PATH/bin/proofhound.js" "${diff[@]}" --model "$PH_MODEL" --budget "$PH_BUDGET" \

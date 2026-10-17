@@ -4,6 +4,7 @@ import { hunterPrompt, reviewerPrompt } from './prompts.js';
 import { verifyFinding, confirmProperty } from './verify.js';
 import { planGroups } from './targets.js';
 import { changedLines, touchedTargets } from './diff.js';
+import { fixBugs } from './fix.js';
 import { c, log, pool, STOP, writeJSON, writeFile, extractJSON, slug, fmtUsd, fmtMs } from './util.js';
 
 export const HOME = '.proofhound';
@@ -146,8 +147,10 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
     .sort((a, b) => (rank[a.review?.severity] ?? 1) - (rank[b.review?.severity] ?? 1) || (b.review?.confidence ?? 1) - (a.review?.confidence ?? 1));
   bugs.forEach((b, i) => { b.bugId = `PH-${String(i + 1).padStart(3, '0')}`; });
 
+  if (opts.fix && bugs.length) await fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, opts, account, overBudget });
+
   const result = {
-    version: 1, tool: 'proofhound', runId: id, diff, repo: path.basename(repo), lang: lang.id, agent: agent.id, model: opts.model || null,
+    version: 1, tool: 'proofhound', runId: id, diff, fixRun: Boolean(opts.fix), repo: path.basename(repo), lang: lang.id, agent: agent.id, model: opts.model || null,
     startedAt: new Date(started).toISOString(), ms: Date.now() - started, spend,
     groups: groupLog,
     counts: {
@@ -155,6 +158,7 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
       reported: all.length, verified: verified.length, duplicates: verified.length - unique.length,
       confirmed: bugs.length, needsLook: unique.filter((f) => f.status === 'needs-look').length,
       rejectedByReview: unique.filter((f) => f.status === 'rejected').length,
+      fixed: bugs.filter((b) => b.fix?.status === 'verified').length,
       droppedByVerification: all.length - verified.length,
     },
     findings: all,

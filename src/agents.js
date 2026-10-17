@@ -14,7 +14,7 @@ const claude = {
   available() { return sh('claude', ['--version']).code === 0; },
   async call({ prompt, cwd, writeDirs = [], runCommands = [], model, timeoutMs = 900000, budgetUsd, env }) {
     const allowed = ['Read', 'Glob', 'Grep', 'TodoWrite'];
-    for (const d of writeDirs) allowed.push(`Write(./${d}/**)`, `Edit(./${d}/**)`);
+    for (const d of writeDirs) { const g = d === '.' ? './**' : `./${d}/**`; allowed.push(`Write(${g})`, `Edit(${g})`); }
     for (const cmd of runCommands) {
       allowed.push(`Bash(${cmd}:*)`, `Bash(${cmd})`);
       if (cmd.startsWith('./')) allowed.push(`Bash(${cmd.slice(2)}:*)`, `Bash(${path.join(cwd, cmd.slice(2))}:*)`);

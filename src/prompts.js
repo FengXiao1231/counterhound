@@ -146,3 +146,28 @@ Read the source and anything else you need. You may run \`${testCmd} ${workdir}/
 Reply with ONLY this JSON object:
 {"verdict": "bug" | "not_a_bug" | "unclear", "confidence": 0.0-1.0, "severity": "low" | "medium" | "high", "category": "crash" | "wrong-result" | "contract-violation" | "inconsistency", "title": "a concise, neutral issue title", "reason": "two or three sentences a maintainer would find convincing", "maintainer_would_fix": true | false}`;
 }
+
+export function fixerPrompt({ bug, lang, reproRel, testCmd, notes }) {
+  const v = bug.verification;
+  const r = bug.review || {};
+  const where = v.site ? `${v.site.file}:${v.site.line}` : bug.file;
+  return `You are fixing a confirmed bug. The current directory is a disposable copy of the project: edit its source files directly. Nothing you change here touches the real project; proofhound turns your edits into a patch.
+
+## The bug
+${r.title || bug.title}
+Function: ${bug.function} (${where})
+Input: ${bug.input}
+Expected: ${bug.expected}
+Actual: ${v.kind === 'assertion' ? bug.actual : `${v.error.type}: ${String(v.error.message).split('\n')[0].slice(0, 300)}`}
+Why it is a bug: ${bug.evidence || ''}${r.reason ? `\nReviewer: ${r.reason}` : ''}
+
+A failing test reproduces it: \`${reproRel}\`. Run it with \`${testCmd} ${reproRel}\` (a single command, no cd, pipes or &&).
+
+## What to do
+1. Read the code and find the root cause. Fix the cause, not this one input: the same bug for similar inputs must also be gone.
+2. Make the smallest change a maintainer would accept: same style, no refactoring, no new dependencies, no unrelated edits. Keep every documented behaviour that is not part of the bug.
+3. Do not edit or delete the repro, and do not change or skip the project's existing tests to make anything pass. You may add a regression test next to the project's existing tests if that is how the project is tested.
+4. Run the repro until it passes. If you can, also run nearby existing tests the same way (\`${testCmd} <test file>\`).
+${notes ? `\nProject notes from the user:\n${notes}\n` : ''}
+proofhound will re-run the repro and the project's test suite on your change and drop it if either fails. When you are done, reply with one or two sentences describing the fix.`;
+}

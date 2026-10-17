@@ -6,12 +6,13 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', 
 
 const KIND = { crash: 'crash', 'internal-assert': 'internal assert', assertion: 'wrong result' };
 
-function funnel(k) {
+function funnel(k, result = {}) {
   const steps = [
     ['reported by the hunter', k.reported],
     ['reproduced deterministically', k.verified],
     ['unique', k.verified - k.duplicates],
     ['confirmed by review', k.confirmed],
+    ...(k.fixed != null && result.fixRun ? [['fixed, with a verified patch', k.fixed]] : []),
   ];
   const max = Math.max(1, k.reported);
   return `<div class="funnel">${steps.map(([label, n], i) => `
@@ -31,6 +32,7 @@ function bugCard(b, lang) {
       ${r.severity ? `<span class="badge sev-${esc(r.severity)}">${esc(r.severity)}</span>` : ''}
       ${r.confidence != null ? `<span class="badge">confidence ${Number(r.confidence).toFixed(2)}</span>` : ''}
       <span class="badge ok">failed ${v.runs}/${v.runs}</span>
+      ${b.fix?.status === 'verified' ? '<span class="badge ok">fix verified</span>' : ''}
     </span>
   </header>
   <p class="where"><code>${esc(b.function)}</code> · <code>${esc(where)}</code></p>
@@ -42,6 +44,8 @@ function bugCard(b, lang) {
   </dl>
   <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>${esc((b.reproSource || '').trim())}</code></pre>
   <p class="err"><code>${esc(v.error.type)}: ${esc(String(v.error.message).split('\n')[0].slice(0, 240))}</code></p></details>
+  ${b.fix?.status === 'verified' ? `<details><summary>Suggested fix: the repro passes with it; project tests ${esc(b.fix.suite)} <button class="copy" data-copy>copy</button></summary><pre><code>${esc(b.fix.patch.trim())}</code></pre></details>` : ''}
+  ${b.fix && b.fix.status !== 'verified' ? `<p class="dim">No fix: ${esc(b.fix.reason)}</p>` : ''}
   <details><summary>Why this is a bug</summary><p>${esc(b.evidence)}</p>${r.reason ? `<p><b>Independent review:</b> ${esc(r.reason)}</p>` : ''}
   ${b.propertyCheck?.example ? `<p><b>${FRAMEWORK[lang] || 'The property test'} shrank it to:</b> <code>${esc(b.propertyCheck.example.slice(0, 400))}</code></p>` : ''}
   ${b.bugDir ? `<p class="dim">Issue write-up: <code>${esc(b.bugDir)}/BUG.md</code></p>` : ''}</details>
@@ -89,7 +93,7 @@ footer{margin-top:48px;color:var(--dim);font-size:12.5px}
 </style></head><body><main>
 <h1>proof<span>hound</span> report</h1>
 <div class="meta">${esc(result.repo)} · ${esc(result.lang)} · ${esc(result.agent)}${result.model ? ` (${esc(result.model)})` : ''} · ${k.modules} modules, ${k.functions} functions · ${fmtMs(result.ms)}${result.spend?.usd ? ` · ${fmtUsd(result.spend.usd)}` : ''} · ${esc(new Date(result.startedAt).toLocaleString('en-US'))}</div>
-${funnel(k)}
+${funnel(k, result)}
 <p class="meta">Every bug below failed the same way in ${bugs[0]?.verification.runs || 3} fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
 
 <h2>${bugs.length} confirmed bug${bugs.length === 1 ? '' : 's'}</h2>

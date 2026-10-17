@@ -333,6 +333,12 @@ export const java = {
     return { code: r.code, timedOut: r.timedOut, ms: r.ms + c.ms, tests, output: `${r.stdout}\n${r.stderr}` };
   },
 
+  suite(repo) {
+    if (fs.existsSync(path.join(repo, 'pom.xml'))) return { cmd: fs.existsSync(path.join(repo, 'mvnw')) ? './mvnw' : 'mvn', args: ['-q', '-B', 'test'] };
+    if (['build.gradle', 'build.gradle.kts'].some((f) => fs.existsSync(path.join(repo, f)))) return { cmd: fs.existsSync(path.join(repo, 'gradlew')) ? './gradlew' : 'gradle', args: ['-q', 'test'] };
+    return null;
+  },
+
   testErrorTypes: ['java.lang.NoClassDefFoundError', 'java.lang.NoSuchMethodError', 'java.lang.NoSuchFieldError', 'java.lang.ClassNotFoundException', /^org\.quicktheories\./, /^org\.junit\./],
 
   isExplicitRaise(frame) { return /^\s*throw\b/.test(frame?.code || ''); },

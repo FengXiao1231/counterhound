@@ -339,7 +339,7 @@ export const rust = {
     const args = ['test', '--color', 'never', '--manifest-path', path.join(hdir, 'Cargo.toml'), ...entries.flatMap((e) => ['--test', e.target]), '--', '--test-threads=1', '--color', 'never'];
     if (name) args.push(name);
     const env = {
-      ...process.env, ...(cfg.env || {}), CARGO_TARGET_DIR: path.join(home, 'target'), RUST_BACKTRACE: '1', CARGO_TERM_COLOR: 'never',
+      ...process.env, ...(cfg.env || {}), CARGO_TARGET_DIR: cfg.cargoTargetDir || path.join(home, 'target'), RUST_BACKTRACE: '1', CARGO_TERM_COLOR: 'never',
       PROPTEST_CASES: String(maxExamples || cfg.maxExamples || 256),
     };
     const r = await run('cargo', args, { cwd: hdir, env, timeoutMs });
@@ -350,6 +350,10 @@ export const rust = {
       tests.push({ id: 'build', name: 'build', outcome: 'error', error: null, longrepr: (errs.join('\n').trim() || r.stderr.trim()).slice(0, 6000) });
     }
     return { code: r.code, timedOut: r.timedOut, ms: r.ms, tests, output: `${r.stdout}\n${r.stderr}` };
+  },
+
+  suite(repo, cfg = {}) {
+    return { cmd: 'cargo', args: ['test', '--quiet', '--color', 'never'], env: { CARGO_TARGET_DIR: cfg.suiteTargetDir || path.join(repo, '.proofhound', 'rust', 'suite-target') } };
   },
 
   // the first build of the harness compiles the crate and proptest

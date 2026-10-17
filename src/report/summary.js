@@ -28,6 +28,7 @@ function bugBlock(b, lang) {
     '```' + (FENCE[lang] || ''),
     String(b.reproSource || '').trim().slice(0, 3000),
     '```',
+    b.fix?.status === 'verified' ? `\nSuggested fix (the repro passes with it; project tests ${cell(b.fix.suite, 200)}):\n\n\`\`\`diff\n${b.fix.patch.trim().slice(0, 4000)}\n\`\`\`` : null,
     '</details>',
   ].filter((l) => l !== null).join('\n');
 }
@@ -49,7 +50,7 @@ export function summaryMarkdown(result, { reportUrl } = {}) {
     return lines.join('\n') + '\n';
   }
   lines.push(bugs.length
-    ? `### proofhound found ${bugs.length} provable bug${bugs.length > 1 ? 's' : ''}`
+    ? `### proofhound found ${bugs.length} provable bug${bugs.length > 1 ? 's' : ''}${k.fixed ? ` (${k.fixed} with a verified fix)` : ''}`
     : '### proofhound: no provable bugs');
   lines.push('', `Checked ${scope} with property-based tests. ${k.reported} reported → ${k.verified} reproduced → ${k.verified - k.duplicates} unique → ${k.confirmed} confirmed by an independent review.`, '');
   for (const b of bugs) lines.push(bugBlock(b, result.lang), '');

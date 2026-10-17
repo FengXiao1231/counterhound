@@ -48,6 +48,12 @@ export default async function fakeAgent({ prompt, cwd }) {
     fs.writeFileSync(path.join(dir, 'findings.json'), 'Here you go:\n```json\n' + JSON.stringify(findings) + '\n```');
     return 'tested 1 property, reported 7 bugs';
   }
+  if (prompt.includes('You are fixing a confirmed bug')) {
+    // cwd is the sandbox copy of the project
+    const file = path.join(cwd, 'textkit', 'lists.py');
+    fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('range(0, len(xs) - size + 1, size)', 'range(0, len(xs), size)'));
+    return 'Iterate up to len(xs) so the last partial chunk is kept.';
+  }
   if (prompt.includes('skeptical, experienced maintainer')) {
     if (prompt.includes('safe_div')) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented ValueError.","maintainer_would_fix":false}';
     return '{"verdict":"bug","confidence":0.93,"severity":"medium","category":"wrong-result","title":"chunk() drops the last partial chunk","reason":"The docstring says the last chunk may be shorter.","maintainer_would_fix":true}';

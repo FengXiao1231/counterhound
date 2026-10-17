@@ -306,6 +306,13 @@ export const javascript = {
     return { code: r.code, timedOut: r.timedOut, ms: r.ms, tests, output: `${r.stdout}\n${r.stderr}` };
   },
 
+  suite(repo) {
+    const pkg = readJSON(path.join(repo, 'package.json'), {}) || {};
+    const t = pkg.scripts?.test;
+    if (!t || /no test specified/.test(t)) return null;
+    return { cmd: 'npm', args: ['test', '--silent'], env: { CI: '1' } };
+  },
+
   testErrorTypes: ['SyntaxError', 'ReferenceError', 'ERR_MODULE_NOT_FOUND', /^ERR_TEST/],
 
   isExplicitRaise(frame) { return /^\s*throw\b/.test(frame?.code || ''); },
