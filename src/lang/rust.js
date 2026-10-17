@@ -76,14 +76,17 @@ function modulePublic(srcDir, segs, libPath) {
   for (const seg of segs) {
     let src = '';
     try { src = fs.readFileSync(parent, 'utf8'); } catch { return false; }
-    if (!new RegExp(`^\\s*pub\\s+mod\\s+${seg}\\s*;`, 'm').test(src)) return false;
+    const decl = src.match(new RegExp(`((?:^\\s*#\\[.*\\]\\s*\\n)*)^\\s*pub\\s+mod\\s+${seg}\\s*;`, 'm'));
+    if (!decl) return false;
+    // #[cfg(test)], #[cfg(fuzzing)] and the like: not part of the normal public API
+    if (/#\[cfg\((?!feature)/.test(decl[1])) return false;
     dir = path.join(dir, seg);
     parent = fs.existsSync(path.join(dir, 'mod.rs')) ? path.join(dir, 'mod.rs') : `${dir}.rs`;
   }
   return true;
 }
 
-export function scanRustFile(repo, crateDir, info, file) {
+export function scanRustFile(repo, crateDir, info, file, pubTraits = new Set()) {
   const src = fs.readFileSync(file, 'utf8');
   if (src.length > 400000) return [];
   const lines = src.split('\n');
@@ -117,8 +120,9 @@ export function scanRustFile(repo, crateDir, info, file) {
     const topLevel = before === 0;
     if (!topLevel && !impl) continue; // nested or inside a trait definition
     if (isUnsafe || restricted || name.startsWith('_')) continue;
-    if (impl?.trait ? !TRAIT_FNS.has(name) : !pub) continue;
-    if (!isPublic && !new RegExp(`pub\\s+use\\b[^;]*\\b${impl ? impl.type : name}\\b`).test(libSrc)) continue;
+    const ownTrait = impl?.trait && pubTraits.has(impl.trait);
+    if (impl?.trait ? !(TRAIT_FNS.has(name) || ownTrait) : !pub) continue;
+    if (!isPublic && !new RegExp(`pub\\s+use\\b[^;]*\\b${ownTrait ? impl.trait : impl ? impl.type : name}\\b`).test(libSrc)) continue;
     // signature: up to the opening brace (may span lines)
     let sig = '', j = i;
     for (; j < Math.min(lines.length, i + 30); j++) { sig += ' ' + lines[j].trim(); if (/\{|;\s*$/.test(lines[j])) break; }
@@ -135,12 +139,14 @@ export function scanRustFile(repo, crateDir, info, file) {
     let pd = 0, close = open;
     for (; close < sig.length; close++) { if (sig[close] === '(') pd++; else if (sig[close] === ')' && --pd === 0) break; }
     const params = sig.slice(open + 1, close).replace(/<[^<>]*>/g, '').replace(/\([^()]*\)/g, '');
-    const nArgs = params.split(',').map((s) => s.trim()).filter((s) => s && !/^&?('\w+\s+)?(mut\s+)?self$/.test(s)).length;
-    const owner = impl ? impl.type : null;
+    let nArgs = params.split(',').map((s) => s.trim()).filter((s) => s && !/^&?('\w+\s+)?(mut\s+)?self$/.test(s)).length;
+    if (ownTrait) nArgs += 1; // the receiver is the input ("Foo".to_snake_case())
+    // methods of the crate's own extension traits (impl ToSnakeCase for str) are used through the trait
+    const owner = ownTrait ? impl.trait : impl ? impl.type : null;
     const qualname = owner ? `${owner}::${name}` : name;
     out.push({
       file: rel, module: modulePath, crateDir: path.relative(repo, crateDir).split(path.sep).join('/') || '.', crateName: info.name, libName: info.libName,
-      name, qualname, owner, trait: impl?.trait || null, publicModule: isPublic, line: i + 1, loc: end - i + 1,
+      name, qualname, owner, trait: impl?.trait || null, forType: ownTrait ? impl.type : null, publicModule: isPublic, line: i + 1, loc: end - i + 1,
       signature: sig.replace(/^.*?fn\s+\w+/, ''), nArgs, doc: docBefore(lines, i).slice(0, 600), async: Boolean(isAsync),
       impure: [...new Set([...body.matchAll(IMPURE)].map((x) => x[1].replace(/::$/, '')))], annotated: true, decorators: [],
     });
@@ -193,7 +199,10 @@ export function parseRustFailure(section, workdir) {
   const deepest = last.frames[last.frames.length - 1];
   const raisedInTest = (deepest && inWork(deepest.file)) || inWork(last.loc.file);
   // A failed assert!/assert_eq!/prop_assert!, or unwrap() on the code's result, in the test means a wrong result.
-  if (/^(assertion|Test failed:)/.test(last.message) || (raisedInTest && /^called `(Result|Option)::unwrap\(\)`/.test(last.message))) out.type = 'AssertionError';
+  // assert!(cond, "custom message") and panic!() in the test itself are its assertions too.
+  const locCode = inWork(last.loc.file) ? sourceLine(last.loc.file, last.loc.line) : '';
+  if (/^(assertion|Test failed:)/.test(last.message) || /\b(prop_)?assert(_eq|_ne)?!|\bpanic!|\bunreachable!/.test(locCode)
+    || (raisedInTest && /^called `(Result|Option)::unwrap\(\)`/.test(last.message))) out.type = 'AssertionError';
   return out;
 }
 
@@ -287,17 +296,20 @@ export const rust = {
         }
       };
       walk(srcDir);
+      const pubTraits = new Set(files.flatMap((f) => [...fs.readFileSync(f, 'utf8').matchAll(/^\s*pub\s+trait\s+(\w+)/gm)].map((m) => m[1])));
       for (const f of files) {
         if (onlyAbs.length && !onlyAbs.some((o) => f === o || f.startsWith(o + path.sep))) continue;
-        out.push(...scanRustFile(repo, crateDir, info, f));
+        out.push(...scanRustFile(repo, crateDir, info, f, pubTraits));
       }
     }
     return out.map((t) => ({ ...t, entry: t.publicModule && t.module === t.libName, lang: 'rust', id: `${t.module}::${t.qualname}` }));
   },
 
   importHint(target) {
-    if (target.publicModule) return `use ${target.module}::${target.owner || target.name};`;
-    return `use ${target.libName}::${target.owner || target.name}; (re-exported at the crate root)`;
+    const what = target.owner || target.name;
+    const forType = target.forType ? ` (a trait implemented for ${target.forType}: call it as a method)` : '';
+    if (target.publicModule) return `use ${target.module}::${what};${forType}`;
+    return `use ${target.libName}::${what}; (re-exported at the crate root)${forType}`;
   },
 
   needsTs() { return false; },

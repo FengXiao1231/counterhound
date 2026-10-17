@@ -225,3 +225,14 @@ test('go scanner lists exported functions and methods', { skip: spawnSync('go', 
   const ids = go.listTargets(path.join(ROOT, 'test', 'fixtures', 'golib'), {}).map((t) => t.qualname);
   assert.deepEqual(ids, ['Chunk', 'Reverse', 'Median', 'EncodeRLE', 'DecodeRLE', 'Range.Contains', 'Range.Len', 'MustPositive']);
 });
+
+test('rust: assert! with a custom message in the test is an assertion, not a test bug', async () => {
+  const { parseRustFailure } = await import('../src/lang/rust.js');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-rsa-'));
+  const file = path.join(dir, 'repro_x.rs');
+  fs.writeFileSync(file, '#[test]\nfn repro_x() {\n    assert!(f("1 30m").is_err(), "{:?}", f("1 30m"));\n    let v: Vec<i32> = vec![];\n    let _ = v[3];\n}\n');
+  const at = (line, msg) => `\nthread 'repro_x' (7) panicked at ${file}:${line}:5:\n${msg}\nstack backtrace:\n   0: repro_x::repro_x\n             at ${file}:${line}:5\n`;
+  assert.equal(parseRustFailure(at(3, 'Ok(7800s)'), dir).type, 'AssertionError');
+  assert.equal(parseRustFailure(at(5, 'index out of bounds: the len is 0 but the index is 3'), dir).type, 'panic');
+  fs.rmSync(dir, { recursive: true, force: true });
+});

@@ -36,3 +36,27 @@ Debatable (reproduced, but arguably out of contract):
 - [filesize](https://github.com/avoidwork/filesize.js): internal helper `getBaseConfiguration('constructor')` picks up `Object.prototype.constructor`.
 
 No bugs reported in: python-slugify, dateutil (parser, relativedelta, easter, rrule), python-semver (one finding refuted by the reviewer), packaging, sqlparse, markupsafe, semver, cookie, content-type, pretty-ms, camelcase, he, bytes.
+
+## Go and Rust
+
+Run: 15 libraries (8 Go, 7 Rust), 26 modules, 111 functions, Claude Sonnet, about $5.10 in total
+(11 reported → 11 reproduced → 7 confirmed; 3 rejected by review, 1 the reviewer was unsure about).
+The unsure one, `humantime::parse_duration("1 30m")` returning 130 minutes, was first dropped as a broken test: an
+`assert!` with a custom message was misread as a panic in the test. That is fixed and covered by a test.
+Hand-checking the 7 confirmed findings against the source: 6 are clear bugs, 1 is debatable, none were wrong.
+
+| Library | Bug | Repro |
+|---|---|---|
+| [gosimple/slug](https://github.com/gosimple/slug) (Go) | With `EnableSmartTruncate = false` and the default `MaxLength = 0` (no limit), every slug comes back empty | `slug.EnableSmartTruncate = false; slug.Make("a")` → `""` |
+| [gosimple/slug](https://github.com/gosimple/slug) (Go) | Truncation can leave a trailing `_`, so the result fails `IsSlug`, which is documented to accept all output of `Make` | `slug.MaxLength = 2; slug.Make("0_0")` → `"0_"` |
+| [hashicorp/go-version](https://github.com/hashicorp/go-version) (Go) | `Compare` ignores the prerelease when the segment counts differ, so equality is not transitive | `1.0.0.0-alpha` compares equal to `1.0.0`, while `1.0.0-alpha` < `1.0.0` |
+| [iancoleman/strcase](https://github.com/iancoleman/strcase) (Go) | `ToLowerCamel` returns an upper-case first letter when the input starts with `_`, `-` or `.` | `ToLowerCamel("_some_string")` → `"SomeString"` |
+| [mitchellh/go-wordwrap](https://github.com/mitchellh/go-wordwrap) (Go) | With a limit of 1, single-character words are never wrapped | `WrapString("a b", 1)` → `"a b"` (expected `"a\nb"`) |
+| [humantime](https://github.com/chronotope/humantime) (Rust) | The strict RFC 3339 parser accepts trailing garbage after `Z` | `parse_rfc3339("1970-01-01T00:00:00ZZ")` → `Ok(UNIX_EPOCH)` |
+
+Debatable:
+
+- [convert_case](https://github.com/rutrum/convert-case) (Rust): a space followed by a combining mark (`" \u{301}"`, one grapheme) is split by the byte-level fast path but not by the grapheme path, so adding a boundary that cannot match changes the output.
+
+No bugs reported in: go-humanize, xstrings, Masterminds/semver, c2h5oh/datasize, bytesize, inflector, slug (Rust), textwrap, heck (two findings refuted by the reviewer).
+

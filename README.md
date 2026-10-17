@@ -11,7 +11,7 @@ and survived an independent reviewer whose job is to refute it.
 
 `npx proofhound`
 
-**English** · [简体中文](README.zh-CN.md) · Python & JavaScript/TypeScript · MIT
+**English** · [简体中文](README.zh-CN.md) · Python, JavaScript/TypeScript, Go & Rust · MIT
 
 <img src="assets/report.png" width="720" alt="proofhound report for a real run on boltons">
 
@@ -46,6 +46,8 @@ You need:
 - **An agent CLI** that does the thinking: [Claude Code](https://claude.com/claude-code) (`claude`) or [Codex](https://github.com/openai/codex) (`codex`). proofhound drives it headlessly, so it uses the subscription or API key you already have.
 - **Python projects:** `pip install pytest hypothesis` in the project's environment (proofhound uses `.venv/` automatically if it exists).
 - **JS/TS projects:** Node 20+. fast-check and tsx are fetched into a cache on first run if your project does not have them.
+- **Go projects:** Go 1.21+. [rapid](https://github.com/flyingmutant/rapid) is added to a private copy of your `go.mod`; your `go.mod`, `go.sum` and package directories are never written to.
+- **Rust projects:** cargo. Tests run as integration tests of a separate harness crate that depends on yours by path, with [proptest](https://github.com/proptest-rs/proptest), so only your public API is exercised and your `Cargo.toml` is untouched.
 
 Run `npx proofhound doctor` to check everything.
 
@@ -74,7 +76,7 @@ Each run writes `.proofhound/runs/<id>/`:
 |---|---|
 | `report.html` | The report above: funnel, confirmed bugs, and everything that was filtered out and why |
 | `bugs/PH-001-…/BUG.md` | An issue-ready write-up: input, expected, actual, repro, evidence, review |
-| `bugs/PH-001-…/test_repro_….py` | A standalone failing test. Drop it into your suite, fix the bug, watch it pass |
+| `bugs/PH-001-…/<repro test>` | A standalone failing test (`test_repro_*.py`, `repro_*.test.mjs`, `repro_*_test.go` or `repro_*.rs`). Drop it into your suite, fix the bug, watch it pass |
 | `results.json` | Everything, machine-readable |
 
 The exit code is `1` when bugs were confirmed, so it can gate CI.
@@ -91,10 +93,10 @@ flowchart LR
   F --> G[Confirmed bug<br/>+ failing test]
 ```
 
-1. **Rank.** A static scan (Python `ast`, a JS/TS scanner) lists public functions and scores them by how checkable they are: documented, typed, pure, named like a transformation (`parse`, `encode`, `merge`, `normalize`…), with a bonus when an inverse exists (`encode`/`decode` means a round-trip property for free). Functions that touch the network, files, clocks or randomness rank low.
-2. **Hunt.** For each module, a coding agent reads the source, docstrings, README and call sites, and writes property-based tests with [Hypothesis](https://hypothesis.works) or [fast-check](https://fast-check.dev): round-trips, invariants, idempotence, agreement with a reference implementation, metamorphic relations. It runs them, separates its own mistakes from real failures, and writes a deterministic repro for each bug it believes in. The agent can only write inside `.proofhound/runs/` and can only run tests through proofhound's own runner.
+1. **Rank.** A static scan (Python `ast`, Go `go/ast`, scanners for JS/TS and Rust) lists public functions and methods and scores them by how checkable they are: documented, typed, pure, named like a transformation (`parse`, `encode`, `merge`, `normalize`…), with a bonus when an inverse exists (`encode`/`decode` means a round-trip property for free). Functions that touch the network, files, clocks or randomness rank low.
+2. **Hunt.** For each module, a coding agent reads the source, docstrings, README and call sites, and writes property-based tests with [Hypothesis](https://hypothesis.works), [fast-check](https://fast-check.dev), [rapid](https://github.com/flyingmutant/rapid) or [proptest](https://github.com/proptest-rs/proptest): round-trips, invariants, idempotence, agreement with a reference implementation, metamorphic relations. It runs them, separates its own mistakes from real failures, and writes a deterministic repro for each bug it believes in. The agent can only write inside `.proofhound/runs/` and can only run tests through proofhound's own runner.
 3. **Replay.** proofhound, not the agent, re-runs every repro N times (default 3) in fresh processes. It is dropped if it ever passes, if the failure changes between runs, if it uses randomness or clocks, or if it cannot be loaded.
-4. **Attribute.** The traceback is inspected. Errors raised inside the test itself (`NameError`, wrong call signatures, a `KeyError` in the test's own bookkeeping), errors from Hypothesis or fast-check, and errors from vendored code are test bugs, not your bugs. Crashes are pinned to the deepest frame in your code, and an explicit `raise`/`throw` is flagged so the reviewer can check whether it is documented behaviour.
+4. **Attribute.** The traceback is inspected. Errors raised inside the test itself (`NameError`, wrong call signatures, a `KeyError` in the test's own bookkeeping), errors from Hypothesis or fast-check, and errors from vendored code are test bugs, not your bugs. Crashes (including Go and Rust panics, read from goroutine traces and backtraces) are pinned to the deepest frame in your code, and an explicit `raise`/`throw`/`panic` is flagged so the reviewer can check whether it is documented behaviour.
 5. **Dedup.** Findings with the same crash site, or the same property on the same function, are merged.
 6. **Review.** A separate agent run, with a fresh context, gets the finding and the verified failure and is told that most automated reports are wrong. It checks whether the input is valid under the contract, whether the expected behaviour is really promised, whether the behaviour is intentional, and whether the test is correct. Only `bug` verdicts at or above `--min-confidence` (default 0.6) are confirmed; unsure ones are listed separately.
 
@@ -106,8 +108,10 @@ flowchart LR
 |---|---|---|---|---|---|
 | Python (`pylib`, 8 functions) | 5 | 5 | 0 (the documented-`ValueError` decoy was left alone) | 1m16s | $0.84 |
 | JavaScript (`jslib`, 7 functions) | 3 | 2, plus 1 real one we had not planted | 0 (the documented-`RangeError` decoy was left alone) | 42s | $0.40 |
+| Go (`golib`, 8 functions) | 5 | 5 | 0 (the documented-`panic` decoy was left alone) | 1m13s | $0.54 |
+| Rust (`rustlib`, 7 functions) | 5 | 5 | 0 (the documented `Err` and `assert!` decoys were left alone) | 1m18s | $0.76 |
 
-**Real libraries:** 25 popular libraries, 204 functions, about $9 in total: **20 confirmed bugs, 17 clear-cut and 3 debatable on a hand check, none wrong.** Full list with one-line repros in [SHOWCASE.md](SHOWCASE.md). Highlights (not yet reported upstream):
+**Real libraries:** 25 popular Python and JS libraries, 204 functions, about $9 in total: **20 confirmed bugs, 17 clear-cut and 3 debatable on a hand check, none wrong.** Then 15 Go and Rust libraries, 111 functions, about $5: **7 confirmed, 6 clear-cut and 1 debatable, none wrong**, for example `slug.Make("a")` returning `""` in gosimple/slug when smart truncation is off, and humantime's strict `parse_rfc3339` accepting `"1970-01-01T00:00:00ZZ"`. Full list with one-line repros in [SHOWCASE.md](SHOWCASE.md). Highlights (not yet reported upstream):
 
 | Project | Modules | Confirmed | Example | Time | Cost |
 |---|---|---|---|---|---|
@@ -123,7 +127,7 @@ proofhound targets [paths...]    show which functions would be tested, no AI cal
 proofhound report                rebuild the HTML report for the latest run
 proofhound doctor                check that the toolchain is ready
 
---lang <python|js>        language (auto-detected)
+--lang <python|js|go|rust>  language (auto-detected)
 --agent <claude|codex>    which coding-agent CLI does the thinking (auto-detected)
 --model <name>            model for the hunter, e.g. sonnet, opus
 --review-model <name>     model for the reviewer (defaults to --model)
@@ -168,7 +172,6 @@ cap a run, `--only` to aim it, and a cheaper `--review-model` if you like.
 
 ## Roadmap
 
-- Go (`testing/quick`, rapid) and Rust (proptest)
 - `--fix`: propose a patch, accept it only if the repro passes and the existing suite stays green
 - Diff mode for CI: only hunt in functions changed by a pull request
 - A GitHub Action
@@ -178,7 +181,7 @@ cap a run, `--only` to aim it, and a cheaper `--review-model` if you like.
 The idea that agents can mine properties and find real bugs with property-based testing
 comes from Anthropic's research, [*Finding bugs with agentic property-based testing*](https://www.anthropic.com/research/property-based-testing),
 and its Python prototype [agentic-pbt](https://github.com/mmaaz-git/agentic-pbt).
-proofhound turns it into a multi-language tool with execution-based verification,
+proofhound turns it into a tool for four languages with execution-based verification,
 attribution, deduplication and adversarial review.
 
 ## License
