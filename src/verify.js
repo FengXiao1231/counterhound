@@ -36,7 +36,8 @@ export function classify(error, { repo, workdir, lang }) {
   const site = projectFrames[projectFrames.length - 1] || null;
   const rel = (f) => f && { ...f, file: path.relative(repo, f.file).split(path.sep).join('/') };
 
-  if (/AssertionError$/.test(type)) {
+  // pytest.raises(...) that did not raise, or pytest.fail(), is the test's assertion failing.
+  if (/AssertionError$|(^|\.)Failed$/.test(type)) {
     if (deepest && inProject(deepest)) return { kind: 'internal-assert', type, site: rel(deepest) };
     return { kind: 'assertion', type, site: null };
   }

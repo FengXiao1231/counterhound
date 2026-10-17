@@ -113,7 +113,7 @@ export const python = {
   /** Exception types that mean the test itself is broken, not the code under test. */
   testErrorTypes: [
     'NameError', 'ImportError', 'ModuleNotFoundError', 'SyntaxError', 'IndentationError', 'UnboundLocalError',
-    /^hypothesis\.errors\./, 'pytest.fixtures.FixtureLookupError', 'Failed', '_pytest.outcomes.Failed',
+    /^hypothesis\.errors\./, 'pytest.fixtures.FixtureLookupError',
   ],
 
   isExplicitRaise(frame) {

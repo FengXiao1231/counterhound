@@ -107,7 +107,7 @@ flowchart LR
 | Python (`pylib`, 8 functions) | 5 | 5 | 0 (the documented-`ValueError` decoy was left alone) | 1m16s | $0.84 |
 | JavaScript (`jslib`, 7 functions) | 3 | 2, plus 1 real one we had not planted | 0 (the documented-`RangeError` decoy was left alone) | 42s | $0.40 |
 
-**Real libraries** (unreviewed by maintainers, not yet reported upstream):
+**Real libraries:** 25 popular libraries, 204 functions, about $9 in total: **20 confirmed bugs, 17 clear-cut and 3 debatable on a hand check, none wrong.** Full list with one-line repros in [SHOWCASE.md](SHOWCASE.md). Highlights (not yet reported upstream):
 
 | Project | Modules | Confirmed | Example | Time | Cost |
 |---|---|---|---|---|---|

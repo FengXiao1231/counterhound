@@ -60,6 +60,10 @@ test('classify: broken tests are rejected', () => {
   assert.equal(classify({ type: 'KeyError', frames: [frame(`${workdir}/t.py`), frame('/repo/.venv/lib/x.py')] }, { repo, workdir, lang: python }).kind, 'test-error');
 });
 
+test('classify: pytest.raises that did not raise counts as the test assertion failing', () => {
+  assert.equal(classify({ type: '_pytest.outcomes.Failed', frames: [frame(`${workdir}/t.py`)] }, { repo, workdir, lang: python }).kind, 'assertion');
+});
+
 test('classify: an assert inside project code is an internal assertion', () => {
   const c = classify({ type: 'AssertionError', frames: [frame(`${workdir}/t.py`), frame('/repo/pkg/m.py', 7)] }, { repo, workdir, lang: python });
   assert.equal(c.kind, 'internal-assert');
