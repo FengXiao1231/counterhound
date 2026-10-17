@@ -3,6 +3,10 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 import { extractJSON, slug } from '../src/util.js';
 import { classify, signature } from '../src/verify.js';
 import { python } from '../src/lang/python.js';
@@ -135,4 +139,89 @@ test('javascript adapter runs fast-check tests and extracts the counterexample',
   const c = classify(e, { repo: dir, workdir: work, lang: javascript });
   assert.equal(c.kind, 'crash');
   assert.equal(c.site.file, 'lib.js');
+});
+
+test('rust scanner: pub fns, impl methods, FromStr, private modules, cfg(test)', async () => {
+  const { rust } = await import('../src/lang/rust.js');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-rs-'));
+  fs.mkdirSync(path.join(dir, 'src'));
+  fs.writeFileSync(path.join(dir, 'Cargo.toml'), '[package]\nname = "my-crate"\nversion = "0.1.0"\nedition = "2021"\n');
+  fs.writeFileSync(path.join(dir, 'src', 'lib.rs'), `pub mod codec;\nmod hidden;\npub use hidden::Shown;\n
+/// Adds.
+pub fn add(a: i32, b: i32) -> i32 { a + b }
+pub(crate) fn internal(x: u8) -> u8 { x }
+fn private(x: u8) -> u8 { x }
+pub struct Point { pub x: i32 }
+impl Point {
+    /// Makes a point.
+    pub fn new(x: i32) -> Self { Point { x } }
+    fn secret(&self) -> i32 { self.x }
+    pub fn dist(&self, other: &Point) -> i32 {
+        (self.x - other.x).abs()
+    }
+}
+impl std::str::FromStr for Point {
+    type Err = ();
+    fn from_str(s: &str) -> Result<Self, ()> { s.parse().map(|x| Point { x }).map_err(|_| ()) }
+}
+#[cfg(test)]
+mod tests {
+    pub fn helper(x: i32) -> i32 { x }
+}
+pub fn after_tests(s: &str) -> usize { s.len() }
+`);
+  fs.writeFileSync(path.join(dir, 'src', 'codec.rs'), 'pub fn encode(s: &str) -> String {\n    s.to_string()\n}\n');
+  fs.writeFileSync(path.join(dir, 'src', 'hidden.rs'), 'pub struct Shown;\nimpl Shown {\n    pub fn go(&self, n: u8) -> u8 { n }\n}\npub fn not_exported(n: u8) -> u8 { n }\n');
+  const ids = rust.listTargets(dir, {}).map((t) => `${t.id}/${t.nArgs}`).sort();
+  assert.deepEqual(ids, ['my_crate::Point::dist/1', 'my_crate::Point::from_str/1', 'my_crate::Point::new/1', 'my_crate::add/2', 'my_crate::after_tests/1', 'my_crate::codec::encode/1', 'my_crate::hidden::Shown::go/1']);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('rust: proptest failures point at the panic inside the crate', async () => {
+  const { parseRustFailure } = await import('../src/lang/rust.js');
+  const section = `
+thread 'ph_t' (12) panicked at /repo/src/lib.rs:29:6:
+byte index 1 is not a char boundary
+stack backtrace:
+   0: __rustc::rust_begin_unwind
+             at /rustc/abc/library/std/src/panicking.rs:689:5
+   1: textkit::truncate
+             at /repo/src/lib.rs:29:6
+   2: ph_props::ph_t::{closure#1}
+             at /repo/.proofhound/runs/x/g/ph_props.rs:12:17
+
+thread 'ph_t' (12) panicked at /repo/.proofhound/runs/x/g/ph_props.rs:4:1:
+Test failed: byte index 1 is not a char boundary.
+minimal failing input: s = "é", n = 1
+\tsuccesses: 0
+`;
+  const e = parseRustFailure(section, '/repo/.proofhound/runs/x/g');
+  assert.equal(e.type, 'panic');
+  assert.equal(e.message, 'byte index 1 is not a char boundary');
+  assert.equal(e.frames.at(-1).file, '/repo/src/lib.rs');
+  assert.equal(e.example, 'Failing test case: s = "é", n = 1');
+});
+
+test('go: goroutine traces and t.Fatalf output are parsed', async () => {
+  const { parseGoFailure } = await import('../src/lang/go.js');
+  const remap = new Map([['/repo/pkg/zz_proofhound_repro_x_test.go', '/repo/.proofhound/w/repro_x_test.go'], ['zz_proofhound_repro_x_test.go', '/repo/.proofhound/w/repro_x_test.go']]);
+  const panic = parseGoFailure([
+    '=== RUN   TestReproX\n', '--- FAIL: TestReproX (0.00s)\n', 'panic: runtime error: index out of range [-1] [recovered]\n', '\tpanic: runtime error: index out of range [-1]\n', '\n',
+    'goroutine 18 [running]:\n', 'testing.tRunner.func1.2({0x6cbee0, 0xc0001ca078})\n', '\t/usr/local/go/src/testing/testing.go:1734 +0x21c\n',
+    'panic({0x6cbee0?, 0xc0001ca078?})\n', '\t/usr/local/go/src/runtime/panic.go:792 +0x132\n',
+    'example.com/m/pkg.Median({0x0?, 0x0?, 0x0?})\n', '\t/repo/pkg/m.go:42 +0xf9\n',
+    'example.com/m/pkg.TestReproX(0xc000082700)\n', '\t/repo/pkg/zz_proofhound_repro_x_test.go:6 +0x1f\n',
+  ], remap);
+  assert.equal(panic.type, 'runtime.Error');
+  assert.deepEqual(panic.frames.map((f) => `${f.file}:${f.line}`), ['/repo/.proofhound/w/repro_x_test.go:6', '/repo/pkg/m.go:42']);
+  const fatal = parseGoFailure(['=== RUN   TestReproX\n', '    zz_proofhound_repro_x_test.go:9: got 2, want 1\n', '--- FAIL: TestReproX (0.00s)\n'], remap);
+  assert.equal(fatal.type, 'AssertionError');
+  assert.equal(fatal.message, 'got 2, want 1');
+  assert.equal(fatal.frames[0].file, '/repo/.proofhound/w/repro_x_test.go');
+});
+
+test('go scanner lists exported functions and methods', { skip: spawnSync('go', ['version']).status !== 0 && 'needs go' }, async () => {
+  const { go } = await import('../src/lang/go.js');
+  const ids = go.listTargets(path.join(ROOT, 'test', 'fixtures', 'golib'), {}).map((t) => t.qualname);
+  assert.deepEqual(ids, ['Chunk', 'Reverse', 'Median', 'EncodeRLE', 'DecodeRLE', 'Range.Contains', 'Range.Len', 'MustPositive']);
 });

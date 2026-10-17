@@ -1,13 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const VENDOR = /[/\\](site-packages|dist-packages|node_modules|\.venv|venv|lib[/\\]python\d|\.cache[/\\]proofhound)[/\\]/;
+const VENDOR = /[/\\](site-packages|dist-packages|node_modules|\.venv|venv|lib[/\\]python\d|\.cache[/\\]proofhound|vendor|\.cargo|pkg[/\\]mod|\.proofhound)[/\\]/;
 
 // A repro must be a fixed input. Randomness, clocks or property-test machinery disqualify it.
 const NONDETERMINISM = [
   /^\s*(import random|from random import)/m, /\bsecrets\./, /\buuid\.uuid[14]\(/, /\btime\.time\(/, /datetime\.(now|utcnow|today)\(/,
   /^\s*from hypothesis import|^\s*import hypothesis/m, /\bMath\.random\(/, /\bDate\.now\(/, /\bnew Date\(\s*\)/,
   /crypto\.(randomUUID|getRandomValues|randomBytes)/, /from ['"]fast-check['"]/,
+  /"math\/rand(\/v2)?"/, /"pgregory\.net\/rapid"/, /\btime\.Now\(/, /"crypto\/rand"/,
+  /\buse proptest\b|\bproptest!/, /\brand::/, /\b(SystemTime|Instant)::now\(/,
 ];
 
 function matchesAny(value, list) {
@@ -66,7 +68,7 @@ export async function verifyFinding(finding, { repo, cfg, lang, workdir, runs = 
 
   const results = [];
   for (let i = 0; i < runs; i++) {
-    const r = await lang.runTests(repo, cfg, [abs], { cwd: repo, timeoutMs: (cfg.testTimeoutSec || 120) * 1000, ts });
+    const r = await lang.runTests(repo, cfg, [abs], { cwd: repo, timeoutMs: (cfg.testTimeoutSec || lang.testTimeoutSec || 120) * 1000, ts });
     if (r.timedOut) return reject('repro timed out');
     const failed = r.tests.filter((t) => t.outcome === 'failed' || t.outcome === 'error');
     if (!r.tests.length) return reject('repro file has no runnable tests', { output: r.output.slice(-1500) });
@@ -97,7 +99,7 @@ export async function confirmProperty(finding, { repo, cfg, lang, workdir, props
   if (!finding.property_test || !fs.existsSync(path.join(workdir, propsFile))) return null;
   const abs = path.join(workdir, propsFile);
   const selector = lang.id === 'python' ? `${abs}::${finding.property_test}` : abs;
-  const r = await lang.runTests(repo, cfg, [selector], { cwd: repo, timeoutMs: (cfg.testTimeoutSec || 120) * 1000, name: lang.id === 'python' ? undefined : finding.property_test, ts });
+  const r = await lang.runTests(repo, cfg, [selector], { cwd: repo, timeoutMs: (cfg.testTimeoutSec || lang.testTimeoutSec || 120) * 1000, name: lang.id === 'python' ? undefined : finding.property_test, ts });
   const t = r.tests.find((x) => x.name === finding.property_test || x.id.endsWith(finding.property_test));
   if (!t) return null;
   return { failed: t.outcome === 'failed', example: t.error?.example || null };

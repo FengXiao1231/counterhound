@@ -15,6 +15,33 @@ const LANG_GUIDE = {
   and import the code with a path relative to the test file, e.g. ${imports.join('; ')}. CommonJS modules can be imported the same way (default export = module.exports).
 - One \`test('name', () => { fc.assert(fc.property(arbs..., (args) => { assert... })); })\` per property. Use \`fc.pre(cond)\` for preconditions.
 - Repro files: \`test('repro_<name>', () => { assert.deepEqual(fn(input), expected); })\`, no fast-check, no randomness.`,
+  go: ({ imports }) => `Language notes (Go + rapid, run by go test):
+- Test files are compiled into the package under test: ${imports.join('; ')}. Start every file with that \`package\` clause (no \`_test\` suffix), so exported and unexported identifiers can be used directly without an import.
+- Name test functions \`TestPh<Something>\` and prefix any helper functions or types with \`ph\`, so nothing collides with the package's own code or tests.
+- Property tests use rapid (import "pgregory.net/rapid"):
+    func TestPhRoundTrip(t *testing.T) {
+        rapid.Check(t, func(t *rapid.T) {
+            s := rapid.String().Draw(t, "s")
+            if got := Decode(Encode(s)); got != s { t.Fatalf("Decode(Encode(%q)) = %q", s, got) }
+        })
+    }
+  Useful generators: rapid.Int(), rapid.IntRange(lo, hi), rapid.String(), rapid.StringMatching(re), rapid.SliceOf(g), rapid.SliceOfN(g, min, max), rapid.MapOf(k, v), rapid.SampledFrom(xs), rapid.Custom(fn). Skip invalid inputs with \`t.Skip()\` inside the property, or bound the generators.
+- A panic in the code under test is reported with its location; a function returning an error where the contract says it succeeds is a failure you check with \`if err != nil { t.Fatalf(...) }\`.
+- Repro files: \`func TestReproXxx(t *testing.T)\` with the concrete input, comparing with the expected value and calling \`t.Fatalf\` on mismatch. No rapid, math/rand or time.Now.`,
+  rust: ({ imports }) => `Language notes (Rust + proptest, run by cargo test):
+- Each test file is compiled as an integration test of a separate crate that depends on the project, so only the PUBLIC API is reachable. Import it like this: ${imports.join('; ')}. If a path does not resolve, read lib.rs for \`pub mod\` and \`pub use\` re-exports.
+- Property tests use proptest:
+    use proptest::prelude::*;
+    proptest! {
+        #[test]
+        fn ph_round_trip(s in "[a-z]{0,20}", n in 0usize..100) {
+            prop_assert_eq!(decode(&encode(&s)), s);
+        }
+    }
+  Strategies: any::<T>(), ranges like 0i64..1000, regex strings like "\\\\PC*" (any non-control chars), proptest::collection::vec(strategy, 0..20), prop_oneof![...], Just(x). Use prop_assume!(cond) for preconditions.
+- Check results with assert!/assert_eq!/prop_assert!/prop_assert_eq!. To check a Result the contract says is Ok, use \`.unwrap()\` or assert on it; do not use \`.expect()\`.
+- Debug builds check integer overflow, so "attempt to add with overflow" inside the project is a panic on that input. Report it only if the input is valid under the contract.
+- Repro files: plain \`#[test] fn repro_<name>() { assert_eq!(f(input), expected); }\`, no proptest, no randomness.`,
 };
 
 const FINDING_SCHEMA = `{
@@ -33,7 +60,7 @@ const FINDING_SCHEMA = `{
 export function hunterPrompt({ lang, group, workdir, testCmd, imports, notes }) {
   const files = lang.files();
   const fns = group.functions.map((f) => {
-    const doc = f.doc ? ` — ${f.doc.split('\n').find((l) => l.trim()) || ''}`.slice(0, 160) : '';
+    const doc = f.doc ? ` — ${f.doc.trim().split(/\n\s*\n/)[0].replace(/\s+/g, ' ')}`.slice(0, 220) : '';
     return `- \`${f.qualname}${f.signature}\` (line ${f.line})${doc}`;
   }).join('\n');
   return `You are proofhound's bug hunter. Find REAL bugs in the functions below by writing property-based tests with ${lang.framework}, running them, and reporting only failures that are genuine bugs in the project's code.

@@ -17,7 +17,16 @@ export function relocateImports(source, fromDir, toDir) {
   });
 }
 
-function fence(lang) { return lang === 'python' ? 'python' : 'js'; }
+const FENCE = { python: 'python', javascript: 'js', go: 'go', rust: 'rust' };
+export const FRAMEWORK = { python: 'Hypothesis', javascript: 'fast-check', go: 'rapid', rust: 'proptest' };
+const HOW_TO_RUN = {
+  python: (f) => `Save it as \`${f}\` in your tests and run \`pytest ${f}\`.`,
+  javascript: (f) => `Run it with \`node --test ${f}\` (fix the import path if you move it).`,
+  go: (f) => `Copy it into the package directory as \`${f}\` and run \`go test -run Repro .\`.`,
+  rust: (f) => `Copy it into \`tests/${f}\` and run \`cargo test --test ${f.replace(/\.rs$/, '')}\`.`,
+};
+
+function fence(lang) { return FENCE[lang] || ''; }
 
 export function bugMarkdown(b, result) {
   const v = b.verification;
@@ -48,6 +57,7 @@ export function bugMarkdown(b, result) {
     '```',
     '',
     `Fails with \`${v.error.type}: ${String(v.error.message).split('\n')[0].slice(0, 200)}\``,
+    HOW_TO_RUN[result.lang] ? `\n${HOW_TO_RUN[result.lang](v.reproFile)}` : '',
     '',
     '## Why this is a bug',
     '',
@@ -57,7 +67,7 @@ export function bugMarkdown(b, result) {
     '## How it was found',
     '',
     `Property: *${b.property}*.`,
-    b.propertyCheck?.example ? `\n${result.lang === 'python' ? 'Hypothesis' : 'fast-check'} shrank the failure to: \`${b.propertyCheck.example.replace(/\s+/g, ' ').slice(0, 300)}\`` : '',
+    b.propertyCheck?.example ? `\n${FRAMEWORK[result.lang] || 'The property-based test'} shrank the failure to: \`${b.propertyCheck.example.replace(/\s+/g, ' ').slice(0, 300)}\`` : '',
     '',
     '---',
     `Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed ${v.runs}/${v.runs} times → independent review.`,

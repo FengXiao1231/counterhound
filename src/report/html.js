@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { writeFile, fmtMs, fmtUsd } from '../util.js';
+import { FRAMEWORK } from './bugs.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 
@@ -42,7 +43,7 @@ function bugCard(b, lang) {
   <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>${esc((b.reproSource || '').trim())}</code></pre>
   <p class="err"><code>${esc(v.error.type)}: ${esc(String(v.error.message).split('\n')[0].slice(0, 240))}</code></p></details>
   <details><summary>Why this is a bug</summary><p>${esc(b.evidence)}</p>${r.reason ? `<p><b>Independent review:</b> ${esc(r.reason)}</p>` : ''}
-  ${b.propertyCheck?.example ? `<p><b>${lang === 'python' ? 'Hypothesis' : 'fast-check'} shrank it to:</b> <code>${esc(b.propertyCheck.example.slice(0, 400))}</code></p>` : ''}
+  ${b.propertyCheck?.example ? `<p><b>${FRAMEWORK[lang] || 'The property test'} shrank it to:</b> <code>${esc(b.propertyCheck.example.slice(0, 400))}</code></p>` : ''}
   ${b.bugDir ? `<p class="dim">Issue write-up: <code>${esc(b.bugDir)}/BUG.md</code></p>` : ''}</details>
 </article>`;
 }

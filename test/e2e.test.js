@@ -40,3 +40,55 @@ test('end to end: only bugs that replay and survive review are reported', { skip
   assert.ok(fs.existsSync(path.join(dir, '.proofhound', 'report.html')));
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+const hasGo = spawnSync('go', ['version']).status === 0;
+const hasCargo = spawnSync('cargo', ['--version']).status === 0;
+
+function runFixture(name) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), `ph-e2e-${name}-`));
+  fs.cpSync(path.join(ROOT, 'test', 'fixtures', name), dir, { recursive: true, filter: (s) => !s.includes('.proofhound') });
+  const r = spawnSync(process.execPath, [BIN, '--agent', 'fake', '--runs', '2', '--json', '-q'], {
+    cwd: dir, encoding: 'utf8',
+    env: { ...process.env, PROOFHOUND_FAKE_AGENT: path.join(ROOT, 'test', 'helpers', 'fake-agent-compiled.mjs') },
+  });
+  assert.equal(r.status, 1, r.stderr);
+  const result = JSON.parse(r.stdout);
+  return { dir, result, by: Object.fromEntries(result.findings.map((f) => [f.title, f])) };
+}
+
+test('end to end on Go: panics are attributed, test bugs and build errors dropped', { skip: !hasGo && 'needs go' }, () => {
+  const { dir, result, by } = runFixture('golib');
+  assert.equal(result.lang, 'go');
+  assert.equal(by['Range.Contains includes Hi'].status, 'confirmed');
+  assert.equal(by['Range.Contains includes Hi'].verification.kind, 'assertion');
+  const median = by['Median panics on empty input'];
+  assert.equal(median.status, 'confirmed');
+  assert.equal(median.verification.kind, 'crash');
+  assert.equal(median.verification.site.file, 'textkit/textkit.go');
+  assert.equal(by['MustPositive panics'].verification.explicitRaise, true);
+  assert.equal(by['MustPositive panics'].status, 'rejected');
+  assert.match(by['bogus: test bug'].verification.reason, /test error/);
+  assert.match(by['bogus: build'].verification.reason, /could not be collected|loaded/);
+  assert.match(by['bogus: rand'].verification.reason, /not deterministic/);
+  assert.match(by['bogus: passes'].verification.reason, /repro passes/);
+  assert.equal(result.counts.confirmed, 2);
+  assert.equal(fs.readFileSync(path.join(dir, 'go.mod'), 'utf8'), fs.readFileSync(path.join(ROOT, 'test', 'fixtures', 'golib', 'go.mod'), 'utf8'), 'go.mod must not change');
+  assert.ok(!fs.existsSync(path.join(dir, 'textkit', 'testdata')));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('end to end on Rust: panics are attributed, documented errors rejected', { skip: !hasCargo && 'needs cargo', timeout: 600000 }, () => {
+  const { dir, result, by } = runFixture('rustlib');
+  assert.equal(result.lang, 'rust');
+  assert.equal(by['median ignores the even case'].status, 'confirmed');
+  assert.equal(by['median ignores the even case'].verification.kind, 'assertion');
+  const tr = by['truncate panics inside a character'];
+  assert.equal(tr.status, 'confirmed');
+  assert.equal(tr.verification.kind, 'crash');
+  assert.equal(tr.verification.site.file, 'src/lib.rs');
+  assert.equal(by['chunk panics on zero'].verification.explicitRaise, true);
+  assert.equal(by['parse_percent rejects 101'].status, 'rejected');
+  assert.match(by['bogus: build'].verification.reason, /could not be collected|loaded/);
+  assert.equal(result.counts.confirmed, 2);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

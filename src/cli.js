@@ -3,6 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { python } from './lang/python.js';
 import { javascript } from './lang/javascript.js';
+import { go } from './lang/go.js';
+import { rust } from './lang/rust.js';
 import { pickAgent } from './agents.js';
 import { planGroups } from './targets.js';
 import { hunt, HOME } from './hunt.js';
@@ -12,13 +14,14 @@ import { writeHtmlReport } from './report/html.js';
 import { c, log, readJSON, writeJSON, fmtUsd, setQuiet } from './util.js';
 
 const BIN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'proofhound.js');
-const LANGS = { python, javascript, js: javascript, ts: javascript, typescript: javascript };
+const LANGS = { python, py: python, javascript, js: javascript, ts: javascript, typescript: javascript, go, golang: go, rust, rs: rust };
 const VERSION = JSON.parse(fs.readFileSync(path.join(path.dirname(BIN), '..', 'package.json'), 'utf8')).version;
 
 const HELP = `proofhound ${VERSION} — an AI bug hunter that only reports bugs it can prove.
 
 It reads your code, infers properties the functions should satisfy, writes
-property-based tests (Hypothesis for Python, fast-check for JS/TS), runs them,
+property-based tests (Hypothesis for Python, fast-check for JS/TS, rapid for Go,
+proptest for Rust), runs them,
 replays every failure as a deterministic repro, and has an independent reviewer
 try to refute it. You only see bugs that survive all of that.
 
@@ -29,7 +32,7 @@ Usage
   proofhound doctor                check that the toolchain is ready
 
 Options
-  --lang <python|js>        language (auto-detected)
+  --lang <python|js|go|rust>  language (auto-detected)
   --agent <claude|codex>    which coding-agent CLI does the thinking (auto-detected)
   --model <name>            model for the hunter, e.g. sonnet, opus
   --review-model <name>     model for the reviewer (defaults to --model)
@@ -83,9 +86,12 @@ export function parseArgs(argv) {
 function detectLang(repo, name) {
   if (name) {
     const l = LANGS[name.toLowerCase()];
-    if (!l) throw new Error(`unsupported language "${name}" (python, js)`);
+    if (!l) throw new Error(`unsupported language "${name}" (python, js, go, rust)`);
     return l;
   }
+  // Compiled-language manifests at the root win: Python/JS files there are usually tooling.
+  if (rust.detect(repo)) return rust;
+  if (go.detect(repo)) return go;
   const isPy = python.detect(repo), isJs = javascript.detect(repo);
   if (isPy && !isJs) return python;
   if (isJs && !isPy) return javascript;
@@ -93,7 +99,7 @@ function detectLang(repo, name) {
     const pyMarkers = ['pyproject.toml', 'setup.py', 'setup.cfg'].some((f) => fs.existsSync(path.join(repo, f)));
     return pyMarkers ? python : javascript;
   }
-  throw new Error('could not tell which language this project uses; pass --lang python or --lang js');
+  throw new Error('could not tell which language this project uses; pass --lang python, js, go or rust');
 }
 
 function loadConfig(repo, opts) {
@@ -107,10 +113,11 @@ async function testCommand(files) {
   const repo = process.cwd();
   if (!files.length) { console.log('usage: ph-test <test file> [more files]'); return 2; }
   const cfg = loadConfig(repo, {});
-  const lang = files.every((f) => f.endsWith('.py')) ? python : javascript;
+  const byExt = { '.py': python, '.go': go, '.rs': rust };
+  const lang = byExt[path.extname(files[0])] || javascript;
   const ts = lang === javascript;
   const abs = files.map((f) => path.resolve(repo, f));
-  const r = await lang.runTests(repo, cfg, abs, { cwd: repo, timeoutMs: (cfg.testTimeoutSec || 300) * 1000, ts });
+  const r = await lang.runTests(repo, cfg, abs, { cwd: repo, timeoutMs: (cfg.testTimeoutSec || lang.testTimeoutSec || 300) * 1000, ts });
   if (r.timedOut) console.log('TIMEOUT: tests took too long and were killed. Use smaller inputs or fewer examples.');
   let passed = 0, failed = 0;
   for (const t of r.tests) {

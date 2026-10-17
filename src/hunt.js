@@ -43,7 +43,7 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
   const runRel = `${HOME}/runs/${id}`;
   const runDir = path.join(repo, runRel);
   const testCmd = writeTestWrapper(repo, binPath);
-  lang.prepare?.(repo, path.join(repo, HOME));
+  lang.prepare?.(repo, path.join(repo, HOME), cfg);
 
   const targets = lang.listTargets(repo, cfg, opts.paths || []);
   const groups = planGroups(targets, { maxGroups: opts.maxGroups, perGroup: opts.perGroup, only: opts.only });
@@ -62,6 +62,7 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
     const workRel = `${runRel}/${group.id}`;
     const workdir = path.join(repo, workRel);
     fs.mkdirSync(workdir, { recursive: true });
+    lang.prepareGroup?.(repo, group, workdir, cfg);
     const imports = group.functions.slice(0, 3).map((f) => lang.importHint(f, workdir, repo));
     const prompt = hunterPrompt({ lang, group, workdir: workRel, testCmd, imports: [...new Set(imports)], notes: cfg.notes });
     writeFile(path.join(workdir, 'prompt.md'), prompt);
