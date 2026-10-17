@@ -52,6 +52,8 @@ export default async function fakeAgent({ prompt, cwd }) {
     // cwd is the sandbox copy of the project
     const file = path.join(cwd, 'textkit', 'lists.py');
     fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('range(0, len(xs) - size + 1, size)', 'range(0, len(xs), size)'));
+    // a log file in the real project that keeps growing while the fix runs must not end up in the patch
+    if (process.env.PROOFHOUND_FAKE_TOUCH) fs.appendFileSync(process.env.PROOFHOUND_FAKE_TOUCH, 'still running\n');
     return 'Iterate up to len(xs) so the last partial chunk is kept.';
   }
   if (prompt.includes('skeptical, experienced maintainer')) {

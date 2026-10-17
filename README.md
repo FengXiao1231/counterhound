@@ -78,6 +78,7 @@ Each run writes `.proofhound/runs/<id>/`:
 | `report.html` | The report above: funnel, confirmed bugs, and everything that was filtered out and why |
 | `bugs/PH-001-…/BUG.md` | An issue-ready write-up: input, expected, actual, repro, evidence, review |
 | `bugs/PH-001-…/<repro test>` | A standalone failing test (`test_repro_*.py`, `repro_*.test.mjs`, `repro_*_test.go` or `repro_*.rs`). Drop it into your suite, fix the bug, watch it pass |
+| `bugs/PH-001-…/fix.patch` | With `--fix`: a patch that makes the repro pass without breaking your own tests. `git apply` it |
 | `results.json` | Everything, machine-readable |
 
 The exit code is `1` when bugs were confirmed, so it can gate CI.
@@ -100,6 +101,7 @@ flowchart LR
 4. **Attribute.** The traceback is inspected. Errors raised inside the test itself (`NameError`, wrong call signatures, a `KeyError` in the test's own bookkeeping), errors from Hypothesis or fast-check, and errors from vendored code are test bugs, not your bugs. Crashes (including Go and Rust panics, read from goroutine traces and backtraces) are pinned to the deepest frame in your code, and an explicit `raise`/`throw`/`panic` is flagged so the reviewer can check whether it is documented behaviour.
 5. **Dedup.** Findings with the same crash site, or the same property on the same function, are merged.
 6. **Review.** A separate agent run, with a fresh context, gets the finding and the verified failure and is told that most automated reports are wrong. It checks whether the input is valid under the contract, whether the expected behaviour is really promised, whether the behaviour is intentional, and whether the test is correct. Only `bug` verdicts at or above `--min-confidence` (default 0.6) are confirmed; unsure ones are listed separately.
+7. **Fix (optional, `--fix`).** For each confirmed bug, an agent edits a throwaway copy of the project (outside it, in the system temp dir). proofhound keeps the patch only if a fresh copy of the repro now passes and the project's own test suite (`pytest`, `npm test`, `go test ./...`, `cargo test`, `mvn test` / `gradle test`, or `testCommand` from the config) does not go from green to red. Your working tree is never touched.
 
 ## Results so far
 
@@ -113,7 +115,7 @@ flowchart LR
 | Rust (`rustlib`, 7 functions) | 5 | 5 | 0 (the documented `Err` and `assert!` decoys were left alone) | 1m18s | $0.76 |
 | Java (`javalib`, 9 functions) | 5 | 5 | 0 (the documented `IllegalArgumentException` and a correct `reverse` were left alone) | 1m27s | $0.51 |
 
-**Real libraries:** 25 popular Python and JS libraries, 204 functions, about $9 in total: **20 confirmed bugs, 17 clear-cut and 3 debatable on a hand check, none wrong.** Then 15 Go and Rust libraries, 111 functions, about $5: **7 confirmed, 6 clear-cut and 1 debatable, none wrong**, for example `slug.Make("a")` returning `""` in gosimple/slug when smart truncation is off, and humantime's strict `parse_rfc3339` accepting `"1970-01-01T00:00:00ZZ"`. Full list with one-line repros in [SHOWCASE.md](SHOWCASE.md). Highlights (not yet reported upstream):
+**Real libraries:** 25 popular Python and JS libraries, 204 functions, about $9 in total: **20 confirmed bugs, 17 clear-cut and 3 debatable on a hand check, none wrong.** Then 15 Go and Rust libraries, 111 functions, about $5: **7 confirmed, 6 clear-cut and 1 debatable, none wrong**, for example `slug.Make("a")` returning `""` in gosimple/slug when smart truncation is off, and humantime's strict `parse_rfc3339` accepting `"1970-01-01T00:00:00ZZ"`. Then 41 more libraries across all five languages with `--fix`, 309 functions, about $15: **26 confirmed, 19 clear-cut and 7 debatable, none wrong; 17 patches written and all 17 verified**, for example jsemver's `nextPreReleaseVersion()` turning `1.0.0-alpha.0` into `1.0.0-alpha.0.1`, fixed with a one-line patch. Full list with one-line repros in [SHOWCASE.md](SHOWCASE.md). Highlights (not yet reported upstream):
 
 | Project | Modules | Confirmed | Example | Time | Cost |
 |---|---|---|---|---|---|
@@ -160,6 +162,7 @@ jobs:
 | `budget` | `2` | Stop starting new work after this many dollars |
 | `max-modules` | `4` | Most files to hunt in |
 | `comment` | `bugs` | `always`, `bugs` (comment only when bugs are found; an earlier comment is still updated) or `never` |
+| `fix` | `false` | Also propose a verified patch for each confirmed bug and include it in the comment |
 | `fail-on-bugs` | `true` | Fail the check when a bug is confirmed |
 | `working-directory` | `.` | Project directory inside the repository |
 | `args` | | Extra options, e.g. `--lang go --notes "..."` |
@@ -191,6 +194,9 @@ proofhound doctor                check that the toolchain is ready
 --notes <text>            extra context for the hunter (contracts, known quirks)
 --diff [ref]              only hunt in functions changed since ref (default: the PR base in CI, else origin's default branch)
 --summary-file <path>     also write a Markdown summary (for PR comments and CI)
+--fix                     also write a patch for each confirmed bug, kept only if the repro
+                          then passes and the project's own tests still pass
+--fix-budget <usd>        extra spend allowed for fixes on top of --budget (default: half of it)
 --json                    print results as JSON on stdout
 ```
 
@@ -214,7 +220,8 @@ Optional `.proofhound/config.json`:
 The hunter agent runs with a strict allowlist: read files, write only inside
 `.proofhound/runs/<id>/`, and run only `./.proofhound/ph-test`. It has no network tools.
 The tests it writes do execute your code, though, just like your own test suite does. On
-code you do not trust, run proofhound inside a container.
+code you do not trust, run proofhound inside a container. With `--fix`, the fixing agent can
+write only inside its own temporary copy of the project, and the patch is shown to you, never applied.
 
 ## Cost
 
@@ -223,7 +230,7 @@ cap a run, `--only` to aim it, and a cheaper `--review-model` if you like.
 
 ## Roadmap
 
-- `--fix`: propose a patch, accept it only if the repro passes and the existing suite stays green
+- `proofhound fix` for an earlier run, so patches do not need a new hunt
 - Kotlin
 
 ## Credits

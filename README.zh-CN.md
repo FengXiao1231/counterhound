@@ -56,6 +56,7 @@ npx proofhound src/codec --budget 2
 |---|---|
 | `report.html` | 上图的报告：漏斗、确认的 Bug，以及所有被过滤掉的发现和原因 |
 | `bugs/PH-001-…/BUG.md` | 可以直接贴成 issue 的说明：输入、期望、实际、复现代码、证据、复核意见 |
+| `bugs/PH-001-…/fix.patch` | 加 `--fix` 时生成：让复现测试通过、又不破坏你原有测试的补丁，用 `git apply` 应用 |
 | `bugs/PH-001-…/<复现测试>` | 独立的失败测试（`test_repro_*.py`、`repro_*.test.mjs`、`repro_*_test.go` 或 `repro_*.rs`）。放进你的测试集，修好 Bug，看它变绿 |
 | `results.json` | 全部数据，方便程序读取 |
 
@@ -79,6 +80,7 @@ flowchart LR
 4. **归因。**检查调用栈。测试自身抛出的错误（`NameError`、参数传错、测试自己算错导致的 `KeyError`）、Hypothesis/fast-check 的错误、第三方库内部的错误，都算测试的问题，不算你的 Bug。崩溃（包括从 goroutine 调用栈和 Rust backtrace 里读出的 panic）会定位到你代码里最深的那一帧；如果是显式的 `raise`/`throw`/`panic` 会单独标出来，让复核者判断是不是文档里写明的行为。
 5. **去重。**出错位置相同、或同一函数上同一性质的发现会被合并。
 6. **复核。**另起一次全新上下文的 Agent 调用，拿到发现和已验证的失败，并被告知"大多数自动报告都是错的"。它要检查：输入是否符合函数约定、期望行为是否真的被承诺、这个行为是不是故意的、测试本身对不对。只有判为 `bug` 且置信度不低于 `--min-confidence`（默认 0.6）的才算确认；拿不准的单独列出。
+7. **修复（可选，`--fix`）。**对每个确认的 Bug，Agent 在项目的一次性副本里改代码（副本放在系统临时目录，不在项目里）。只有当复现测试的全新副本能通过、并且项目自己的测试（`pytest`、`npm test`、`go test ./...`、`cargo test`、`mvn test` / `gradle test`，或配置里的 `testCommand`）没有从通过变成失败时，proofhound 才保留这个补丁。你的工作目录始终不会被改动。
 
 ## 目前的成绩
 
@@ -92,7 +94,7 @@ flowchart LR
 | Rust（`rustlib`，7 个函数） | 5 | 5 | 0（文档写明返回 `Err` 和会 `assert!` 的诱饵没被误报） | 1分18秒 | $0.76 |
 | Java（`javalib`，9 个函数） | 5 | 5 | 0（文档写明会抛 `IllegalArgumentException` 的诱饵和本来就正确的 `reverse` 都没被误报） | 1分27秒 | $0.51 |
 
-**真实开源库：**25 个常用 Python 和 JS 库、204 个函数，总花费约 $9，**确认 20 个 Bug；人工逐个复核后，17 个是明确的 Bug，3 个有争议，没有一个是错的。**之后又跑了 15 个 Go 和 Rust 库、111 个函数，花费约 $5，**确认 7 个，6 个明确、1 个有争议，没有错的**，比如 gosimple/slug 关闭智能截断后 `slug.Make("a")` 返回 `""`，humantime 的严格解析函数 `parse_rfc3339` 接受 `"1970-01-01T00:00:00ZZ"`。完整清单和一行复现代码见 [SHOWCASE.md](SHOWCASE.md)。部分例子（还没向上游报告）：
+**真实开源库：**25 个常用 Python 和 JS 库、204 个函数，总花费约 $9，**确认 20 个 Bug；人工逐个复核后，17 个是明确的 Bug，3 个有争议，没有一个是错的。**之后又跑了 15 个 Go 和 Rust 库、111 个函数，花费约 $5，**确认 7 个，6 个明确、1 个有争议，没有错的**，比如 gosimple/slug 关闭智能截断后 `slug.Make("a")` 返回 `""`，humantime 的严格解析函数 `parse_rfc3339` 接受 `"1970-01-01T00:00:00ZZ"`。之后又用 `--fix` 跑了 5 种语言的 41 个库、309 个函数，花费约 $15，**确认 26 个，19 个明确、7 个有争议，没有错的；写出 17 个补丁，17 个全部通过验证**，比如 jsemver 的 `nextPreReleaseVersion()` 把 `1.0.0-alpha.0` 变成 `1.0.0-alpha.0.1`，补丁只改了一行。完整清单和一行复现代码见 [SHOWCASE.md](SHOWCASE.md)。部分例子（还没向上游报告）：
 
 | 项目 | 模块数 | 确认 | 例子 | 用时 | 花费 |
 |---|---|---|---|---|---|
@@ -137,6 +139,7 @@ jobs:
 | `budget` | `2` | 花到这么多美元就不再开始新任务 |
 | `max-modules` | `4` | 最多检查几个文件 |
 | `comment` | `bugs` | `always`、`bugs`（只在找到 Bug 时评论；之前的评论仍会更新）或 `never` |
+| `fix` | `false` | 同时为每个确认的 Bug 给出经过验证的补丁，并放进评论里 |
 | `fail-on-bugs` | `true` | 确认到 Bug 时让检查失败 |
 | `working-directory` | `.` | 项目在仓库里的目录 |
 | `args` | | 额外参数，比如 `--lang go --notes "..."` |
@@ -168,6 +171,8 @@ proofhound doctor                检查工具链
 --notes <text>            给猎手的额外背景（约定、已知特性）
 --diff [ref]              只检查自 ref 以来改动过的函数（默认：CI 里是 PR 的基准分支，否则是 origin 的默认分支）
 --summary-file <path>     另外输出一份 Markdown 摘要（用于 PR 评论和 CI）
+--fix                     同时为每个确认的 Bug 写补丁，只有复现测试通过且项目原有测试仍通过才保留
+--fix-budget <usd>        在 --budget 之外留给修复的额度（默认是 --budget 的一半）
 --json                    在标准输出打印 JSON 结果
 ```
 
@@ -189,7 +194,7 @@ proofhound doctor                检查工具链
 ## 安全
 
 猎手 Agent 在严格白名单下运行：可以读文件，只能在 `.proofhound/runs/<id>/` 里写，只能运行 `./.proofhound/ph-test`，没有联网工具。
-但它写的测试会执行你的代码，就像你自己的测试集一样。对不信任的代码，请在容器里运行 proofhound。
+但它写的测试会执行你的代码，就像你自己的测试集一样。对不信任的代码，请在容器里运行 proofhound。加 `--fix` 时，修复 Agent 只能在它自己的临时项目副本里写文件，补丁只展示给你，不会自动应用。
 
 ## 花费
 
@@ -197,7 +202,7 @@ proofhound doctor                检查工具链
 
 ## 路线图
 
-- `--fix`：给出补丁，只有复现测试通过且原有测试全绿才接受
+- `proofhound fix`：对已有的运行结果直接补写补丁，不用重新找 Bug
 - Kotlin
 
 ## 致谢

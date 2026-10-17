@@ -60,3 +60,49 @@ Debatable:
 
 No bugs reported in: go-humanize, xstrings, Masterminds/semver, c2h5oh/datasize, bytesize, inflector, slug (Rust), textwrap, heck (two findings refuted by the reviewer).
 
+
+## Five languages, with `--fix`
+
+Run: 41 libraries (10 Python, 9 JS, 7 Go, 7 Rust, 8 Java), 69 modules, 309 functions, Claude Sonnet, `--max-modules 2 --budget 0.5 --fix`,
+about 55 minutes of machine time and $14.75 in total (33 reported → 33 reproduced → 26 confirmed; 5 rejected by review, 2 the reviewer was unsure about).
+Hand-checking the 26 confirmed findings against the source: 19 are clear bugs, 7 are debatable, none were wrong.
+
+`--fix` wrote a patch for 17 of them; the other 9 were not attempted because the run's `--budget` was already used up
+(fixes now get their own `--fix-budget`). **All 17 patches were verified**: the repro passes with the patch, and the project's own test suite still passes for 12 of them
+(for 3 the suite already failed without the patch, 2 projects have no test command). Every patch applies cleanly with `git apply`.
+A ✓ in the patch column means a verified patch exists.
+
+| Library | Bug | Repro | Patch |
+|---|---|---|---|
+| [spf13/cast](https://github.com/spf13/cast) (Go) | `ToStringMapIntE` panics instead of returning an error (or converting) for maps with non-string keys | `ToStringMapIntE(map[int]int{0: 0})` → panic in `reflect.Value.SetMapIndex` | ✓ |
+| [hako/durafmt](https://github.com/hako/durafmt) (Go) | Formatting a negative duration negates it in place, so the second `String()` call returns `"-"` | `d := Parse(-time.Microsecond); d.String(); d.String()` → `"-"` | ✓ |
+| [agext/levenshtein](https://github.com/agext/levenshtein) (Go) | With `maxCost`, `Calculate` returns an in-budget distance that is wrong | `Calculate("aaa", "bbbab", 2, 1, 2, 2)` → 2 (the true distance, with `maxCost` 0, is 6) | |
+| [agext/levenshtein](https://github.com/agext/levenshtein) (Go) | `BonusPrefix` set after `BonusScale` skips the clamp, so `Match` scores above 1 | `NewParams().BonusScale(0.25).BonusPrefix(10)`, `Match("a…ab", "a…ac", p)` → 1.075 | |
+| [isodate](https://github.com/gweis/isodate) (Python) | Fractional hours with many 9s round the microseconds up to 1000000 and crash | `parse_time("10.99999999999999")` → `ValueError: microsecond must be in 0..999999` | ✓ |
+| [num2words](https://github.com/savoirfairelinux/num2words) (Python) | Bengali currency reads 0.01 as ten paisa | `num2words(0.01, lang='bn', to='currency')`: "শূন্য টাকা দশ পয়সা" | ✓ |
+| [num2words](https://github.com/savoirfairelinux/num2words) (Python) | Bengali cardinals drop zeros after the decimal point | `1.05` reads the same as `1.5` | ✓ |
+| [humanfriendly](https://github.com/xolox/python-humanfriendly) (Python) | `detailed=True` returns an empty string for zero | `format_timespan(0, detailed=True)` → `''` (`format_timespan(0)` is `'0 seconds'`) | ✓ |
+| [titlecase](https://github.com/ppannuto/python-titlecase) (Python) | `set_small_word_list()` rebuilds a regex without the dash separators, so resetting to the default list changes the output (the project's own test for this is skipped with a FIXME) | `titlecase('foo - the end')` → `'Foo - the End'` after the reset | ✓ |
+| [uritemplate](https://github.com/python-hyper/uritemplate) (Python) | The prefix modifier crashes on numbers | `expand('{a:1}', {'a': 12})` → `TypeError: 'int' object is not subscriptable` | |
+| [uritemplate](https://github.com/python-hyper/uritemplate) (Python) | Reserved expansion leaves a space unencoded once the value contains any `%XX` escape (RFC 6570 §3.2.3) | `expand('{+x}', {'x': 'a b%41'})` → `'a b%41'` | |
+| [query-string](https://github.com/sindresorhus/query-string) (JS) | `stringifyUrl` corrupts an index-format array already in the URL | `stringifyUrl({url: 'https://foo.bar?a[0]=x&a[1]=y', query: {}}, {arrayFormat: 'index', encode: false})` → `'…?a=[object Object]'` | ✓ |
+| [fast-json-stable-stringify](https://github.com/epoberezkin/fast-json-stable-stringify) (JS) | Cycles made only of arrays are not detected; `cycles: true` is ignored | `const a = []; a.push(a); stringify(a, {cycles: true})` → `RangeError` | ✓ |
+| [dot-prop](https://github.com/sindresorhus/dot-prop) (JS) | `stringifyPath` emits an index that `parsePath` rejects | `stringifyPath([1e21])` → `'[1e+21]'` | ✓ |
+| [jsemver](https://github.com/zafarkhaja/jsemver) (Java) | `"0"` is not treated as a numeric identifier | `Version.parse("1.0.0-alpha.0").nextPreReleaseVersion()` → `1.0.0-alpha.0.1` | ✓ |
+| [jsemver](https://github.com/zafarkhaja/jsemver) (Java) | Numeric pre-release identifiers rank above alphanumeric ones that start with `-` (SemVer §11) | `1.0.0-1` compares greater than `1.0.0--a` | ✓ |
+| [java-string-similarity](https://github.com/tdebatty/java-string-similarity) (Java) | A negative threshold, documented to give plain Jaro, still adds the Winkler bonus | `new JaroWinkler(-1).similarity("ab", "ac")` → 0.7, not 2/3 | ✓ |
+| [jsoup](https://github.com/jhy/jsoup) (Java) | The selector parser trims an escaped trailing space, so `escapeCssIdentifier`'s own output does not match | element with id `"a "`, `select("#" + escapeCssIdentifier("a "))` → no match | ✓ |
+| [commons-codec](https://github.com/apache/commons-codec) (Java) | Strict quoted-printable encoding can emit a 77-character line (RFC 1521 allows 76) | `new QuotedPrintableCodec(true).encode("a"×70 + "\0\0aa")` | |
+
+Debatable:
+
+- [change-case](https://github.com/blakeembrey/change-case) (JS): words that start with an astral-plane letter are not capitalised, because `word[0]` splits a surrogate pair (`pascalSnakeCase('\u{10428}a')`). Real, but the scripts involved are rare. Patch ✓.
+- [cron-parser](https://github.com/harrisiirak/cron-parser) (JS): `seededRandom('')` treats an empty seed as no seed, so it is not deterministic. Patch ✓.
+- [humansize](https://github.com/LeopoldArkham/humansize) (Rust): `-1` formats as `"-1 Bytes"` while `1` is `"1 Byte"`. Patch ✓.
+- [gobwas/glob](https://github.com/gobwas/glob) (Go): `Lexer.Offset()` points past the whole character class for tokens inside it, so parse errors there report the wrong position.
+- [agext/levenshtein](https://github.com/agext/levenshtein) (Go): `Similarity("", "a", NewParams().InsCost(0))` is `NaN`, from 0/0.
+- [uritemplate](https://github.com/python-hyper/uritemplate) (Python): `partial('a{x}b', {'x': ''})` keeps `{x}`, while `expand` drops it.
+- [byte-unit](https://github.com/magiclen/byte-unit) (Rust): `Byte::from_f64_with_unit(1e-29, Unit::B)` is `Byte(0)`, while `Byte::from_f64(1e-29)` rounds up to `Byte(1)` as documented.
+
+No bugs reported in: more-itertools, tabulate, furl, python-json-pointer, pathspec, path-to-regexp, parse-duration, filenamify, decamelize, commons-lang, commons-text, commons-csv, dtolnay/semver, unicode-width, shell-words, shlex, rust-lang/glob, wildmatch, blang/semver, go-runewidth, stringy.
+Not run: pluralize (a UMD module the scanner cannot see into), slugify (Java dependencies not resolved), timeago (no `go.mod`).

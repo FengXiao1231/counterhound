@@ -28,11 +28,13 @@ const IMPURE = /\b(fetch|require\(['"](fs|http|https|net|child_process)['"]\)|fs
 
 /** Find the end of a function body by brace matching (good enough for ranking, not parsing). */
 function bodyExtent(lines, startLine) {
-  let depth = 0, seen = false;
+  let depth = 0, seen = false, parens = 0;
   for (let i = startLine; i < Math.min(lines.length, startLine + 600); i++) {
     const l = lines[i].replace(/(["'`])(?:\\.|(?!\1).)*\1/g, '""').replace(/\/\/.*$/, '');
     for (const ch of l) {
-      if (ch === '{') { depth++; seen = true; }
+      if (!seen && (ch === '(' || ch === ')')) parens += ch === '(' ? 1 : -1;
+      else if (!seen && parens > 0) continue; // braces of a destructured parameter, not the body
+      else if (ch === '{') { depth++; seen = true; }
       else if (ch === '}') depth--;
     }
     if (seen && depth <= 0) return i;
@@ -140,8 +142,14 @@ export function scanFile(root, file) {
     // module.exports = function (params) / (params) =>
     new RegExp(`^\\s*module\\.exports\\s*=\\s*(async\\s+)?(?:function\\s*\\*?\\s*(${ID})?\\s*)?\\(([^)]*)\\)`),
   ];
-  lines.forEach((line, i) => {
+  lines.forEach((raw, i) => {
     let local, params, isAsync, ret, info, m;
+    // a parameter list that spans lines: join until the parentheses balance
+    let line = raw;
+    const open = (x) => (x.match(/\(/g) || []).length - (x.match(/\)/g) || []).length;
+    if (/\bfunction\b|=\s*(async\s*)?\(\s*$|=\s*(async\s*)?\([^)]*$/.test(raw) && open(raw) > 0) {
+      for (let k = i + 1; k < Math.min(lines.length, i + 30) && open(line) > 0; k++) line += ' ' + lines[k].replace(/\/\/.*$/, '').trim();
+    }
     if ((m = line.match(defs[0]))) { [, isAsync, local, , params, ret] = m; info = ex.get(local); }
     else if ((m = line.match(defs[1]))) {
       [, local, isAsync, params, ret] = m;

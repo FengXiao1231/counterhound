@@ -147,7 +147,10 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
     .sort((a, b) => (rank[a.review?.severity] ?? 1) - (rank[b.review?.severity] ?? 1) || (b.review?.confidence ?? 1) - (a.review?.confidence ?? 1));
   bugs.forEach((b, i) => { b.bugId = `PH-${String(i + 1).padStart(3, '0')}`; });
 
-  if (opts.fix && bugs.length) await fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, opts, account, overBudget });
+  // fixes get their own allowance on top of --budget, so a hunt that used it all still gets patches
+  const fixBudget = opts.fixBudget ?? (opts.budget ? opts.budget / 2 : 0);
+  const fixOverBudget = () => opts.budget && spend.usd >= opts.budget + fixBudget;
+  if (opts.fix && bugs.length) await fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, opts, account, overBudget: fixOverBudget });
 
   const result = {
     version: 1, tool: 'proofhound', runId: id, diff, fixRun: Boolean(opts.fix), repo: path.basename(repo), lang: lang.id, agent: agent.id, model: opts.model || null,

@@ -146,8 +146,9 @@ test('--fix: a patch is kept only if the repro passes in a sandbox; the project 
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-e2e-fix-'));
   fs.cpSync(path.join(ROOT, 'test', 'fixtures', 'pylib'), dir, { recursive: true });
   const before = fs.readFileSync(path.join(dir, 'textkit', 'lists.py'), 'utf8');
+  fs.writeFileSync(path.join(dir, 'run.log'), 'started\n');
   const r = spawnSync(process.execPath, [BIN, '--agent', 'fake', '--runs', '1', '--fix', '--json', '-q'], {
-    cwd: dir, encoding: 'utf8', env: { ...process.env, PROOFHOUND_FAKE_AGENT: path.join(ROOT, 'test', 'helpers', 'fake-agent.mjs') },
+    cwd: dir, encoding: 'utf8', env: { ...process.env, PROOFHOUND_FAKE_AGENT: path.join(ROOT, 'test', 'helpers', 'fake-agent.mjs'), PROOFHOUND_FAKE_TOUCH: path.join(dir, 'run.log') },
   });
   const result = JSON.parse(r.stdout);
   const bug = result.findings.find((f) => f.status === 'confirmed');

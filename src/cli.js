@@ -54,6 +54,7 @@ Options
   --summary-file <path>     also write a Markdown summary (for PR comments / CI)
   --fix                     also write a patch for each confirmed bug, kept only if the
                             repro then passes and the project's own tests still pass
+  --fix-budget <usd>        extra spend allowed for fixes on top of --budget (default: half of it)
   --json                    print results as JSON on stdout
   -q, --quiet               less output
   -h, --help / -v, --version
@@ -79,6 +80,7 @@ export function parseArgs(argv) {
       case '-j': case '--jobs': o.jobs = +val(); break;
       case '--runs': o.runs = Math.max(1, +val()); break;
       case '--budget': o.budget = +val(); break;
+      case '--fix-budget': o.fixBudget = +val(); break;
       case '--min-confidence': o.minConfidence = +val(); break;
       case '--no-review': o.review = false; break;
       case '--notes': o.notes = val(); break;

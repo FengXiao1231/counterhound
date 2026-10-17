@@ -99,7 +99,7 @@ async function runSuite(lang, root, cfg) {
 }
 
 /**
- * Try to fix each confirmed bug. Sets `bug.fix` = { status: 'verified' | 'rejected' | 'failed', reason,
+ * Try to fix each confirmed bug. Sets `bug.fix` = { status: 'verified' | 'rejected' | 'failed' | 'skipped', reason,
  * patch, files, suite }. Each attempt runs in a copy of the project outside it (so build tools that
  * search parent directories never see the original), and the agent works inside that copy.
  */
@@ -108,21 +108,29 @@ export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, o
   log(c.dim(`\n  writing fixes for ${bugs.length} bug${bugs.length > 1 ? 's' : ''}…`));
   const shared = { ...cfg, cargoTargetDir: cfg.cargoTargetDir || path.join(repo, '.proofhound', 'rust', 'target'), suiteTargetDir: path.join(repo, '.proofhound', 'rust', 'suite-target') };
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'proofhound-fix-'));
+  // One snapshot of the project, taken now: every sandbox is copied from it and patches are diffed
+  // against it, so files that change in the project meanwhile (logs, build output) never leak into a patch.
+  const pristine = path.join(tmpRoot, 'pristine');
+  try { makeSandbox(repo, pristine); } catch (e) {
+    for (const bug of bugs) bug.fix = { status: 'failed', reason: e.message };
+    fs.rmSync(tmpRoot, { recursive: true, force: true });
+    return;
+  }
   // The baseline suite also runs in a pristine copy, so the project's tree is never written to.
   let baseline = null;
   const getBaseline = () => (baseline ||= (async () => {
     const dir = path.join(tmpRoot, 'baseline');
-    try { makeSandbox(repo, dir); } catch { return { ran: false }; }
+    try { makeSandbox(pristine, dir); } catch { return { ran: false }; }
     const res = await runSuite(lang, dir, shared);
     fs.rmSync(dir, { recursive: true, force: true });
     return res;
   })());
 
   await pool(bugs, opts.jobs || 2, async (bug) => {
-    if (overBudget()) { bug.fix = { status: 'failed', reason: 'not attempted: budget reached' }; return; }
+    if (overBudget()) { bug.fix = { status: 'skipped', reason: 'not attempted: --budget plus --fix-budget was used up' }; return; }
     const dir = path.join(repo, runRel, 'fix', bug.bugId);
     const sandbox = path.join(tmpRoot, bug.bugId);
-    try { makeSandbox(repo, sandbox); } catch (e) { bug.fix = { status: 'failed', reason: e.message }; return; }
+    try { makeSandbox(pristine, sandbox); } catch (e) { bug.fix = { status: 'failed', reason: e.message }; return; }
     try { await attempt(bug, dir, sandbox); } finally {
       if (opts.keepSandbox) log(c.dim(`    sandbox kept at ${sandbox}`));
       else fs.rmSync(sandbox, { recursive: true, force: true });
@@ -157,10 +165,10 @@ export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, o
     account(r);
     writeFile(path.join(dir, 'agent.txt'), `${r.text || ''}\n${r.error ? `ERROR: ${r.error}\n` : ''}${r.denials?.length ? `Permission denials:\n${r.denials.join('\n')}\n` : ''}`);
 
-    const files = changedFiles(repo, sandbox);
+    const files = changedFiles(pristine, sandbox);
     const reject = (reason, extra = {}) => { bug.fix = { status: 'rejected', reason, files, ...extra }; log(`  ${c.dim('·')} ${c.dim(bug.bugId)} ${c.yellow(`fix rejected: ${reason}`)}`); };
     if (!files.length) return reject(r.ok ? 'the agent did not change any file' : `agent failed: ${(r.error || '').split('\n')[0]}`);
-    const patch = makePatch(repo, sandbox, files);
+    const patch = makePatch(pristine, sandbox, files);
     writeFile(path.join(dir, 'fix.patch'), patch);
 
     // 1. a fresh copy of the repro (in case the agent edited it) must pass on the patched code

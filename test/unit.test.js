@@ -83,6 +83,8 @@ test('javascript scanner finds exported functions with JSDoc', () => {
   assert.deepEqual(names.sort(), ['add', 'load', 'twice']);
   assert.deepEqual(scanFile(dir, path.join(dir, 'b.js')).map((f) => [f.name, f.access]), [['shown', 'prop']]);
   assert.deepEqual(scanFile(dir, path.join(dir, 'c.js')).map((f) => [f.name, f.access]), [['c', 'default']]);
+  fs.writeFileSync(path.join(dir, 'd.js'), `export default function decamelize(\n  text,\n  { separator = '_' } = {},\n) {\n  const x = 1;\n  return text + separator + x;\n}\n`);
+  assert.deepEqual(scanFile(dir, path.join(dir, 'd.js')).map((f) => [f.name, f.nArgs, f.loc]), [['decamelize', 2, 7]]);
   const add = fns.find((f) => f.name === 'add');
   assert.equal(add.doc, 'Adds.');
   assert.equal(add.nArgs, 2);
@@ -172,8 +174,10 @@ pub fn after_tests(s: &str) -> usize { s.len() }
 `);
   fs.writeFileSync(path.join(dir, 'src', 'codec.rs'), 'pub fn encode(s: &str) -> String {\n    s.to_string()\n}\n');
   fs.writeFileSync(path.join(dir, 'src', 'hidden.rs'), 'pub struct Shown;\nimpl Shown {\n    pub fn go(&self, n: u8) -> u8 { n }\n}\npub fn not_exported(n: u8) -> u8 { n }\n');
+  fs.writeFileSync(path.join(dir, 'src', 'glob.rs'), 'pub struct Pat<const A: char>;\nimpl<const A: char>\n    Pat<A>\n{\n    pub fn is_match(&self, s: &str) -> bool { s.contains(A) }\n}\n');
+  fs.appendFileSync(path.join(dir, 'src', 'lib.rs'), 'mod glob;\npub use glob::*;\n');
   const ids = rust.listTargets(dir, {}).map((t) => `${t.id}/${t.nArgs}`).sort();
-  assert.deepEqual(ids, ['my_crate::Point::dist/1', 'my_crate::Point::from_str/1', 'my_crate::Point::new/1', 'my_crate::add/2', 'my_crate::after_tests/1', 'my_crate::codec::encode/1', 'my_crate::hidden::Shown::go/1']);
+  assert.deepEqual(ids, ['my_crate::Point::dist/1', 'my_crate::Point::from_str/1', 'my_crate::Point::new/1', 'my_crate::add/2', 'my_crate::after_tests/1', 'my_crate::codec::encode/1', 'my_crate::glob::Pat::is_match/1', 'my_crate::hidden::Shown::go/1']);
   fs.rmSync(dir, { recursive: true, force: true });
 });
 

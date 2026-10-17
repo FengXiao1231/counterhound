@@ -76,7 +76,10 @@ function modulePublic(srcDir, segs, libPath) {
   for (const seg of segs) {
     let src = '';
     try { src = fs.readFileSync(parent, 'utf8'); } catch { return false; }
-    const decl = src.match(new RegExp(`((?:^\\s*#\\[.*\\]\\s*\\n)*)^\\s*pub\\s+mod\\s+${seg}\\s*;`, 'm'));
+    // `pub mod seg;`, or a private `mod seg;` whose items are glob re-exported with `pub use seg::*;`
+    const decl = src.match(new RegExp(`((?:^\\s*#\\[.*\\]\\s*\\n)*)^\\s*pub\\s+mod\\s+${seg}\\s*;`, 'm'))
+      || (new RegExp(`^\\s*pub\\s+use\\s+(?:self::)?${seg}::\\*\\s*;`, 'm').test(src)
+        && src.match(new RegExp(`((?:^\\s*#\\[.*\\]\\s*\\n)*)^\\s*mod\\s+${seg}\\s*;`, 'm')));
     if (!decl) return false;
     // #[cfg(test)], #[cfg(fuzzing)] and the like: not part of the normal public API
     if (/#\[cfg\((?!feature)/.test(decl[1])) return false;
@@ -107,12 +110,16 @@ export function scanRustFile(repo, crateDir, info, file, pubTraits = new Set()) 
     if (/^#\[cfg\(test\)\]/.test(t)) pendingCfgTest = true;
     else if (pendingCfgTest && /^(pub\s+)?mod\s+\w+\s*\{/.test(t)) { skipDepth = depth; pendingCfgTest = false; }
     else if (t && !t.startsWith('#[') && !t.startsWith('//')) pendingCfgTest = false;
-    const im = skipDepth == null && t.match(/^impl\b(?:\s*<.*?>)?\s+(?:([\w:]+)(?:<.*?>)?\s+for\s+)?([\w:]+)/);
+    // an impl header may span lines: impl<const A: char, const B: char>\n    Pattern<A, B>\n{
+    let ih = t;
+    for (let k = i + 1; /^impl\b/.test(t) && !ih.includes('{') && k < Math.min(lines.length, i + 8); k++) ih += ' ' + lines[k].trim();
+    const im = skipDepth == null && ih.match(/^impl\b(?:\s*<.*?>)?\s+(?:([\w:]+)(?:<.*?>)?\s+for\s+)?([\w:]+)/);
     const fm = skipDepth == null && t.match(/^(pub(?:\((crate|super|in [^)]*)\))?\s+)?(const\s+)?(async\s+)?(unsafe\s+)?(?:extern\s+"[^"]*"\s+)?fn\s+(\w+)/);
     const before = depth;
     for (const ch of strip(line)) { if (ch === '{') depth++; else if (ch === '}') depth--; }
     if (im) impls.push({ type: im[2].split('::').pop(), trait: im[1] ? im[1].split('::').pop() : null, depth: before });
-    while (impls.length && depth <= impls[impls.length - 1].depth) impls.pop();
+    for (const x of impls) if (depth > x.depth) x.open = true; // its `{` may come on a later line
+    while (impls.length && impls[impls.length - 1].open && depth <= impls[impls.length - 1].depth) impls.pop();
     if (skipDepth != null && depth <= skipDepth) { skipDepth = null; continue; }
     if (!fm) continue;
     const [, pub, restricted, , isAsync, isUnsafe, name] = fm;
