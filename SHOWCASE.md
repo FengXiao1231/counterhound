@@ -106,3 +106,16 @@ Debatable:
 
 No bugs reported in: more-itertools, tabulate, furl, python-json-pointer, pathspec, path-to-regexp, parse-duration, filenamify, decamelize, commons-lang, commons-text, commons-csv, dtolnay/semver, unicode-width, shell-words, shlex, rust-lang/glob, wildmatch, blang/semver, go-runewidth, stringy.
 Not run: pluralize (a UMD module the scanner cannot see into), slugify (Java dependencies not resolved), timeago (no `go.mod`).
+
+## proofhound on itself
+
+Run on its own source (`--max-modules 6 --fix`, 22 functions, 5 minutes, $1.55): 7 reported → 7 reproduced → 6 confirmed, 1 the reviewer was unsure about.
+All 7 were real and are fixed, with regression tests in `test/unit.test.js`. Three of the fixes are the patches `--fix` wrote, unchanged.
+
+- `parseDiff` read an added line whose content starts with `++ ` as a new file header (patch from `--fix`)
+- `parseGoJson` blamed a package-level panic on tests that had already failed for another reason (patch from `--fix`)
+- `fmtMs(119500)` printed `1m60s` (patch from `--fix`)
+- `relPath` treated a child folder named `..foo` as outside the root
+- `parseJavaTrace` kept the frames of tab-indented `Suppressed:` exceptions
+- `extractJSON` returned the first object of `Result: [{...}, {...}]` instead of the array
+- `parseLibtest` missed `#[should_panic]` tests entirely (the one the reviewer was unsure about)

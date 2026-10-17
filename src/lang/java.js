@@ -214,7 +214,7 @@ export function parseJavaTrace(text, resolve) {
   let trace = text;
   const cause = text.indexOf('Cause was :-\n');
   if (cause >= 0) trace = text.slice(cause + 'Cause was :-\n'.length);
-  trace = trace.split(/\n(?:Caused by|Suppressed): /)[0];
+  trace = trace.split(/\n\s*(?:Caused by|Suppressed): /)[0]; // Suppressed: is tab-indented
   const head = trace.split(/\n\s*at /)[0];
   const m = head.trim().match(/^([\w$]+(?:\.[\w$]+)*)(?::\s?([\s\S]*))?$/);
   if (m) { out.type = m[1]; out.message = (m[2] || '').trim(); } else out.message = head.trim();

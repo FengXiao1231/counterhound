@@ -144,14 +144,15 @@ export function parseGoJson(stdout, remap) {
   }
   const out = [];
   for (const t of tests.values()) {
-    if (!t.outcome) t.outcome = 'failed'; // the binary died while this test was running
+    const unfinished = !t.outcome;
+    if (unfinished) t.outcome = 'failed'; // the binary died while this test was running
     out.push({
       id: t.name, name: t.name, outcome: t.outcome,
       error: t.outcome === 'failed' ? parseGoFailure(t.lines, remap) : null,
       longrepr: t.outcome === 'failed' ? t.lines.join('').slice(-6000) : null,
     });
     // a panic printed after the test's own lines lands in package output
-    if (t.outcome === 'failed' && !t.lines.join('').includes('panic:') && pkgFailOutput.join('').includes('panic:')) {
+    if (unfinished && !t.lines.join('').includes('panic:') && pkgFailOutput.join('').includes('panic:')) {
       out[out.length - 1].error = parseGoFailure([...t.lines, ...pkgFailOutput], remap);
     }
   }

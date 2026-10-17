@@ -93,9 +93,10 @@ export function hash(s, n = 10) {
 export function fmtMs(ms) {
   if (ms == null || Number.isNaN(ms)) return '–';
   const s = ms / 1000;
-  if (s < 60) return `${s.toFixed(s < 10 ? 1 : 0)}s`;
-  const m = Math.floor(s / 60);
-  return `${m}m${String(Math.round(s % 60)).padStart(2, '0')}s`;
+  const total = Math.round(s);
+  if (total < 60) return `${s.toFixed(s < 10 ? 1 : 0)}s`;
+  const m = Math.floor(total / 60);
+  return `${m}m${String(total % 60).padStart(2, '0')}s`;
 }
 
 export function fmtUsd(v) {
@@ -127,7 +128,9 @@ export function extractJSON(text) {
   for (const cand of candidates) {
     if (!cand) continue;
     try { return JSON.parse(cand.trim()); } catch { /* keep looking */ }
-    for (const open of ['{', '[']) {
+    // whichever bracket comes first, so prose around [{...}, {...}] still yields the whole array
+    const opens = ['{', '['].sort((x, y) => (cand.indexOf(x) + 1 || Infinity) - (cand.indexOf(y) + 1 || Infinity));
+    for (const open of opens) {
       const start = cand.indexOf(open);
       if (start < 0) continue;
       const close = open === '{' ? '}' : ']';
@@ -141,5 +144,6 @@ export function extractJSON(text) {
 
 export function relPath(root, p) {
   const r = path.relative(root, p);
-  return r.startsWith('..') ? p : r.split(path.sep).join('/');
+  const outside = r === '..' || r.startsWith(`..${path.sep}`) || path.isAbsolute(r); // not a child named '..foo'
+  return outside ? p : r.split(path.sep).join('/');
 }

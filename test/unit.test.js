@@ -357,3 +357,31 @@ java.lang.NumberFormatException: For input string: ""
   assert.deepEqual(e.frames.map((f) => `${f.file}:${f.line}`), ['/r/.proofhound/w/PhPropsTest.java:9', '/r/src/main/java/com/x/Codec.java:12']);
   assert.equal(parseJavaTrace('org.opentest4j.AssertionFailedError: expected: <1> but was: <2>\n\tat com.x.T.t(T.java:3)', () => null).type, 'AssertionError');
 });
+
+test('bugs proofhound found in itself stay fixed', async () => {
+  const u = await import('../src/util.js');
+  const { parseDiff } = await import('../src/diff.js');
+  const { parseJavaTrace } = await import('../src/lang/java.js');
+  const { parseLibtest } = await import('../src/lang/rust.js');
+  const { parseGoJson } = await import('../src/lang/go.js');
+  // an added line whose content is "++ x" is not a file header
+  assert.deepEqual([...parseDiff('--- a/a.txt\n+++ b/a.txt\n@@ -4,0 +5 @@\n+++ x\n@@ -9,0 +11 @@\n+y\n')], [['a.txt', [[5, 5], [11, 11]]]]);
+  assert.equal(u.fmtMs(119500), '2m00s');
+  assert.equal(u.fmtMs(59600), '1m00s');
+  assert.equal(u.relPath('/root', '/root/..foo/a.js'), '..foo/a.js');
+  assert.equal(u.relPath('/root', '/other/a.js'), '/other/a.js');
+  assert.deepEqual(u.extractJSON('Result: [{"a":1},{"b":2}]'), [{ a: 1 }, { b: 2 }]);
+  assert.deepEqual(u.extractJSON('x {"a":[1]} y'), { a: [1] });
+  const jt = parseJavaTrace('java.lang.RuntimeException: boom\n\tat p.A.run(A.java:3)\n\tSuppressed: java.io.IOException: x\n\t\tat p.B.close(B.java:9)\n', (cls, f) => f);
+  assert.deepEqual(jt.frames.map((f) => f.file), ['A.java']);
+  const lt = parseLibtest('running 1 test\ntest t_a - should panic ... FAILED\n\nfailures:\n\n---- t_a stdout ----\nnote: test did not panic as expected\n\nfailures:\n    t_a\n\ntest result: FAILED. 0 passed; 1 failed\n', '/w');
+  assert.deepEqual(lt.map((t) => [t.name, t.outcome]), [['t_a', 'failed']]);
+  // a package-level panic belongs to the test that was still running, not to one that already failed
+  const ev = (o) => JSON.stringify({ Package: 'p', ...o });
+  const go = parseGoJson([
+    ev({ Action: 'run', Test: 'TestA' }), ev({ Action: 'output', Test: 'TestA', Output: '    a_test.go:3: got 1, want 2\n' }), ev({ Action: 'fail', Test: 'TestA' }),
+    ev({ Action: 'run', Test: 'TestB' }), ev({ Action: 'output', Output: 'panic: boom\n' }), ev({ Action: 'fail' }),
+  ].join('\n'), new Map()).tests;
+  assert.notEqual(go.find((t) => t.name === 'TestA').error.type, 'panic');
+  assert.equal(go.find((t) => t.name === 'TestB').error.type, 'panic');
+});

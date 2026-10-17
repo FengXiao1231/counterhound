@@ -218,7 +218,7 @@ export function parseLibtest(stdout, workdir) {
   const sections = new Map();
   const parts = stdout.split(/^---- (\S+) stdout ----$/m);
   for (let i = 1; i < parts.length; i += 2) sections.set(parts[i], parts[i + 1].split(/^\nfailures:\n/m)[0]);
-  const lines = [...stdout.matchAll(/^test (\S+) \.\.\. ?(ok|FAILED|ignored.*)?$/gm)];
+  const lines = [...stdout.matchAll(/^test (\S+)(?: - should panic)? \.\.\. ?(ok|FAILED|ignored.*)?$/gm)];
   for (const m of lines) {
     const name = m[1];
     const res = m[2] || 'crashed';
