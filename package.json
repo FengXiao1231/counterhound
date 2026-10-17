@@ -1,0 +1,12 @@
+{
+  "name": "proofhound",
+  "version": "0.1.0",
+  "description": "An AI bug hunter that only reports bugs it can prove: LLM-written property-based tests, deterministic repros, independent review.",
+  "type": "module",
+  "bin": { "proofhound": "bin/proofhound.js" },
+  "files": ["bin", "src", "README.md", "README.zh-CN.md", "LICENSE"],
+  "engines": { "node": ">=20" },
+  "scripts": { "test": "node --test test/*.test.js" },
+  "keywords": ["property-based-testing", "bug-finding", "hypothesis", "fast-check", "ai", "claude-code", "codex", "testing", "fuzzing"],
+  "license": "MIT"
+}
