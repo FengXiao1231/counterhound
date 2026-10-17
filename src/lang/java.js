@@ -341,5 +341,5 @@ export const java = {
 
   testErrorTypes: ['java.lang.NoClassDefFoundError', 'java.lang.NoSuchMethodError', 'java.lang.NoSuchFieldError', 'java.lang.ClassNotFoundException', /^org\.quicktheories\./, /^org\.junit\./],
 
-  isExplicitRaise(frame) { return /^\s*throw\b/.test(frame?.code || ''); },
+  isExplicitRaise(frame) { return /(^|[;{)]\s*)throw\s+(new\s+)?[\w$]/.test(frame?.code || ''); },
 };

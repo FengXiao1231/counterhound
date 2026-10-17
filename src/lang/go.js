@@ -241,5 +241,5 @@ export const go = {
 
   testErrorTypes: ['GoTestTimeout'],
 
-  isExplicitRaise(frame) { return /^\s*(panic\(|log\.(Fatal|Panic))/.test(frame?.code || ''); },
+  isExplicitRaise(frame) { return /(^|[;{]\s*)(panic\(|log\.(Fatal|Panic))/.test(frame?.code || ''); },
 };

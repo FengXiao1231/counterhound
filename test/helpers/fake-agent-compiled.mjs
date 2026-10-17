@@ -31,6 +31,17 @@ const JAVA = {
   'ReproPassesTest.java': J('ReproPassesTest', 'assertEquals("ba", TextKit.reverse("ab"));'),
 };
 
+// JS repros import the fixture's sources by a path relative to the work dir, as the hunter is told to.
+const JS = (toSrc) => ({
+  'repro_unique.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { uniqueBy } from '${toSrc}/arrays.js';\ntest('repro_unique', () => { assert.deepEqual(uniqueBy([{ k: 1, v: 'a' }, { k: 1, v: 'b' }], (x) => x.k), [{ k: 1, v: 'a' }]); });\n`,
+  'repro_truncate.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { truncate } from '${toSrc}/text.js';\ntest('repro_truncate', () => { assert.ok(truncate('abcdef', 3).length <= 3); });\n`,
+  'repro_range.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { rangeInclusive } from '${toSrc}/arrays.js';\ntest('repro_range', () => { assert.deepEqual(rangeInclusive(1, 3, 0), []); });\n`,
+  'repro_testbug.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { page } from '${toSrc}/arrays.js';\ntest('repro_testbug', () => { assert.deepEqual(pagee([1, 2], 1, 1), [1]); });\n`,
+  'repro_build.test.mjs': `import test from 'node:test';\nimport { nope } from '${toSrc}/arrays.js';\ntest('repro_build', () => { nope(); });\n`,
+  'repro_random.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\ntest('repro_random', () => { assert.ok(Math.random() < 0.5); });\n`,
+  'repro_passes.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { camelToSnake } from '${toSrc}/text.js';\ntest('repro_passes', () => { assert.equal(camelToSnake('aB'), 'a_b'); });\n`,
+});
+
 const f = (title, fn, repro, kind = 'wrong-result') => ({
   title, function: fn, kind, property: title, property_test: '', repro_file: repro,
   input: 'see repro', expected: 'see repro', actual: 'see repro', evidence: 'doc comment',
@@ -41,9 +52,19 @@ export default async function fakeAgent({ prompt, cwd }) {
     const dir = path.join(cwd, prompt.match(/Create files only inside `([^`]+)\/`/)[1]);
     const isGo = prompt.includes('Go + rapid');
     const isJava = prompt.includes('Java + JUnit 5');
-    const files = isJava ? JAVA : isGo ? GO : RUST;
+    const isJs = prompt.includes('fast-check');
+    const toSrc = path.relative(dir, path.join(cwd, 'src')).split(path.sep).join('/');
+    const files = isJs ? JS(toSrc) : isJava ? JAVA : isGo ? GO : RUST;
     for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src);
-    const findings = isJava ? [
+    const findings = isJs ? [
+      f('uniqueBy keeps the last duplicate', 'uniqueBy', 'repro_unique.test.mjs'),
+      f('truncate exceeds max', 'truncate', 'repro_truncate.test.mjs'),
+      f('rangeInclusive throws on step 0', 'rangeInclusive', 'repro_range.test.mjs', 'crash'),
+      f('bogus: test bug', 'page', 'repro_testbug.test.mjs', 'crash'),
+      f('bogus: build', 'page', 'repro_build.test.mjs'),
+      f('bogus: random', 'page', 'repro_random.test.mjs'),
+      f('bogus: passes', 'camelToSnake', 'repro_passes.test.mjs'),
+    ] : isJava ? [
       f('Range.contains includes hi', 'com.example.textkit.Range.contains', 'ReproContainsTest.java'),
       f('median throws on empty input', 'com.example.textkit.TextKit.median', 'ReproMedianTest.java', 'crash'),
       f('parsePercent rejects 101', 'com.example.textkit.TextKit.parsePercent', 'ReproPercentTest.java', 'crash'),
@@ -69,13 +90,26 @@ export default async function fakeAgent({ prompt, cwd }) {
     // the Rust fixture has two modules; report each finding in the module it belongs to
     const inStats = prompt.includes('File: src/stats.rs');
     const inRange = prompt.includes('File: src/main/java/com/example/textkit/Range.java');
-    const mine = isJava ? findings.filter((x) => x.function.includes('.Range.') === inRange)
+    const jsFile = (prompt.match(/^File: (src\/\w+\.js)$/m) || [])[1];
+    const mine = isJs ? findings.filter((x) => jsFile === (/truncate|camelToSnake/.test(x.function) ? 'src/text.js' : 'src/arrays.js'))
+      : isJava ? findings.filter((x) => x.function.includes('.Range.') === inRange)
       : isGo ? findings : findings.filter((x) => x.function.includes('::stats::') === inStats);
     fs.writeFileSync(path.join(dir, 'findings.json'), JSON.stringify(mine));
     return `reported ${findings.length} bugs`;
   }
+  if (prompt.includes('You are fixing a confirmed bug')) {
+    // cwd is the sandbox copy of the JS fixture: fix truncate, and (to be rejected) also edit an existing test
+    const file = path.join(cwd, 'src', 'text.js');
+    fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace("return s.slice(0, max) + '…';", "return s.slice(0, Math.max(0, max - 1)) + '…';"));
+    if (prompt.includes('uniqueBy')) {
+      const a = path.join(cwd, 'src', 'arrays.js');
+      fs.writeFileSync(a, fs.readFileSync(a, 'utf8').replace('seen.set(keyFn(item), item)', 'if (!seen.has(keyFn(item))) seen.set(keyFn(item), item)'));
+      fs.writeFileSync(path.join(cwd, 'test', 'arrays.test.mjs'), '// weakened\n');
+    }
+    return 'fixed';
+  }
   if (prompt.includes('skeptical, experienced maintainer')) {
-    if (/MustPositive|parse_percent|parsePercent|chunk panics on zero/.test(prompt)) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented.","maintainer_would_fix":false}';
+    if (/MustPositive|parse_percent|parsePercent|chunk panics on zero|rangeInclusive/.test(prompt)) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented.","maintainer_would_fix":false}';
     return '{"verdict":"bug","confidence":0.9,"severity":"medium","category":"wrong-result","title":"confirmed","reason":"Contradicts the doc comment.","maintainer_would_fix":true}';
   }
   throw new Error('unexpected prompt');

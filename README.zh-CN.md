@@ -193,8 +193,11 @@ proofhound doctor                检查工具链
 
 ## 安全
 
-猎手 Agent 在严格白名单下运行：可以读文件，只能在 `.proofhound/runs/<id>/` 里写，只能运行 `./.proofhound/ph-test`，没有联网工具。
-但它写的测试会执行你的代码，就像你自己的测试集一样。对不信任的代码，请在容器里运行 proofhound。加 `--fix` 时，修复 Agent 只能在它自己的临时项目副本里写文件，补丁只展示给你，不会自动应用。
+用 Claude Code 时，猎手 Agent 在严格白名单下运行：可以读文件，只能在 `.proofhound/runs/<id>/` 里写，只能运行 `./.proofhound/ph-test`，没有联网工具。
+用 Codex 时，复核 Agent 在它的只读沙箱里运行，但猎手 Agent 运行在 Codex 的 `workspace-write` 沙箱里，这个沙箱没有按工具划分的白名单：它可以写项目里的任何文件、运行任何命令（proofhound 会在这种情况下打印一条提示）。
+无论哪种，Agent 写的测试都会执行你的代码，就像你自己的测试集一样。对不信任的代码，请在容器里运行 proofhound。加 `--fix` 时，修复 Agent 只能在它自己的临时项目副本里写文件；改动或删除了项目现有测试的补丁会被拒绝，补丁只展示给你，不会自动应用。
+
+proofhound 生成的所有东西都在 `.proofhound/` 里，里面自带一个 `.gitignore`，把运行记录、Go / Rust / Java 的构建缓存和报告全部忽略，只保留你自己的 `config.json`。
 
 ## 花费
 

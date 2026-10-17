@@ -323,5 +323,5 @@ export const javascript = {
 
   testErrorTypes: ['SyntaxError', 'ReferenceError', 'ERR_MODULE_NOT_FOUND', /^ERR_TEST/],
 
-  isExplicitRaise(frame) { return /^\s*throw\b/.test(frame?.code || ''); },
+  isExplicitRaise(frame) { return /(^|[;{)]\s*)throw\s+(new\s+)?[\w$]/.test(frame?.code || ''); },
 };

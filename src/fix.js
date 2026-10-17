@@ -103,7 +103,15 @@ async function runSuite(lang, root, cfg) {
  * patch, files, suite }. Each attempt runs in a copy of the project outside it (so build tools that
  * search parent directories never see the original), and the agent works inside that copy.
  */
-export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, opts, account, overBudget }) {
+/** Does a repo-relative path look like one of the project's own test files? */
+export function isTestFile(rel) {
+  return /(^|\/)(tests?|__tests__|spec|specs|testing|src\/test)\//.test(rel)
+    || /(^|\/)(test_[^/]*\.py|conftest\.py|[^/]*_test\.(py|go|rs))$/.test(rel)
+    || /\.(test|spec)\.[cm]?[jt]sx?$/.test(rel)
+    || /(^|\/)[^/]*Tests?\.(java|kt)$/.test(rel);
+}
+
+export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, opts, account, overBudget, remaining }) {
   if (!bugs.length) return;
   log(c.dim(`\n  writing fixes for ${bugs.length} bug${bugs.length > 1 ? 's' : ''}…`));
   const shared = { ...cfg, cargoTargetDir: cfg.cargoTargetDir || path.join(repo, '.proofhound', 'rust', 'target'), suiteTargetDir: path.join(repo, '.proofhound', 'rust', 'suite-target') };
@@ -161,7 +169,7 @@ export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, o
     const prompt = fixerPrompt({ bug, lang, reproRel, testCmd, notes: cfg.notes });
     writeFile(path.join(dir, 'prompt.md'), prompt);
     log(c.dim(`  ▸ fixing ${bug.bugId} ${bug.review?.title || bug.title}`));
-    const r = await agent.call({ prompt, cwd: sandbox, writeDirs: ['.'], runCommands: [testCmd], model: opts.model, timeoutMs: (cfg.agentTimeoutSec || 1200) * 1000 });
+    const r = await agent.call({ prompt, cwd: sandbox, writeDirs: ['.'], runCommands: [testCmd], model: opts.model, timeoutMs: (cfg.agentTimeoutSec || 1200) * 1000, budgetUsd: remaining?.() });
     account(r);
     writeFile(path.join(dir, 'agent.txt'), `${r.text || ''}\n${r.error ? `ERROR: ${r.error}\n` : ''}${r.denials?.length ? `Permission denials:\n${r.denials.join('\n')}\n` : ''}`);
 
@@ -170,6 +178,9 @@ export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, o
     if (!files.length) return reject(r.ok ? 'the agent did not change any file' : `agent failed: ${(r.error || '').split('\n')[0]}`);
     const patch = makePatch(pristine, sandbox, files);
     writeFile(path.join(dir, 'fix.patch'), patch);
+    // a fix may add a regression test, but must not change or delete the tests the project already has
+    const touchedTests = files.filter((f) => isTestFile(f) && fs.existsSync(path.join(pristine, f)));
+    if (touchedTests.length) return reject(`the patch changes the project's own tests (${touchedTests.join(', ')})`, { patch });
 
     // 1. a fresh copy of the repro (in case the agent edited it) must pass on the patched code
     const fresh = placeRepro();

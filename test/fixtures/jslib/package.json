@@ -1,1 +1,1 @@
-{ "name": "jslib-fixture", "version": "1.0.0", "type": "module", "private": true }
+{ "name": "jslib-fixture", "version": "1.0.0", "type": "module", "private": true, "scripts": { "test": "node --test test/*.test.mjs" } }

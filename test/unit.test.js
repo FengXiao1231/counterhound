@@ -11,8 +11,10 @@ import { extractJSON, slug } from '../src/util.js';
 import { classify, signature } from '../src/verify.js';
 import { python } from '../src/lang/python.js';
 import { javascript, scanFile } from '../src/lang/javascript.js';
+import { go } from '../src/lang/go.js';
 import { planGroups, scoreTarget } from '../src/targets.js';
 import { relocateImports } from '../src/report/bugs.js';
+import { isTestFile } from '../src/fix.js';
 import { parseArgs } from '../src/cli.js';
 
 test('extractJSON finds JSON inside prose and fences', () => {
@@ -384,4 +386,19 @@ test('bugs proofhound found in itself stay fixed', async () => {
   ].join('\n'), new Map()).tests;
   assert.notEqual(go.find((t) => t.name === 'TestA').error.type, 'panic');
   assert.equal(go.find((t) => t.name === 'TestB').error.type, 'panic');
+});
+
+test('--fix: files that are the project\'s own tests are recognised in every language', () => {
+  for (const f of ['tests/test_x.py', 'pkg/x_test.go', 'tests/it.rs', 'src/test/java/A/BTest.java', 'test/a.test.mjs', 'lib/__tests__/a.spec.ts', 'conftest.py', 'spec/a.js'])
+    assert.ok(isTestFile(f), f);
+  for (const f of ['src/x.py', 'pkg/x.go', 'src/lib.rs', 'src/main/java/A/B.java', 'lib/a.js', 'testing_utils.py', 'contest.go'])
+    assert.ok(!isTestFile(f), f);
+});
+
+test('an explicit throw/panic on the same line as its if is still flagged', () => {
+  assert.ok(javascript.isExplicitRaise({ code: "if (!ok) throw new RangeError('x');" }));
+  assert.ok(javascript.isExplicitRaise({ code: 'throw err;' }));
+  assert.ok(!javascript.isExplicitRaise({ code: "const s = 'do not throw here';" }));
+  assert.ok(go.isExplicitRaise({ code: 'if n < 0 { panic("negative") }' }));
+  assert.ok(!go.isExplicitRaise({ code: 'defer func() { recover() }()' }));
 });

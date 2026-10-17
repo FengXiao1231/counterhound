@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { run, sh, extractJSON } from './util.js';
+import { run, sh, extractJSON, log, c } from './util.js';
 
 /**
  * Agent backends drive an existing coding-agent CLI in headless mode, so proofhound
@@ -44,8 +44,12 @@ const claude = {
 const codex = {
   id: 'codex',
   available() { return sh('codex', ['--version']).code === 0; },
+  // Codex's sandbox is per directory tree, not per tool: in workspace-write mode the whole project
+  // is writable and any command can run, so the allowlist proofhound gives Claude Code (write only
+  // in .proofhound/runs/, run only ph-test) is not enforced here. The reviewer does run read-only.
   async call({ prompt, cwd, model, timeoutMs = 900000, readOnly, env }) {
     const args = ['exec', '--json', '--skip-git-repo-check', '--sandbox', readOnly ? 'read-only' : 'workspace-write', '-C', cwd];
+    if (!readOnly && !codex.warned) { codex.warned = true; log(c.yellow('  note: with codex the hunter can write anywhere in the project and run any command (codex has no per-tool allowlist); its edits outside .proofhound/ are not checked')); }
     if (model) args.push('-m', model);
     args.push(prompt);
     const r = await run('codex', args, { cwd, timeoutMs, env: { ...process.env, ...(env || {}) } });

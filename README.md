@@ -217,11 +217,18 @@ Optional `.proofhound/config.json`:
 
 ## Safety
 
-The hunter agent runs with a strict allowlist: read files, write only inside
+With Claude Code, the hunter agent runs with a strict allowlist: read files, write only inside
 `.proofhound/runs/<id>/`, and run only `./.proofhound/ph-test`. It has no network tools.
-The tests it writes do execute your code, though, just like your own test suite does. On
-code you do not trust, run proofhound inside a container. With `--fix`, the fixing agent can
-write only inside its own temporary copy of the project, and the patch is shown to you, never applied.
+With Codex, the reviewer runs in its read-only sandbox, but the hunter runs in Codex's
+`workspace-write` sandbox, which has no per-tool allowlist: it can write anywhere in the project
+and run any command (proofhound prints a note when that is the case). Either way, the tests the
+agent writes do execute your code, just like your own test suite does. On code you do not trust,
+run proofhound inside a container. With `--fix`, the fixing agent can write only inside its own
+temporary copy of the project; a patch that changes or deletes the project's existing tests is
+rejected, and the patch is shown to you, never applied.
+
+Everything proofhound generates lives in `.proofhound/`, which carries a `.gitignore` that hides
+all of it (runs, build caches for Go, Rust and Java, reports) except your own `config.json`.
 
 ## Cost
 

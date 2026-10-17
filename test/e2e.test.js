@@ -120,6 +120,47 @@ test('diff mode: only functions changed since the base are hunted', { skip: !has
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('end to end on JavaScript, with --fix: errors are attributed, patches that touch existing tests are rejected', { timeout: 600000 }, () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-e2e-jslib-'));
+  fs.cpSync(path.join(ROOT, 'test', 'fixtures', 'jslib'), dir, { recursive: true, filter: (s) => !s.includes('.proofhound') });
+  const r = spawnSync(process.execPath, [BIN, '--agent', 'fake', '--runs', '2', '--fix', '--json', '-q'], {
+    cwd: dir, encoding: 'utf8', env: { ...process.env, PROOFHOUND_FAKE_AGENT: path.join(ROOT, 'test', 'helpers', 'fake-agent-compiled.mjs') },
+  });
+  assert.equal(r.status, 1, r.stderr);
+  const result = JSON.parse(r.stdout);
+  const by = Object.fromEntries(result.findings.map((f) => [f.title, f]));
+  assert.equal(result.lang, 'javascript');
+  assert.equal(by['uniqueBy keeps the last duplicate'].status, 'confirmed');
+  assert.equal(by['uniqueBy keeps the last duplicate'].verification.kind, 'assertion');
+  assert.equal(by['truncate exceeds max'].status, 'confirmed');
+  const range = by['rangeInclusive throws on step 0'];
+  assert.equal(range.verification.kind, 'crash');
+  assert.equal(range.verification.site.file, 'src/arrays.js');
+  assert.equal(range.verification.explicitRaise, true);
+  assert.equal(range.status, 'rejected');
+  assert.match(by['bogus: test bug'].verification.reason, /test error/);
+  assert.match(by['bogus: build'].verification.reason, /could not be collected|loaded|test error/);
+  assert.match(by['bogus: random'].verification.reason, /not deterministic/);
+  assert.match(by['bogus: passes'].verification.reason, /repro passes/);
+  assert.equal(result.counts.confirmed, 2);
+  // --fix: the truncate patch is kept (the repro, re-imported from the sandbox, passes; npm test still green);
+  // the uniqueBy patch also rewrote an existing test file, so it is rejected
+  const tr = by['truncate exceeds max'].fix, un = by['uniqueBy keeps the last duplicate'].fix;
+  assert.equal(tr.status, 'verified', JSON.stringify(tr));
+  assert.deepEqual(tr.files, ['src/text.js']);
+  assert.match(tr.suite, /^passed/);
+  assert.equal(un.status, 'rejected', JSON.stringify(un));
+  assert.match(un.reason, /project's own tests/);
+  assert.equal(result.counts.fixed, 1);
+  assert.ok(fs.existsSync(path.join(dir, by['truncate exceeds max'].bugDir, 'fix.patch')));
+  assert.ok(!fs.readFileSync(path.join(dir, 'src', 'text.js'), 'utf8').includes('max - 1'), 'project must not change');
+  // everything proofhound generated is ignored by git, so `git add -A` picks up nothing
+  const git = (...a) => spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { cwd: dir, encoding: 'utf8' });
+  git('init', '-q');
+  assert.equal(git('status', '--porcelain', '--untracked-files=all').stdout.split('\n').filter((l) => l.includes('.proofhound')).join('\n'), '');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 const hasJava = spawnSync('javac', ['-version']).status === 0;
 
 test('end to end on Java: exceptions are attributed, documented throws rejected', { skip: !hasJava && 'needs a JDK', timeout: 600000 }, () => {
