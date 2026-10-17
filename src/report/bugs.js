@@ -17,13 +17,14 @@ export function relocateImports(source, fromDir, toDir) {
   });
 }
 
-export const FENCE = { python: 'python', javascript: 'js', go: 'go', rust: 'rust' };
-export const FRAMEWORK = { python: 'Hypothesis', javascript: 'fast-check', go: 'rapid', rust: 'proptest' };
+export const FENCE = { python: 'python', javascript: 'js', go: 'go', rust: 'rust', java: 'java' };
+export const FRAMEWORK = { python: 'Hypothesis', javascript: 'fast-check', go: 'rapid', rust: 'proptest', java: 'QuickTheories' };
 const HOW_TO_RUN = {
   python: (f) => `Save it as \`${f}\` in your tests and run \`pytest ${f}\`.`,
   javascript: (f) => `Run it with \`node --test ${f}\` (fix the import path if you move it).`,
   go: (f) => `Copy it into the package directory as \`${f}\` and run \`go test -run Repro .\`.`,
   rust: (f) => `Copy it into \`tests/${f}\` and run \`cargo test --test ${f.replace(/\.rs$/, '')}\`.`,
+  java: (f) => `Copy it into \`src/test/java/\` under its package directory (it uses JUnit 5) and run \`mvn test -Dtest=${f.replace(/\.java$/, '')}\` or \`gradle test --tests '*${f.replace(/\.java$/, '')}'\`.`,
 };
 
 function fence(lang) { return FENCE[lang] || ''; }

@@ -10,6 +10,7 @@ const NONDETERMINISM = [
   /crypto\.(randomUUID|getRandomValues|randomBytes)/, /from ['"]fast-check['"]/,
   /"math\/rand(\/v2)?"/, /"pgregory\.net\/rapid"/, /\btime\.Now\(/, /"crypto\/rand"/,
   /\buse proptest\b|\bproptest!/, /\brand::/, /\b(SystemTime|Instant)::now\(/,
+  /\borg\.quicktheories\b/, /\bnew Random\(|ThreadLocalRandom|UUID\.randomUUID\(/, /System\.(currentTimeMillis|nanoTime)\(/, /\b(LocalDate|LocalDateTime|LocalTime|Instant|ZonedDateTime|OffsetDateTime)\.now\(/,
 ];
 
 function matchesAny(value, list) {

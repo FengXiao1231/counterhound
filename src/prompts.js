@@ -42,6 +42,24 @@ const LANG_GUIDE = {
 - Check results with assert!/assert_eq!/prop_assert!/prop_assert_eq!. To check a Result the contract says is Ok, use \`.unwrap()\` or assert on it; do not use \`.expect()\`.
 - Debug builds check integer overflow, so "attempt to add with overflow" inside the project is a panic on that input. Report it only if the input is valid under the contract.
 - Repro files: plain \`#[test] fn repro_<name>() { assert_eq!(f(input), expected); }\`, no proptest, no randomness.`,
+  java: ({ imports }) => `Language notes (Java + JUnit 5 + QuickTheories):
+- Each test file is one class whose name matches the file name, in the package of the code under test: ${imports.join('; ')}. Being in the same package, it can use package-private members. The project's main classes and its dependencies are on the classpath.
+- Property tests are JUnit 5 tests that run QuickTheories:
+    import org.junit.jupiter.api.Test;
+    import static org.junit.jupiter.api.Assertions.*;
+    import static org.quicktheories.QuickTheory.qt;
+    import static org.quicktheories.generators.SourceDSL.*;
+
+    class PhPropsTest {
+        @Test
+        void roundTrip() {
+            qt().forAll(strings().basicLatinAlphabet().ofLengthBetween(0, 20))
+                .checkAssert(s -> assertEquals(s, Codec.decode(Codec.encode(s))));
+        }
+    }
+  Generators: integers().all() / .between(a, b), longs(), doubles().between(a, b), strings().allPossible() / .basicLatinAlphabet() / .numeric() with .ofLengthBetween(a, b), lists().of(gen).ofSizeBetween(a, b), arbitrary().pick(a, b, c), booleans().all(), and gen.map(...) to build objects; forAll takes up to 4 generators. Use .assuming((a, b) -> cond) before checkAssert for preconditions. Prefer checkAssert with JUnit assertions over check(predicate): failures then say what differed.
+- An exception from the project is reported with its source line; a documented exception (@throws) on invalid input is correct behaviour.
+- Repro files: \`class Repro<Name>Test\` with a plain JUnit 5 \`@Test\` method calling the code with the concrete input and \`assertEquals(expected, actual)\`. No QuickTheories, Random or clocks.`,
 };
 
 const FINDING_SCHEMA = `{

@@ -20,6 +20,17 @@ const RUST = {
   'repro_build.rs': '#[test]\nfn repro_build() {\n    textkit::nope();\n}\n',
 };
 
+const J = (cls, body, imports = '') => `package com.example.textkit;\n\n${imports}import org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.*;\n\nclass ${cls} {\n    @Test\n    void repro() {\n        ${body}\n    }\n}\n`;
+const JAVA = {
+  'ReproContainsTest.java': J('ReproContainsTest', 'assertFalse(new Range(0, 3).contains(3));'),
+  'ReproMedianTest.java': J('ReproMedianTest', 'assertEquals(0.0, TextKit.median(new double[0]));'),
+  'ReproPercentTest.java': J('ReproPercentTest', 'assertEquals(101, TextKit.parsePercent("101"));'),
+  'ReproTestBugTest.java': J('ReproTestBugTest', 'int[] a = new int[1]; a[2] = TextKit.midpoint(1, 2);'),
+  'ReproBuildTest.java': J('ReproBuildTest', 'TextKit.nope();'),
+  'ReproRandomTest.java': J('ReproRandomTest', 'assertTrue(new Random().nextBoolean());', 'import java.util.Random;\n'),
+  'ReproPassesTest.java': J('ReproPassesTest', 'assertEquals("ba", TextKit.reverse("ab"));'),
+};
+
 const f = (title, fn, repro, kind = 'wrong-result') => ({
   title, function: fn, kind, property: title, property_test: '', repro_file: repro,
   input: 'see repro', expected: 'see repro', actual: 'see repro', evidence: 'doc comment',
@@ -29,9 +40,18 @@ export default async function fakeAgent({ prompt, cwd }) {
   if (prompt.includes("proofhound's bug hunter")) {
     const dir = path.join(cwd, prompt.match(/Create files only inside `([^`]+)\/`/)[1]);
     const isGo = prompt.includes('Go + rapid');
-    const files = isGo ? GO : RUST;
+    const isJava = prompt.includes('Java + JUnit 5');
+    const files = isJava ? JAVA : isGo ? GO : RUST;
     for (const [name, src] of Object.entries(files)) fs.writeFileSync(path.join(dir, name), src);
-    const findings = isGo ? [
+    const findings = isJava ? [
+      f('Range.contains includes hi', 'com.example.textkit.Range.contains', 'ReproContainsTest.java'),
+      f('median throws on empty input', 'com.example.textkit.TextKit.median', 'ReproMedianTest.java', 'crash'),
+      f('parsePercent rejects 101', 'com.example.textkit.TextKit.parsePercent', 'ReproPercentTest.java', 'crash'),
+      f('bogus: test bug', 'com.example.textkit.TextKit.midpoint', 'ReproTestBugTest.java', 'crash'),
+      f('bogus: build', 'com.example.textkit.TextKit.chunk', 'ReproBuildTest.java'),
+      f('bogus: random', 'com.example.textkit.TextKit.chunk', 'ReproRandomTest.java'),
+      f('bogus: passes', 'com.example.textkit.TextKit.reverse', 'ReproPassesTest.java'),
+    ] : isGo ? [
       f('Range.Contains includes Hi', 'Range.Contains', 'repro_contains_test.go'),
       f('Median panics on empty input', 'Median', 'repro_median_test.go', 'crash'),
       f('MustPositive panics', 'MustPositive', 'repro_must_test.go', 'crash'),
@@ -48,12 +68,14 @@ export default async function fakeAgent({ prompt, cwd }) {
     ];
     // the Rust fixture has two modules; report each finding in the module it belongs to
     const inStats = prompt.includes('File: src/stats.rs');
-    const mine = isGo ? findings : findings.filter((x) => x.function.includes('::stats::') === inStats);
+    const inRange = prompt.includes('File: src/main/java/com/example/textkit/Range.java');
+    const mine = isJava ? findings.filter((x) => x.function.includes('.Range.') === inRange)
+      : isGo ? findings : findings.filter((x) => x.function.includes('::stats::') === inStats);
     fs.writeFileSync(path.join(dir, 'findings.json'), JSON.stringify(mine));
     return `reported ${findings.length} bugs`;
   }
   if (prompt.includes('skeptical, experienced maintainer')) {
-    if (/MustPositive|parse_percent|chunk panics on zero/.test(prompt)) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented.","maintainer_would_fix":false}';
+    if (/MustPositive|parse_percent|parsePercent|chunk panics on zero/.test(prompt)) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented.","maintainer_would_fix":false}';
     return '{"verdict":"bug","confidence":0.9,"severity":"medium","category":"wrong-result","title":"confirmed","reason":"Contradicts the doc comment.","maintainer_would_fix":true}';
   }
   throw new Error('unexpected prompt');

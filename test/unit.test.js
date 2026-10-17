@@ -320,3 +320,36 @@ test('PR comment: updates the earlier proofhound comment, skips clean runs when 
     ]);
   } finally { server.close(); }
 });
+
+test('java scanner: public methods of public top-level classes, javadoc, instance vs static', async () => {
+  const { java } = await import('../src/lang/java.js');
+  const t = java.listTargets(path.join(ROOT, 'test', 'fixtures', 'javalib'), {});
+  const by = Object.fromEntries(t.map((x) => [x.qualname, x]));
+  assert.deepEqual(Object.keys(by).sort(), ['Range.contains', 'Range.length', 'TextKit.chunk', 'TextKit.decodeRle', 'TextKit.encodeRle', 'TextKit.median', 'TextKit.midpoint', 'TextKit.parsePercent', 'TextKit.reverse']);
+  assert.equal(by['TextKit.chunk'].static, true);
+  assert.equal(by['TextKit.chunk'].nArgs, 2);
+  assert.equal(by['Range.contains'].static, false);
+  assert.match(by['TextKit.chunk'].doc, /Concatenating the chunks gives back xs/);
+  assert.equal(by['TextKit.median'].module, 'com.example.textkit.TextKit');
+});
+
+test('java: QuickTheories causes and JDK frames are attributed to the calling project frame', async () => {
+  const { parseJavaTrace } = await import('../src/lang/java.js');
+  const text = `java.lang.AssertionError: Property falsified after 1 example(s) 
+Smallest found falsifying value(s) :-
+[]
+Cause was :-
+java.lang.NumberFormatException: For input string: ""
+\tat java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:67)
+\tat java.base/java.lang.Integer.parseInt(Integer.java:672)
+\tat com.x.Codec.decode(Codec.java:12)
+\tat com.x.PhPropsTest.lambda$rt$0(PhPropsTest.java:9)
+\tat org.quicktheories.impl.Core.run(Core.java:35)`;
+  const files = { 'Codec.java': '/r/src/main/java/com/x/Codec.java', 'PhPropsTest.java': '/r/.proofhound/w/PhPropsTest.java' };
+  const e = parseJavaTrace(text, (cls, file) => (cls.startsWith('com.x.') ? files[file] : null));
+  assert.equal(e.type, 'java.lang.NumberFormatException');
+  assert.equal(e.message, 'For input string: ""');
+  assert.equal(e.example, 'Failing test case: []');
+  assert.deepEqual(e.frames.map((f) => `${f.file}:${f.line}`), ['/r/.proofhound/w/PhPropsTest.java:9', '/r/src/main/java/com/x/Codec.java:12']);
+  assert.equal(parseJavaTrace('org.opentest4j.AssertionFailedError: expected: <1> but was: <2>\n\tat com.x.T.t(T.java:3)', () => null).type, 'AssertionError');
+});

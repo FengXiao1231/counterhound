@@ -119,3 +119,25 @@ test('diff mode: only functions changed since the base are hunted', { skip: !has
   assert.match(fs.readFileSync(summary, 'utf8'), /nothing to check/);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+const hasJava = spawnSync('javac', ['-version']).status === 0;
+
+test('end to end on Java: exceptions are attributed, documented throws rejected', { skip: !hasJava && 'needs a JDK', timeout: 600000 }, () => {
+  const { dir, result, by } = runFixture('javalib');
+  assert.equal(result.lang, 'java');
+  assert.equal(by['Range.contains includes hi'].status, 'confirmed');
+  assert.equal(by['Range.contains includes hi'].verification.kind, 'assertion');
+  const median = by['median throws on empty input'];
+  assert.equal(median.status, 'confirmed');
+  assert.equal(median.verification.kind, 'crash');
+  assert.equal(median.verification.site.file, 'src/main/java/com/example/textkit/TextKit.java');
+  assert.equal(by['parsePercent rejects 101'].verification.explicitRaise, true);
+  assert.equal(by['parsePercent rejects 101'].status, 'rejected');
+  assert.match(by['bogus: test bug'].verification.reason, /test error/);
+  assert.match(by['bogus: build'].verification.reason, /could not be collected|loaded/);
+  assert.match(by['bogus: random'].verification.reason, /not deterministic/);
+  assert.match(by['bogus: passes'].verification.reason, /repro passes/);
+  assert.equal(result.counts.confirmed, 2);
+  assert.ok(!fs.existsSync(path.join(dir, 'target')), 'must not build into target/');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
