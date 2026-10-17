@@ -3,6 +3,13 @@ import path from 'node:path';
 
 const VENDOR = /[/\\](site-packages|dist-packages|node_modules|\.venv|venv|lib[/\\]python\d|\.cache[/\\]proofhound)[/\\]/;
 
+// A repro must be a fixed input. Randomness, clocks or property-test machinery disqualify it.
+const NONDETERMINISM = [
+  /^\s*(import random|from random import)/m, /\bsecrets\./, /\buuid\.uuid[14]\(/, /\btime\.time\(/, /datetime\.(now|utcnow|today)\(/,
+  /^\s*from hypothesis import|^\s*import hypothesis/m, /\bMath\.random\(/, /\bDate\.now\(/, /\bnew Date\(\s*\)/,
+  /crypto\.(randomUUID|getRandomValues|randomBytes)/, /from ['"]fast-check['"]/,
+];
+
 function matchesAny(value, list) {
   return list.some((p) => (p instanceof RegExp ? p.test(value) : value === p || value.endsWith('.' + p)));
 }
@@ -53,6 +60,8 @@ export async function verifyFinding(finding, { repo, cfg, lang, workdir, runs = 
   if (!reproFile) return reject('no repro file given');
   const abs = path.join(workdir, reproFile);
   if (!fs.existsSync(abs)) return reject(`repro file ${reproFile} does not exist`);
+  const nondet = NONDETERMINISM.find((re) => re.test(fs.readFileSync(abs, 'utf8')));
+  if (nondet) return reject(`repro is not deterministic (uses ${nondet.source.replace(/\\[bs]|[\\()|?:]/g, ' ').trim().split(/\s+/)[0]})`);
 
   const results = [];
   for (let i = 0; i < runs; i++) {

@@ -1,0 +1,161 @@
+<div align="center">
+
+# proofhound
+
+**只报告能证明的 Bug 的 AI 找 Bug 工具。**
+
+它会读你的代码，推断每个函数承诺了什么，写成属性测试，再用成千上万个自动生成的输入去打。
+一个失败要先被缩到最小输入、重放成确定性测试、定位到你的代码、再扛住一个专门挑刺的独立复核，
+才会出现在你面前。
+
+`npx proofhound`
+
+[English](README.md) · **简体中文** · 支持 Python 和 JavaScript/TypeScript · MIT
+
+<img src="assets/report.png" width="720" alt="proofhound 在 boltons 上真实运行的报告">
+
+</div>
+
+## 为什么做这个
+
+现在的 AI 代码审查误报太多。它靠猜，你得花一下午去核实每条猜测是不是真的。
+proofhound 反过来：AI 只负责**提出**怀疑，由**实际运行**来裁决。
+
+每一步只会删掉发现，不会增加：
+
+> AI 报告一个失败 → 复现测试在全新进程里 N 次全部失败 → 错误确实出自你的代码而不是测试 → 合并重复 → 挑刺的复核者驳不倒 → **你才会看到**
+
+每个确认的 Bug 都附带一个可以直接提交的失败测试、最小输入、期望结果和实际结果，以及"这确实是承诺过的行为"的证据。
+
+## 快速开始
+
+```bash
+cd your-project
+npx proofhound                    # 在最值得测的 6 个模块里找 Bug
+npx proofhound targets            # 只看会测哪些函数，不调用 AI
+npx proofhound --only parse_url   # 聚焦某个函数、模块或文件
+npx proofhound src/codec --budget 2
+```
+
+需要：
+
+- **一个 AI 编程命令行工具**负责思考：[Claude Code](https://claude.com/claude-code)（`claude`）或 [Codex](https://github.com/openai/codex)（`codex`）。proofhound 以无界面模式驱动它，用的是你已有的订阅或 API Key。
+- **Python 项目：**在项目环境里 `pip install pytest hypothesis`（如果有 `.venv/` 会自动使用）。
+- **JS/TS 项目：**Node 20+。如果项目里没有 fast-check 和 tsx，首次运行会自动装到缓存目录。
+
+运行 `npx proofhound doctor` 检查环境。
+
+## 输出什么
+
+每次运行会生成 `.proofhound/runs/<id>/`：
+
+| 文件 | 内容 |
+|---|---|
+| `report.html` | 上图的报告：漏斗、确认的 Bug，以及所有被过滤掉的发现和原因 |
+| `bugs/PH-001-…/BUG.md` | 可以直接贴成 issue 的说明：输入、期望、实际、复现代码、证据、复核意见 |
+| `bugs/PH-001-…/test_repro_….py` | 独立的失败测试。放进你的测试集，修好 Bug，看它变绿 |
+| `results.json` | 全部数据，方便程序读取 |
+
+确认到 Bug 时退出码为 `1`，可以直接用来卡 CI。
+
+## 工作原理
+
+```mermaid
+flowchart LR
+  A[给函数排序<br/>静态扫描，不用 AI] --> B[猎手 Agent<br/>推断性质、写属性测试、运行]
+  B --> C[重放<br/>复现测试在全新进程里<br/>N 次全部失败]
+  C --> D[归因<br/>错误是否出自项目代码]
+  D --> E[去重<br/>同一出错位置<br/>或同一性质]
+  E --> F[挑刺 Agent<br/>努力驳倒它]
+  F --> G[确认的 Bug<br/>+ 失败测试]
+```
+
+1. **排序。**静态扫描（Python 用 `ast`，JS/TS 用扫描器）列出公开函数，按"好不好验证"打分：有文档、有类型、无副作用、名字像变换（`parse`、`encode`、`merge`、`normalize`……），如果存在逆函数还会加分（有 `encode`/`decode` 就天然有往返性质）。会碰网络、文件、时钟、随机数的函数排在后面。
+2. **猎捕。**每个模块交给一个编程 Agent：读源码、文档字符串、README 和调用处，用 [Hypothesis](https://hypothesis.works) 或 [fast-check](https://fast-check.dev) 写属性测试，比如往返、不变量、幂等、和参考实现对照、蜕变关系。它会运行测试，分清是自己写错了还是真失败，并为它相信的每个 Bug 写一个确定性的复现测试。Agent 只能在 `.proofhound/runs/` 里写文件，只能通过 proofhound 自己的测试运行器跑测试。
+3. **重放。**由 proofhound（不是 Agent）把每个复现测试在全新进程里重跑 N 次（默认 3 次）。只要有一次通过、失败原因前后不一致、用了随机数或时钟、或者根本加载不了，就丢弃。
+4. **归因。**检查调用栈。测试自身抛出的错误（`NameError`、参数传错、测试自己算错导致的 `KeyError`）、Hypothesis/fast-check 的错误、第三方库内部的错误，都算测试的问题，不算你的 Bug。崩溃会定位到你代码里最深的那一帧；如果是显式的 `raise`/`throw` 会单独标出来，让复核者判断是不是文档里写明的行为。
+5. **去重。**出错位置相同、或同一函数上同一性质的发现会被合并。
+6. **复核。**另起一次全新上下文的 Agent 调用，拿到发现和已验证的失败，并被告知"大多数自动报告都是错的"。它要检查：输入是否符合函数约定、期望行为是否真的被承诺、这个行为是不是故意的、测试本身对不对。只有判为 `bug` 且置信度不低于 `--min-confidence`（默认 0.6）的才算确认；拿不准的单独列出。
+
+## 目前的成绩
+
+**埋了 Bug 的示例库**（`test/fixtures/`，Claude Sonnet）：
+
+| 示例 | 埋的 Bug | 找到 | 误报 | 用时 | 花费 |
+|---|---|---|---|---|---|
+| Python（`pylib`，8 个函数） | 5 | 5 | 0（文档写明会抛 `ValueError` 的诱饵没被误报） | 1分16秒 | $0.84 |
+| JavaScript（`jslib`，7 个函数） | 3 | 2，外加 1 个我们没埋但确实存在的 | 0（文档写明会抛 `RangeError` 的诱饵没被误报） | 42秒 | $0.40 |
+
+**真实开源库**（还没经过维护者确认，也还没向上游报告）：
+
+| 项目 | 模块数 | 确认 | 例子 | 用时 | 花费 |
+|---|---|---|---|---|---|
+| [boltons](https://github.com/mahmoud/boltons)（Python） | 6 | 4 | `TracebackInfo.from_dict` 文档说它是 `to_dict` 的逆操作，但从不重建 `Callpoint` 对象（源码里写着 `# TODO: check this.`）；`Stats([]).format_histogram()` 会除以零 | 2分14秒 | $1.10 |
+| [ms](https://github.com/vercel/ms)（TypeScript） | 1 | 1 | `format(-1500, { long: true })` 返回 `"-1 seconds"`，而 `format(1500, { long: true })` 返回 `"2 seconds"` | 51秒 | $0.19 |
+| [bytes](https://github.com/visionmedia/bytes.js)（JavaScript） | 1 | 0 | 两个涉及 `-0` 和浮点输入的失败被判定为约定未覆盖，没有上报 | 25秒 | $0.09 |
+
+## 参数
+
+```
+proofhound [paths...]            找 Bug（默认当前目录）
+proofhound targets [paths...]    显示会测试哪些函数，不调用 AI
+proofhound report                重新生成最近一次运行的 HTML 报告
+proofhound doctor                检查工具链
+
+--lang <python|js>        语言（自动识别）
+--agent <claude|codex>    用哪个 AI 命令行工具（自动识别）
+--model <name>            猎手用的模型，如 sonnet、opus
+--review-model <name>     复核用的模型（默认同 --model）
+--only <names>            逗号分隔的函数、模块或文件
+--max-modules <n>         最多猎捕几个模块（默认 6）
+--per-module <n>          每个模块最多几个函数（默认 6）
+-j, --jobs <n>            并行模块数（默认 2）
+--runs <n>                复现测试需要连续失败几次（默认 3）
+--budget <usd>            花到这个数就不再开始新任务
+--min-confidence <0-1>    复核置信度门槛（默认 0.6）
+--no-review               跳过独立复核
+--notes <text>            给猎手的额外背景（约定、已知特性）
+--json                    在标准输出打印 JSON 结果
+```
+
+可选的 `.proofhound/config.json`：
+
+```json
+{
+  "python": ".venv/bin/python",
+  "notes": "时间戳一律是 UTC。parse_* 函数遇到坏输入会抛 ParseError，这是故意的。",
+  "env": { "MYAPP_SETTINGS": "test" },
+  "maxExamples": 300,
+  "testTimeoutSec": 120,
+  "agentTimeoutSec": 1200
+}
+```
+
+`notes` 是最有效的调节手段：告诉猎手你的约定是什么，误报会进一步减少。
+
+## 安全
+
+猎手 Agent 在严格白名单下运行：可以读文件，只能在 `.proofhound/runs/<id>/` 里写，只能运行 `./.proofhound/ph-test`，没有联网工具。
+但它写的测试会执行你的代码，就像你自己的测试集一样。对不信任的代码，请在容器里运行 proofhound。
+
+## 花费
+
+用 Claude Sonnet 每个模块大约 $0.15–0.35（含复核）。可以用 `--budget` 封顶，用 `--only` 缩小范围，或给 `--review-model` 换个便宜的模型。
+
+## 路线图
+
+- Go（`testing/quick`、rapid）和 Rust（proptest）
+- `--fix`：给出补丁，只有复现测试通过且原有测试全绿才接受
+- CI 的 diff 模式：只测 PR 改动到的函数
+- GitHub Action
+
+## 致谢
+
+"Agent 可以挖掘性质、用属性测试找到真实 Bug"这个想法来自 Anthropic 的研究
+[*Finding bugs with agentic property-based testing*](https://www.anthropic.com/research/property-based-testing)
+及其 Python 原型 [agentic-pbt](https://github.com/mmaaz-git/agentic-pbt)。
+proofhound 把它做成了多语言工具，并加上了基于执行的验证、归因、去重和对抗式复核。
+
+## 许可证
+
+MIT

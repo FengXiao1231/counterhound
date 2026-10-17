@@ -64,6 +64,8 @@ export function scanFile(root, file) {
   const cjsExports = new Set();
   const mExp = src.match(/module\.exports\s*=\s*\{([^}]*)\}/);
   if (mExp) for (const n of mExp[1].split(',')) { const k = n.split(':')[0].trim(); if (k) cjsExports.add(k); }
+  for (const m of src.matchAll(/(?:module\.)?exports\.([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*)\s*;?\s*$/gm)) { cjsExports.add(m[1]); cjsExports.add(m[2]); }
+  for (const m of src.matchAll(/module\.exports\s*=\s*([A-Za-z_$][\w$]*)\s*;?\s*$/gm)) cjsExports.add(m[1]);
   const exportList = new Set();
   for (const m of src.matchAll(/export\s*\{([^}]*)\}/g)) for (const n of m[1].split(',')) { const k = n.trim().split(/\s+as\s+/)[0]; if (k) exportList.add(k); }
   const out = [];
@@ -84,6 +86,8 @@ export function scanFile(root, file) {
       exported = cjsExports.has(name) || exportList.has(name);
     }
     if (!name || !exported || name.startsWith('_')) return;
+    if (/\)\s*(:[^{]*)?;\s*$/.test(line)) return; // TypeScript overload signature, no body
+    if (out.some((f) => f.name === name)) return;
     const end = bodyExtent(lines, i);
     const body = lines.slice(i, end + 1).join('\n');
     const impure = [...new Set([...body.matchAll(IMPURE)].map((x) => x[1].replace(/[.(].*$/, '')))];
@@ -200,6 +204,7 @@ export const javascript = {
     if (name) args.push(`--test-name-pattern=^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
     args.push(...selectors);
     const env = { ...process.env, ...(cfg.env || {}), PROOFHOUND_REPORT: reportFile, FORCE_COLOR: '0', NO_COLOR: '1' };
+    delete env.NODE_TEST_CONTEXT; // otherwise a parent node:test run swallows the results
     if (seed != null) env.PROOFHOUND_SEED = String(seed);
     const r = await run(process.execPath, args, { cwd, env, timeoutMs });
     const data = readJSON(reportFile, null);

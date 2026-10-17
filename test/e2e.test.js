@@ -26,7 +26,7 @@ test('end to end: only bugs that replay and survive review are reported', { skip
   assert.ok(by['chunk() drops the final partial chunk (dup)'].duplicateOf);
   assert.match(by['bogus: passes'].verification.reason ?? JSON.stringify(by['bogus: passes']), /repro passes/);
   assert.match(by['bogus: typo in test'].verification.reason, /test error/);
-  assert.match(by['bogus: flaky'].verification.reason, /flaky|repro passes/);
+  assert.match(by['bogus: flaky'].verification.reason, /not deterministic/);
   assert.match(by['bogus: missing file'].verification.reason, /does not exist/);
   const div = by['safe_div raises on zero'];
   assert.equal(div.verification.kind, 'crash');
