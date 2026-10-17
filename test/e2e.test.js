@@ -92,3 +92,30 @@ test('end to end on Rust: panics are attributed, documented errors rejected', { 
   assert.equal(result.counts.confirmed, 2);
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('diff mode: only functions changed since the base are hunted', { skip: !hasHypothesis && 'needs python3 with pytest + hypothesis' }, () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-e2e-diff-'));
+  fs.cpSync(path.join(ROOT, 'test', 'fixtures', 'pylib'), dir, { recursive: true });
+  const git = (...a) => spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', ...a], { cwd: dir, encoding: 'utf8' });
+  git('init', '-q', '-b', 'main'); git('add', '.'); git('commit', '-qm', 'base'); git('checkout', '-qb', 'pr');
+  const file = path.join(dir, 'textkit', 'lists.py');
+  fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('raise ValueError("size must be positive")', 'raise ValueError("chunk size must be positive")'));
+  const summary = path.join(dir, 'summary.md');
+  const r = spawnSync(process.execPath, [BIN, '--agent', 'fake', '--runs', '1', '--diff', 'main', '--summary-file', summary, '--json', '-q'], {
+    cwd: dir, encoding: 'utf8', env: { ...process.env, PROOFHOUND_FAKE_AGENT: path.join(ROOT, 'test', 'helpers', 'fake-agent.mjs') },
+  });
+  const result = JSON.parse(r.stdout);
+  assert.equal(result.diff.base, 'main');
+  assert.deepEqual(result.groups.map((g) => g.file), ['textkit/lists.py']);
+  assert.deepEqual(result.groups[0].functions, ['chunk']);
+  assert.match(fs.readFileSync(summary, 'utf8'), /found 1 provable bug/);
+
+  // nothing testable changed: a clean, successful run
+  git('add', '.'); git('commit', '-qm', 'pr');
+  const r2 = spawnSync(process.execPath, [BIN, '--agent', 'fake', '--diff', 'HEAD', '--summary-file', summary, '-q'], {
+    cwd: dir, encoding: 'utf8', env: { ...process.env, PROOFHOUND_FAKE_AGENT: path.join(ROOT, 'test', 'helpers', 'fake-agent.mjs') },
+  });
+  assert.equal(r2.status, 0, r2.stderr);
+  assert.match(fs.readFileSync(summary, 'utf8'), /nothing to check/);
+  fs.rmSync(dir, { recursive: true, force: true });
+});

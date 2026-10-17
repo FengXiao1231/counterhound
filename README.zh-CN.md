@@ -98,6 +98,51 @@ flowchart LR
 | [ms](https://github.com/vercel/ms)（TypeScript） | 1 | 1 | `format(-1500, { long: true })` 返回 `"-1 seconds"`，而 `format(1500, { long: true })` 返回 `"2 seconds"` | 51秒 | $0.19 |
 | [bytes](https://github.com/visionmedia/bytes.js)（JavaScript） | 1 | 0 | 两个涉及 `-0` 和浮点输入的失败被判定为约定未覆盖，没有上报 | 25秒 | $0.09 |
 
+## 在 PR 上自动运行（GitHub Action）
+
+proofhound 可以检查每一个 PR：只在这个 PR 改动过的函数里找 Bug。证明有 Bug 时，它会在 PR 下面留评论，写明输入、期望结果、实际结果，并附上失败测试，同时把这次检查标为失败。添加 `.github/workflows/proofhound.yml`：
+
+```yaml
+name: proofhound
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write   # 用来在 PR 下评论
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # 需要完整历史，才能和 PR 的基准分支做对比
+      # 按平常的方式装好项目的工具链，例如：
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -e . pytest hypothesis
+      - uses: FengXiao1231/proofhound@v0
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          budget: 2
+```
+
+| 参数 | 默认值 | 说明 |
+|---|---|---|
+| `anthropic-api-key` / `claude-code-oauth-token` | | 二选一，必填。OAuth token（用 `claude setup-token` 获取）走 Claude 订阅额度 |
+| `base` | PR 的基准提交 | 和哪个提交对比；填 `none` 则检查整个项目 |
+| `model` | `sonnet` | 猎手和复核用的模型 |
+| `budget` | `2` | 花到这么多美元就不再开始新任务 |
+| `max-modules` | `4` | 最多检查几个文件 |
+| `comment` | `bugs` | `always`、`bugs`（只在找到 Bug 时评论；之前的评论仍会更新）或 `never` |
+| `fail-on-bugs` | `true` | 确认到 Bug 时让检查失败 |
+| `working-directory` | `.` | 项目在仓库里的目录 |
+| `args` | | 额外参数，比如 `--lang go --notes "..."` |
+
+HTML 报告、`results.json` 和复现测试会作为 `proofhound-report` 产物上传，摘要显示在运行页面上。来自 fork 的 PR 在 `pull_request` 事件下拿不到 secrets，这时 Action 会给出明确的报错。不要为了绕过它改用 `pull_request_target`，那样会带着你的 secrets 去运行 fork 里的代码。
+
+同样的 diff 模式在本地也能用：`npx proofhound --diff main`。
+
 ## 参数
 
 ```
@@ -119,6 +164,8 @@ proofhound doctor                检查工具链
 --min-confidence <0-1>    复核置信度门槛（默认 0.6）
 --no-review               跳过独立复核
 --notes <text>            给猎手的额外背景（约定、已知特性）
+--diff [ref]              只检查自 ref 以来改动过的函数（默认：CI 里是 PR 的基准分支，否则是 origin 的默认分支）
+--summary-file <path>     另外输出一份 Markdown 摘要（用于 PR 评论和 CI）
 --json                    在标准输出打印 JSON 结果
 ```
 
@@ -149,8 +196,7 @@ proofhound doctor                检查工具链
 ## 路线图
 
 - `--fix`：给出补丁，只有复现测试通过且原有测试全绿才接受
-- CI 的 diff 模式：只测 PR 改动到的函数
-- GitHub Action
+- Java 和 Kotlin（jqwik）
 
 ## 致谢
 

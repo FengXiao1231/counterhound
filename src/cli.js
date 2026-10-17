@@ -11,6 +11,9 @@ import { hunt, HOME } from './hunt.js';
 import { classify } from './verify.js';
 import { writeBugs } from './report/bugs.js';
 import { writeHtmlReport } from './report/html.js';
+import { summaryMarkdown } from './report/summary.js';
+import { postComment } from './github.js';
+import { defaultBase, changedLines, touchedTargets } from './diff.js';
 import { c, log, readJSON, writeJSON, fmtUsd, setQuiet } from './util.js';
 
 const BIN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'proofhound.js');
@@ -45,6 +48,9 @@ Options
   --min-confidence <0-1>    reviewer confidence needed to confirm (default 0.6)
   --no-review               skip the independent review step
   --notes <text>            extra context for the hunter (contracts, known quirks)
+  --diff [ref]              only hunt in functions changed since ref (default: the
+                            PR base in GitHub Actions, else origin's default branch)
+  --summary-file <path>     also write a Markdown summary (for PR comments / CI)
   --json                    print results as JSON on stdout
   -q, --quiet               less output
   -h, --help / -v, --version
@@ -73,6 +79,13 @@ export function parseArgs(argv) {
       case '--min-confidence': o.minConfidence = +val(); break;
       case '--no-review': o.review = false; break;
       case '--notes': o.notes = val(); break;
+      case '--diff':
+        if (inline !== undefined) o.diff = inline;
+        else if (i + 1 < argv.length && !argv[i + 1].startsWith('-')) o.diff = argv[++i];
+        else o.diff = true;
+        break;
+      case '--summary-file': o.summaryFile = val(); break;
+      case '--report-url': o.reportUrl = val(); break;
       case '--json': o.json = true; break;
       case '-q': case '--quiet': o.quiet = true; break;
       default:
@@ -142,6 +155,20 @@ async function testCommand(files) {
   return failed ? 1 : 0;
 }
 
+/** `proofhound _comment <summary.md> [--only-if-bugs] [--has-bugs]`: post or update the PR comment (GitHub Action). */
+async function commentCommand(args) {
+  const file = args.find((a) => !a.startsWith('--'));
+  if (!file) { log('usage: proofhound _comment <summary.md> [--only-if-bugs] [--has-bugs]'); return 2; }
+  try {
+    const what = await postComment(fs.readFileSync(file, 'utf8'), { onlyIfBugs: args.includes('--only-if-bugs'), hasBugs: args.includes('--has-bugs') });
+    log(`proofhound: pull request comment ${what}`);
+    return 0;
+  } catch (e) {
+    log(c.red(`proofhound: could not comment on the pull request: ${e.message}`));
+    return 1;
+  }
+}
+
 function printSummary(result, written, htmlPath) {
   const k = result.counts;
   const bugs = result.findings.filter((f) => f.status === 'confirmed').sort((a, b) => a.bugId.localeCompare(b.bugId));
@@ -170,6 +197,7 @@ function printSummary(result, written, htmlPath) {
 
 export async function main(argv) {
   if (argv[0] === '_test') return testCommand(argv.slice(1));
+  if (argv[0] === '_comment') return commentCommand(argv.slice(1));
   let opts;
   try { opts = parseArgs(argv); } catch (e) { log(c.red(e.message)); log(HELP); return 2; }
   if (opts.help) { console.log(HELP); return 0; }
@@ -179,6 +207,7 @@ export async function main(argv) {
   const repo = process.cwd();
   opts.paths = opts._;
   try {
+    if (opts.diff === true) opts.diff = defaultBase(repo);
     const lang = detectLang(repo, opts.lang);
     const cfg = loadConfig(repo, opts);
 
@@ -192,7 +221,9 @@ export async function main(argv) {
     }
 
     if (cmd === 'targets') {
-      const groups = planGroups(lang.listTargets(repo, cfg, opts.paths), { maxGroups: opts.maxGroups || 20, perGroup: opts.perGroup || 6, only: opts.only });
+      let targets = lang.listTargets(repo, cfg, opts.paths);
+      if (opts.diff) targets = touchedTargets(targets, changedLines(repo, opts.diff));
+      const groups = planGroups(targets, { maxGroups: opts.maxGroups || 20, perGroup: opts.perGroup || 6, only: opts.only, all: Boolean(opts.diff) });
       if (opts.json) { console.log(JSON.stringify(groups, null, 2)); return 0; }
       for (const g of groups) {
         console.log(`${c.bold(g.file)} ${c.dim(`score ${g.score}`)}`);
@@ -224,6 +255,9 @@ export async function main(argv) {
     const written = writeBugs(repo, runRel, result);
     writeJSON(path.join(repo, runRel, 'results.json'), result);
     const html = writeHtmlReport(repo, runRel, result);
+    const md = summaryMarkdown(result, { reportUrl: opts.reportUrl });
+    fs.writeFileSync(path.join(repo, runRel, 'summary.md'), md);
+    if (opts.summaryFile) fs.writeFileSync(path.resolve(opts.summaryFile), md);
     if (opts.json) console.log(JSON.stringify(result, null, 2));
     printSummary(result, written, html);
     return result.counts.confirmed ? 1 : 0;

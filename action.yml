@@ -1,0 +1,138 @@
+name: proofhound
+description: Find provable bugs in the functions a pull request changes, with AI-written property-based tests.
+author: FengXiao
+branding:
+  icon: check-circle
+  color: red
+
+inputs:
+  anthropic-api-key:
+    description: Anthropic API key used by Claude Code. Pass it from a secret. Either this or claude-code-oauth-token is required.
+    required: false
+  claude-code-oauth-token:
+    description: Claude Code OAuth token (from `claude setup-token`), to use a Claude subscription instead of an API key.
+    required: false
+  base:
+    description: Git ref or SHA to diff against. Defaults to the pull request's base commit. Set to "none" to hunt in the whole project.
+    required: false
+    default: ''
+  model:
+    description: Model for the hunter and the reviewer.
+    required: false
+    default: sonnet
+  budget:
+    description: Stop starting new work after this many US dollars of model usage.
+    required: false
+    default: '2'
+  max-modules:
+    description: Maximum number of modules (files) to hunt in.
+    required: false
+    default: '4'
+  working-directory:
+    description: Directory of the project to test, relative to the repository root.
+    required: false
+    default: '.'
+  comment:
+    description: '"always" posts or updates a PR comment on every run, "bugs" (default) only when bugs are found (an earlier comment is still updated), "never" never comments.'
+    required: false
+    default: bugs
+  fail-on-bugs:
+    description: Fail the check when a bug is confirmed.
+    required: false
+    default: 'true'
+  args:
+    description: Extra command-line arguments for proofhound, e.g. "--lang go --notes 'parse_* may raise ParseError'".
+    required: false
+    default: ''
+  github-token:
+    description: Token for posting the PR comment.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  bugs:
+    description: Number of confirmed bugs.
+    value: ${{ steps.run.outputs.bugs }}
+  report-dir:
+    description: Path of the run directory (report.html, bugs/, results.json).
+    value: ${{ steps.run.outputs.report-dir }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Claude Code
+      shell: bash
+      run: command -v claude >/dev/null || npm install -g @anthropic-ai/claude-code
+
+    - name: Hunt for bugs
+      id: run
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        CLAUDE_CODE_OAUTH_TOKEN: ${{ inputs.claude-code-oauth-token }}
+        PH_BASE: ${{ inputs.base || github.event.pull_request.base.sha }}
+        PH_MODEL: ${{ inputs.model }}
+        PH_BUDGET: ${{ inputs.budget }}
+        PH_MAX_MODULES: ${{ inputs.max-modules }}
+        PH_ARGS: ${{ inputs.args }}
+        PH_REPORT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        PH_WD: ${{ inputs.working-directory }}
+      run: |
+        if [ -z "$ANTHROPIC_API_KEY" ] && [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
+          echo "::error::proofhound needs anthropic-api-key or claude-code-oauth-token (pull requests from forks do not get secrets)"
+          exit 1
+        fi
+        diff=()
+        if [ "$PH_BASE" != "none" ] && [ -n "$PH_BASE" ]; then diff=(--diff "$PH_BASE"); fi
+        set +e
+        eval "extra=($PH_ARGS)"
+        node "$GITHUB_ACTION_PATH/bin/proofhound.js" "${diff[@]}" --model "$PH_MODEL" --budget "$PH_BUDGET" \
+          --max-modules "$PH_MAX_MODULES" --summary-file "$RUNNER_TEMP/proofhound-summary.md" \
+          --report-url "$PH_REPORT_URL" "${extra[@]}"
+        code=$?
+        set -e
+        if [ "$code" -ge 2 ]; then exit "$code"; fi
+        bugs=$(node -e "const fs=require('fs');const l=JSON.parse(fs.readFileSync('.proofhound/latest.json','utf8'));console.log(JSON.parse(fs.readFileSync(l.results,'utf8')).counts.confirmed)")
+        dir=$(node -e "const l=require(process.cwd()+'/.proofhound/latest.json');console.log(require('path').dirname(l.results))")
+        echo "bugs=$bugs" >> "$GITHUB_OUTPUT"
+        echo "report-dir=$PH_WD/$dir" >> "$GITHUB_OUTPUT"
+        cat "$RUNNER_TEMP/proofhound-summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Upload report
+      if: always() && steps.run.outputs.report-dir != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: proofhound-report
+        path: |
+          ${{ steps.run.outputs.report-dir }}/report.html
+          ${{ steps.run.outputs.report-dir }}/results.json
+          ${{ steps.run.outputs.report-dir }}/summary.md
+          ${{ steps.run.outputs.report-dir }}/bugs/
+        if-no-files-found: ignore
+
+    - name: Comment on the pull request
+      if: github.event_name == 'pull_request' && inputs.comment != 'never' && steps.run.outputs.report-dir != ''
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        PH_BUGS: ${{ steps.run.outputs.bugs }}
+        PH_COMMENT: ${{ inputs.comment }}
+      run: |
+        flags=()
+        [ "$PH_COMMENT" = "bugs" ] && flags+=(--only-if-bugs)
+        [ "${PH_BUGS:-0}" -gt 0 ] && flags+=(--has-bugs)
+        node "$GITHUB_ACTION_PATH/bin/proofhound.js" _comment "$RUNNER_TEMP/proofhound-summary.md" "${flags[@]}" || echo "::warning::could not comment on the pull request (does the workflow have pull-requests: write?)"
+
+    - name: Fail on confirmed bugs
+      if: inputs.fail-on-bugs == 'true' && steps.run.outputs.bugs != '' && steps.run.outputs.bugs != '0'
+      shell: bash
+      env:
+        PH_BUGS: ${{ steps.run.outputs.bugs }}
+      run: |
+        echo "::error::proofhound confirmed $PH_BUGS bug(s). See the PR comment or the job summary."
+        exit 1

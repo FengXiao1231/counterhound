@@ -236,3 +236,87 @@ test('rust: assert! with a custom message in the test is an assertion, not a tes
   assert.equal(parseRustFailure(at(5, 'index out of bounds: the len is 0 but the index is 3'), dir).type, 'panic');
   fs.rmSync(dir, { recursive: true, force: true });
 });
+
+test('diff mode: changed line ranges select the functions they touch', async () => {
+  const { parseDiff, touchedTargets, changedLines } = await import('../src/diff.js');
+  const d = parseDiff(`diff --git a/x.py b/x.py
+--- a/x.py
++++ b/x.py
+@@ -3,0 +4,2 @@ def a():
++    y = 1
++    z = 2
+@@ -20 +22 @@ def c():
+-    return 1
++    return 2
+diff --git a/old.py b/old.py
+--- a/old.py
++++ /dev/null
+`);
+  assert.deepEqual([...d.entries()], [['x.py', [[4, 5], [22, 22]]]]);
+  const t = (name, line, loc) => ({ file: 'x.py', name, line, loc });
+  assert.deepEqual(touchedTargets([t('a', 1, 6), t('b', 8, 10), t('c', 20, 5), { ...t('d', 1, 30), file: 'y.py' }], d).map((x) => x.name), ['a', 'c']);
+
+  // against a real repository, in a subdirectory
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-diff-'));
+  const git = (...a) => { const r = spawnSync('git', a, { cwd: dir, encoding: 'utf8' }); assert.equal(r.status, 0, r.stderr); return r.stdout; };
+  git('init', '-q', '-b', 'main');
+  fs.mkdirSync(path.join(dir, 'pkg'));
+  fs.writeFileSync(path.join(dir, 'pkg', 'm.py'), 'def a():\n    return 1\n\n\ndef b():\n    return 2\n');
+  git('add', '.'); git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'one');
+  git('checkout', '-qb', 'feature');
+  fs.writeFileSync(path.join(dir, 'pkg', 'm.py'), 'def a():\n    return 1\n\n\ndef b():\n    return 3\n');
+  const ch = changedLines(path.join(dir, 'pkg'), 'main');
+  assert.deepEqual([...ch.entries()], [['m.py', [[6, 6]]]]);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('PR summary lists confirmed bugs with their repro, and says when nothing changed', async () => {
+  const { summaryMarkdown, MARKER } = await import('../src/report/summary.js');
+  const bug = {
+    status: 'confirmed', bugId: 'PH-001', title: 't', function: 'm.chunk', file: 'm.py', input: 'chunk([1], 2)', expected: '[[1]]', actual: '[]',
+    reproSource: 'def test_repro():\n    assert chunk([1], 2) == [[1]]\n',
+    verification: { kind: 'assertion', reproFile: 'test_repro.py', runs: 3, error: { type: 'AssertionError', message: '' } },
+    review: { verdict: 'bug', confidence: 0.9, severity: 'medium', title: 'chunk() drops | the last chunk', reason: 'Documented.' },
+  };
+  const counts = { modules: 1, functions: 2, reported: 2, verified: 1, duplicates: 0, confirmed: 1 };
+  const md = summaryMarkdown({ lang: 'python', counts, findings: [bug], ms: 1000, spend: { usd: 0.2 }, diff: { base: 'main', files: 1 } }, { reportUrl: 'https://x/run' });
+  assert.ok(md.startsWith(MARKER));
+  assert.match(md, /found 1 provable bug/);
+  assert.match(md, /2 changed functions in 1 module/);
+  assert.match(md, /chunk\(\) drops \\\| the last chunk/);
+  assert.match(md, /```python\ndef test_repro/);
+  assert.match(md, /\[full report\]\(https:\/\/x\/run\)/);
+  const none = summaryMarkdown({ lang: 'python', counts: { ...counts, functions: 0, modules: 0, confirmed: 0 }, findings: [], ms: 0, diff: { base: 'main', files: 3 } });
+  assert.match(none, /nothing to check/);
+});
+
+test('PR comment: updates the earlier proofhound comment, skips clean runs when asked', async () => {
+  const http = await import('node:http');
+  const { postComment } = await import('../src/github.js');
+  const { MARKER } = await import('../src/report/summary.js');
+  const calls = [];
+  let comments = [{ id: 1, body: 'lgtm' }];
+  const server = http.createServer((req, res) => {
+    let body = '';
+    req.on('data', (d) => { body += d; });
+    req.on('end', () => {
+      calls.push(`${req.method} ${req.url}`);
+      assert.equal(req.headers.authorization, 'Bearer tok');
+      if (req.method === 'GET') { res.end(JSON.stringify(comments)); return; }
+      res.end(JSON.stringify({ id: 2, ...JSON.parse(body) }));
+    });
+  });
+  await new Promise((r) => server.listen(0, r));
+  const env = { GITHUB_TOKEN: 'tok', GITHUB_REPOSITORY: 'o/r', PROOFHOUND_PR: '7', GITHUB_API_URL: `http://127.0.0.1:${server.address().port}` };
+  try {
+    assert.equal(await postComment(`${MARKER}\nclean`, { env, onlyIfBugs: true, hasBugs: false }), 'skipped');
+    assert.equal(await postComment(`${MARKER}\nbugs`, { env, onlyIfBugs: true, hasBugs: true }), 'created');
+    comments = [{ id: 1, body: 'lgtm' }, { id: 9, body: `${MARKER}\nbugs` }];
+    assert.equal(await postComment(`${MARKER}\nclean now`, { env, onlyIfBugs: true, hasBugs: false }), 'updated');
+    assert.deepEqual(calls, [
+      'GET /repos/o/r/issues/7/comments?per_page=100&page=1',
+      'GET /repos/o/r/issues/7/comments?per_page=100&page=1', 'POST /repos/o/r/issues/7/comments',
+      'GET /repos/o/r/issues/7/comments?per_page=100&page=1', 'PATCH /repos/o/r/issues/comments/9',
+    ]);
+  } finally { server.close(); }
+});

@@ -17,7 +17,7 @@ export function relocateImports(source, fromDir, toDir) {
   });
 }
 
-const FENCE = { python: 'python', javascript: 'js', go: 'go', rust: 'rust' };
+export const FENCE = { python: 'python', javascript: 'js', go: 'go', rust: 'rust' };
 export const FRAMEWORK = { python: 'Hypothesis', javascript: 'fast-check', go: 'rapid', rust: 'proptest' };
 const HOW_TO_RUN = {
   python: (f) => `Save it as \`${f}\` in your tests and run \`pytest ${f}\`.`,

@@ -39,7 +39,7 @@ export function scoreTarget(t, siblings = []) {
  * Rank functions and group them by module, so one hunt sees related functions together
  * (round-trip pairs, helpers that share invariants).
  */
-export function planGroups(targets, { maxGroups = 8, perGroup = 6, minScore = 0, only } = {}) {
+export function planGroups(targets, { maxGroups = 8, perGroup = 6, minScore = 0, only, all = false } = {}) {
   let pool = targets;
   if (only && only.length) {
     pool = targets.filter((t) => only.some((o) => t.id === o || t.id.endsWith('.' + o) || t.name === o || t.file === o || t.file.startsWith(o.replace(/\/$/, '') + '/') || t.module === o));
@@ -52,7 +52,7 @@ export function planGroups(targets, { maxGroups = 8, perGroup = 6, minScore = 0,
   const groups = [];
   for (const [file, fns] of byFile) {
     for (const t of fns) Object.assign(t, scoreTarget(t, fns));
-    const picked = fns.filter((t) => t.score > minScore || (only && only.length)).sort((a, b) => b.score - a.score).slice(0, perGroup);
+    const picked = fns.filter((t) => all || t.score > minScore || (only && only.length)).sort((a, b) => b.score - a.score).slice(0, perGroup);
     if (!picked.length) continue;
     const top = picked.slice(0, 3).reduce((a, t) => a + t.score, 0);
     groups.push({ file, module: picked[0].module, lang: picked[0].lang, functions: picked, score: Math.round(top * 10) / 10 });

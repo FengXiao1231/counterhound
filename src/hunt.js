@@ -3,6 +3,7 @@ import path from 'node:path';
 import { hunterPrompt, reviewerPrompt } from './prompts.js';
 import { verifyFinding, confirmProperty } from './verify.js';
 import { planGroups } from './targets.js';
+import { changedLines, touchedTargets } from './diff.js';
 import { c, log, pool, STOP, writeJSON, writeFile, extractJSON, slug, fmtUsd, fmtMs } from './util.js';
 
 export const HOME = '.proofhound';
@@ -45,9 +46,17 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
   const testCmd = writeTestWrapper(repo, binPath);
   lang.prepare?.(repo, path.join(repo, HOME), cfg);
 
-  const targets = lang.listTargets(repo, cfg, opts.paths || []);
-  const groups = planGroups(targets, { maxGroups: opts.maxGroups, perGroup: opts.perGroup, only: opts.only });
-  if (!groups.length) throw new Error('no candidate functions found. Point proofhound at a source directory, or use --only');
+  let targets = lang.listTargets(repo, cfg, opts.paths || []);
+  let diff = null;
+  if (opts.diff) {
+    const changes = changedLines(repo, opts.diff);
+    targets = touchedTargets(targets, changes);
+    diff = { base: opts.diff, files: changes.size, functions: targets.length };
+    log(c.dim(`  diff against ${opts.diff}: ${changes.size} changed file${changes.size === 1 ? '' : 's'}, ${targets.length} changed function${targets.length === 1 ? '' : 's'}`));
+  }
+  // In diff mode every changed function is a candidate, however it scores.
+  const groups = planGroups(targets, { maxGroups: opts.maxGroups, perGroup: opts.perGroup, only: opts.only, all: Boolean(diff) });
+  if (!groups.length && !diff) throw new Error('no candidate functions found. Point proofhound at a source directory, or use --only');
   const ts = lang.needsTs(groups.flatMap((g) => g.functions.map((f) => f.file)));
   log(c.bold(`\nproofhound`) + c.dim(` · ${lang.name} · ${agent.id}${opts.model ? ` (${opts.model})` : ''} · ${groups.length} module${groups.length > 1 ? 's' : ''}, ${groups.reduce((a, g) => a + g.functions.length, 0)} functions\n`));
 
@@ -138,7 +147,7 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
   bugs.forEach((b, i) => { b.bugId = `PH-${String(i + 1).padStart(3, '0')}`; });
 
   const result = {
-    version: 1, tool: 'proofhound', runId: id, repo: path.basename(repo), lang: lang.id, agent: agent.id, model: opts.model || null,
+    version: 1, tool: 'proofhound', runId: id, diff, repo: path.basename(repo), lang: lang.id, agent: agent.id, model: opts.model || null,
     startedAt: new Date(started).toISOString(), ms: Date.now() - started, spend,
     groups: groupLog,
     counts: {

@@ -119,6 +119,53 @@ flowchart LR
 | [ms](https://github.com/vercel/ms) (TypeScript) | 1 | 1 | `format(-1500, { long: true })` returns `"-1 seconds"`, while `format(1500, { long: true })` returns `"2 seconds"` | 51s | $0.19 |
 | [bytes](https://github.com/visionmedia/bytes.js) (JavaScript) | 1 | 0 | Two failures involving `-0` and float inputs were judged unspecified and not reported | 25s | $0.09 |
 
+## Use it on pull requests (GitHub Action)
+
+proofhound can check every pull request: it hunts only in the functions the PR changed, comments
+on the PR when it can prove a bug (with the input, the expected and actual result, and a failing
+test), and fails the check. Add `.github/workflows/proofhound.yml`:
+
+```yaml
+name: proofhound
+on: pull_request
+
+permissions:
+  contents: read
+  pull-requests: write   # to comment on the PR
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # needed to diff against the PR base
+      # set up your project's toolchain as usual, for example:
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -e . pytest hypothesis
+      - uses: FengXiao1231/proofhound@v0
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          budget: 2
+```
+
+| Input | Default | |
+|---|---|---|
+| `anthropic-api-key` / `claude-code-oauth-token` | | One of them is required. The OAuth token (`claude setup-token`) uses a Claude subscription |
+| `base` | the PR base | Ref to diff against; `none` hunts in the whole project |
+| `model` | `sonnet` | Model for the hunter and the reviewer |
+| `budget` | `2` | Stop starting new work after this many dollars |
+| `max-modules` | `4` | Most files to hunt in |
+| `comment` | `bugs` | `always`, `bugs` (comment only when bugs are found; an earlier comment is still updated) or `never` |
+| `fail-on-bugs` | `true` | Fail the check when a bug is confirmed |
+| `working-directory` | `.` | Project directory inside the repository |
+| `args` | | Extra options, e.g. `--lang go --notes "..."` |
+
+The HTML report, `results.json` and the repro tests are uploaded as the `proofhound-report` artifact, and the summary is shown on the run page. Pull requests from forks get no secrets on `pull_request`, so the action fails with a clear message there. Do not switch to `pull_request_target` to work around it: that would run the fork's code with your secrets.
+
+The same diff mode works locally: `npx proofhound --diff main`.
+
 ## Options
 
 ```
@@ -140,6 +187,8 @@ proofhound doctor                check that the toolchain is ready
 --min-confidence <0-1>    reviewer confidence needed to confirm (default 0.6)
 --no-review               skip the independent review step
 --notes <text>            extra context for the hunter (contracts, known quirks)
+--diff [ref]              only hunt in functions changed since ref (default: the PR base in CI, else origin's default branch)
+--summary-file <path>     also write a Markdown summary (for PR comments and CI)
 --json                    print results as JSON on stdout
 ```
 
@@ -173,8 +222,7 @@ cap a run, `--only` to aim it, and a cheaper `--review-model` if you like.
 ## Roadmap
 
 - `--fix`: propose a patch, accept it only if the repro passes and the existing suite stays green
-- Diff mode for CI: only hunt in functions changed by a pull request
-- A GitHub Action
+- Java and Kotlin (jqwik)
 
 ## Credits
 
