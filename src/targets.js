@@ -1,6 +1,6 @@
 // Ranking: which functions are most likely to have checkable properties (and real bugs)?
 
-const STRONG = /(parse|format|encode|decode|serial|deserial|dump|load|marshal|escape|unescape|quote|compress|decompress|convert|normali[sz]e|canonical|sort|merge|split|join|chunk|partition|tokeni[sz]e|slug|round|clamp|interval|range|diff|patch|inverse|invert|reverse|rotate|pack|unpack|to_?[A-Z_a-z]|from_?[A-Z_a-z]|wrap|truncate|pad|strip|trim|hash|checksum|base\d*|hex|url|path|semver|version|date|time|duration|median|mean|percent|ratio|scale|interp|lerp|bisect|search|union|intersect|dedup|unique|flatten|group|bucket|window|validate|render|template|quantile|histogram)/i;
+const STRONG = /(case|pretty|humani[sz]e|plural|singular|ordinal|ms$|bytes|size|camel|snake|kebab|title|parse|format|encode|decode|serial|deserial|dump|load|marshal|escape|unescape|quote|compress|decompress|convert|normali[sz]e|canonical|sort|merge|split|join|chunk|partition|tokeni[sz]e|slug|round|clamp|interval|range|diff|patch|inverse|invert|reverse|rotate|pack|unpack|to_?[A-Z_a-z]|from_?[A-Z_a-z]|wrap|truncate|pad|strip|trim|hash|checksum|base\d*|hex|url|path|semver|version|date|time|duration|median|mean|percent|ratio|scale|interp|lerp|bisect|search|union|intersect|dedup|unique|flatten|group|bucket|window|validate|render|template|quantile|histogram)/i;
 const WEAK = /(get|set|init|setup|teardown|main|run|start|stop|close|open|connect|send|fetch|request|handle|log|print|show|register|save|write|read|delete|update|create|cli|command|app|view|route)/i;
 const PAIRS = [
   ['encode', 'decode'], ['serialize', 'deserialize'], ['dump', 'load'], ['dumps', 'loads'], ['compress', 'decompress'],
@@ -15,6 +15,7 @@ export function scoreTarget(t, siblings = []) {
   if (WEAK.test(t.name) && !STRONG.test(t.name)) s -= 2;
   if (t.doc) { s += Math.min(3, 1 + t.doc.length / 200); why.push('documented'); }
   if (t.annotated) { s += 1; why.push('typed'); }
+  if (t.entry) { s += 3; why.push('public entry point'); }
   if (t.nArgs === 0) s -= 3;
   else if (t.nArgs <= 3) s += 1;
   else if (t.nArgs > 5) s -= 1;

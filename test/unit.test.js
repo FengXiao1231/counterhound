@@ -67,10 +67,14 @@ test('classify: an assert inside project code is an internal assertion', () => {
 
 test('javascript scanner finds exported functions with JSDoc', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-js-'));
-  fs.writeFileSync(path.join(dir, 'a.js'), `/** Adds. */\nexport function add(a, b) {\n  return a + b;\n}\nexport const twice = (x) => x * 2;\nfunction hidden(x) { return x; }\nfunction shown(s) {\n  return s;\n}\nmodule.exports = { shown };\nexport async function load(url) { return fetch(url); }\n`);
+  fs.writeFileSync(path.join(dir, 'a.js'), `/** Adds. */\nexport function add(a, b) {\n  return a + b;\n}\nexport const twice = (x) => x * 2;\nfunction hidden(x) { return x; }\nexport async function load(url) { return fetch(url); }\n`);
+  fs.writeFileSync(path.join(dir, 'b.js'), `function hidden(x) { return x; }\nconst shown = function (s) {\n  return s;\n};\nconst api = {\n  /** it's, a comment (with commas) */\n  'version': '1.0',\n  'nested': { 'x': hidden },\n  'shown': shown\n};\nmodule.exports = api;\n`);
+  fs.writeFileSync(path.join(dir, 'c.js'), `module.exports = function (str, opts) {\n  return str;\n};\n`);
   const fns = scanFile(dir, path.join(dir, 'a.js'));
   const names = fns.map((f) => f.name);
-  assert.deepEqual(names.sort(), ['add', 'load', 'shown', 'twice']);
+  assert.deepEqual(names.sort(), ['add', 'load', 'twice']);
+  assert.deepEqual(scanFile(dir, path.join(dir, 'b.js')).map((f) => [f.name, f.access]), [['shown', 'prop']]);
+  assert.deepEqual(scanFile(dir, path.join(dir, 'c.js')).map((f) => [f.name, f.access]), [['c', 'default']]);
   const add = fns.find((f) => f.name === 'add');
   assert.equal(add.doc, 'Adds.');
   assert.equal(add.nArgs, 2);

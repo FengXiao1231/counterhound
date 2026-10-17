@@ -56,48 +56,130 @@ function countArgs(params) {
   return p ? p.split(',').filter((s) => s.trim()).length : 0;
 }
 
+const ID = '[A-Za-z_$][\\w$]*';
+
+/** Keys of an object literal starting at `open` (the index of "{"): key -> local name. */
+function objectKeys(src, open) {
+  let depth = 0, i = open;
+  for (; i < src.length; i++) {
+    if (src[i] === '{') depth++;
+    else if (src[i] === '}' && --depth === 0) break;
+  }
+  const body = src.slice(open + 1, i).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+  const keys = new Map();
+  // only look at the top level of the literal
+  let level = 0, cur = '';
+  const parts = [];
+  for (const ch of body) {
+    if ('{[('.includes(ch)) level++;
+    if ('}])'.includes(ch)) level--;
+    if (ch === ',' && level === 0) { parts.push(cur); cur = ''; } else cur += ch;
+  }
+  parts.push(cur);
+  for (const part of parts) {
+    const p = part.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
+    let m;
+    if ((m = p.match(new RegExp(`^['"]?(${ID})['"]?\\s*:\\s*(${ID})$`)))) keys.set(m[1], m[2]);
+    else if ((m = p.match(new RegExp(`^(${ID})$`)))) keys.set(m[1], m[1]);
+  }
+  return keys;
+}
+
+/**
+ * Work out what a file exports, as a map local name -> { name, access }.
+ * access: 'named' (ESM named), 'default' (ESM default or module.exports = fn), 'prop' (module.exports.x / exported object key).
+ */
+function exportsOf(src, file) {
+  const ex = new Map();
+  const add = (local, name, access) => { if (!ex.has(local)) ex.set(local, { name, access }); };
+  const esm = /^\s*export\s/m.test(src) || /\.(mjs|mts|ts|tsx)$/.test(file);
+  for (const m of src.matchAll(new RegExp(`^\\s*export\\s+(?:async\\s+)?function\\*?\\s+(${ID})`, 'gm'))) add(m[1], m[1], 'named');
+  for (const m of src.matchAll(new RegExp(`^\\s*export\\s+(?:const|let|var)\\s+(${ID})`, 'gm'))) add(m[1], m[1], 'named');
+  for (const m of src.matchAll(new RegExp(`^\\s*export\\s+default\\s+(?:async\\s+)?function\\*?\\s+(${ID})`, 'gm'))) ex.set(m[1], { name: m[1], access: 'default' });
+  for (const m of src.matchAll(new RegExp(`^\\s*export\\s+default\\s+(${ID})\\s*;?\\s*$`, 'gm'))) add(m[1], m[1], 'default');
+  for (const m of src.matchAll(/export\s*\{([^}]*)\}/g)) {
+    for (const n of m[1].split(',')) {
+      const [local, alias] = n.trim().split(/\s+as\s+/);
+      if (local) add(local.trim(), (alias || local).trim(), (alias || '').trim() === 'default' ? 'default' : 'named');
+    }
+  }
+  if (!esm) {
+    for (const m of src.matchAll(new RegExp(`(?:module\\.)?exports\\.(${ID})\\s*=\\s*(${ID})\\s*;?\\s*$`, 'gm'))) add(m[2], m[1], 'prop');
+    const target = src.match(new RegExp(`module\\.exports\\s*=\\s*(${ID})\\s*;?\\s*$`, 'm'));
+    const literal = src.match(/module\.exports\s*=\s*\{/);
+    if (literal) for (const [k, local] of objectKeys(src, literal.index + literal[0].length - 1)) add(local, k, 'prop');
+    if (target) {
+      // module.exports = he, where `var he = { encode: encode, ... }` -> exported properties
+      const obj = src.match(new RegExp(`(?:var|let|const)\\s+${target[1].replace('$', '\\$')}\\s*=\\s*\\{`));
+      if (obj) for (const [k, local] of objectKeys(src, obj.index + obj[0].length - 1)) add(local, k, 'prop');
+      else add(target[1], target[1], 'default');
+    }
+    // UMD: root.he = he / define(function() { return he; }) with the same object literal
+    for (const m of src.matchAll(new RegExp(`(?:var|let|const)\\s+(${ID})\\s*=\\s*\\{\\s*\\n?\\s*['"]?version['"]?\\s*:`, 'g'))) {
+      for (const [k, local] of objectKeys(src, m.index + m[0].length - m[0].slice(m[0].indexOf('{')).length)) add(local, k, 'prop');
+    }
+  }
+  return { ex, esm };
+}
+
 export function scanFile(root, file) {
   const src = fs.readFileSync(file, 'utf8');
   if (src.length > 400000) return [];
   const lines = src.split('\n');
   const rel = path.relative(root, file).split(path.sep).join('/');
-  const cjsExports = new Set();
-  const mExp = src.match(/module\.exports\s*=\s*\{([^}]*)\}/);
-  if (mExp) for (const n of mExp[1].split(',')) { const k = n.split(':')[0].trim(); if (k) cjsExports.add(k); }
-  for (const m of src.matchAll(/(?:module\.)?exports\.([A-Za-z_$][\w$]*)\s*=\s*([A-Za-z_$][\w$]*)\s*;?\s*$/gm)) { cjsExports.add(m[1]); cjsExports.add(m[2]); }
-  for (const m of src.matchAll(/module\.exports\s*=\s*([A-Za-z_$][\w$]*)\s*;?\s*$/gm)) cjsExports.add(m[1]);
-  const exportList = new Set();
-  for (const m of src.matchAll(/export\s*\{([^}]*)\}/g)) for (const n of m[1].split(',')) { const k = n.trim().split(/\s+as\s+/)[0]; if (k) exportList.add(k); }
+  const { ex, esm } = exportsOf(src, file);
+  const baseName = path.basename(file).replace(/\.[^.]+$/, '').replace(/[-_.](\w)/g, (_, ch) => ch.toUpperCase());
   const out = [];
-  const patterns = [
-    /^\s*export\s+(?:default\s+)?(async\s+)?function\*?\s+([A-Za-z_$][\w$]*)\s*(<[^>]*>)?\s*\(([^)]*)\)\s*(:\s*[^{]+)?/,
-    /^\s*export\s+const\s+([A-Za-z_$][\w$]*)\s*(?::\s*[^=]+)?=\s*(async\s+)?(?:function\s*\*?\s*)?\(([^)]*)\)\s*(:\s*[^=]+)?(=>)?/,
-    /^\s*(?:module\.)?exports\.([A-Za-z_$][\w$]*)\s*=\s*(async\s+)?function\s*\w*\s*\(([^)]*)\)/,
-    /^\s*(async\s+)?function\*?\s+([A-Za-z_$][\w$]*)\s*(<[^>]*>)?\s*\(([^)]*)\)\s*(:\s*[^{]+)?/,
+  const defs = [
+    // function name(params)
+    new RegExp(`^\\s*(?:export\\s+(?:default\\s+)?)?(async\\s+)?function\\*?\\s+(${ID})\\s*(<[^>]*>)?\\s*\\(([^)]*)\\)\\s*(:\\s*[^{]+)?`),
+    // const name = (params) => / function (params)
+    new RegExp(`^\\s*(?:export\\s+)?(?:const|let|var)\\s+(${ID})\\s*(?::\\s*[^=]+)?=\\s*(async\\s+)?(?:function\\s*\\*?\\s*(?:${ID})?\\s*)?\\(([^)]*)\\)\\s*(:\\s*[^=]+)?(=>)?`),
+    // exports.name = function (params)
+    new RegExp(`^\\s*(?:module\\.)?exports\\.(${ID})\\s*=\\s*(async\\s+)?(?:function\\s*\\*?\\s*(?:${ID})?\\s*)?\\(([^)]*)\\)`),
+    // module.exports = function (params) / (params) =>
+    new RegExp(`^\\s*module\\.exports\\s*=\\s*(async\\s+)?(?:function\\s*\\*?\\s*(${ID})?\\s*)?\\(([^)]*)\\)`),
   ];
   lines.forEach((line, i) => {
-    let name, params, isAsync, ret, exported = true;
-    let m;
-    if ((m = line.match(patterns[0]))) [, isAsync, name, , params, ret] = m;
-    else if ((m = line.match(patterns[1]))) [, name, isAsync, params, ret] = m;
-    else if ((m = line.match(patterns[2]))) [, name, isAsync, params] = m;
-    else if ((m = line.match(patterns[3]))) {
-      [, isAsync, name, , params, ret] = m;
-      exported = cjsExports.has(name) || exportList.has(name);
-    }
-    if (!name || !exported || name.startsWith('_')) return;
+    let local, params, isAsync, ret, info, m;
+    if ((m = line.match(defs[0]))) { [, isAsync, local, , params, ret] = m; info = ex.get(local); }
+    else if ((m = line.match(defs[1]))) {
+      [, local, isAsync, params, ret] = m;
+      if (!m[5] && !/function/.test(line)) return; // `const x = (a)` without => is not a function
+      info = ex.get(local);
+    } else if ((m = line.match(defs[2]))) { [, local, isAsync, params] = m; info = { name: local, access: 'prop' }; }
+    else if ((m = line.match(defs[3]))) { [, isAsync, local, params] = m; local = local || baseName; info = { name: local, access: 'default' }; }
+    if (!local || !info || info.name.startsWith('_')) return;
     if (/\)\s*(:[^{]*)?;\s*$/.test(line)) return; // TypeScript overload signature, no body
-    if (out.some((f) => f.name === name)) return;
+    if (out.some((f) => f.name === info.name)) return;
     const end = bodyExtent(lines, i);
     const body = lines.slice(i, end + 1).join('\n');
     const impure = [...new Set([...body.matchAll(IMPURE)].map((x) => x[1].replace(/[.(].*$/, '')))];
     out.push({
-      file: rel, module: rel, name, qualname: name, owner: null, line: i + 1, loc: end - i + 1,
+      file: rel, module: rel, name: info.name, local, access: info.access, esm, qualname: info.name, owner: null, line: i + 1, loc: end - i + 1,
       signature: `(${(params || '').trim()})${ret ? ret.replace(/^:\s*/, ': ').trim() : ''}`,
       nArgs: countArgs(params || ''), doc: jsdocBefore(lines, i).slice(0, 600), async: Boolean(isAsync),
       impure, annotated: /:/.test(params || '') || Boolean(ret), decorators: [],
     });
   });
+  return out;
+}
+
+/** Files named as the package's public entry points (main/module/exports/source). */
+function entryFiles(repo) {
+  const pkg = readJSON(path.join(repo, 'package.json'), {}) || {};
+  const out = new Set();
+  const addPath = (p) => {
+    if (typeof p !== 'string') return;
+    const rel = p.replace(/^\.\//, '');
+    for (const cand of [rel, `${rel}.js`, `${rel}/index.js`, rel.replace(/^(dist|lib|build)\//, 'src/').replace(/\.(c|m)?js$/, '.ts'), rel.replace(/^(dist|build)\//, 'src/')]) {
+      if (fs.existsSync(path.join(repo, cand)) && fs.statSync(path.join(repo, cand)).isFile()) out.add(cand);
+    }
+  };
+  const walkExports = (e) => { if (typeof e === 'string') addPath(e); else if (e && typeof e === 'object') Object.values(e).forEach(walkExports); };
+  [pkg.main, pkg.module, pkg.source, pkg.types && null].forEach(addPath);
+  walkExports(pkg.exports);
+  if (!out.size) ['index.js', 'src/index.ts', 'src/index.js'].forEach(addPath);
   return out;
 }
 
@@ -156,7 +238,8 @@ export const javascript = {
 
   /** Make fast-check importable from proofhound's work directory. */
   prepare(repo, workRoot) {
-    if (hasFastCheck(repo)) return;
+    const localTsx = fs.existsSync(path.join(repo, 'node_modules', 'tsx', 'package.json'));
+    if (hasFastCheck(repo) && localTsx) return;
     if (!cacheReady()) {
       fs.mkdirSync(CACHE, { recursive: true });
       if (!fs.existsSync(path.join(CACHE, 'package.json'))) fs.writeFileSync(path.join(CACHE, 'package.json'), '{"name":"proofhound-cache","private":true}\n');
@@ -164,7 +247,7 @@ export const javascript = {
       if (r.code !== 0) throw new Error(`could not install fast-check into ${CACHE}: ${r.stderr.trim().slice(-300)}`);
     }
     const link = path.join(workRoot, 'node_modules');
-    if (!fs.existsSync(link)) {
+    if (!hasFastCheck(repo) && !fs.existsSync(link)) {
       fs.mkdirSync(workRoot, { recursive: true });
       fs.symlinkSync(path.join(CACHE, 'node_modules'), link, 'dir');
     }
@@ -183,18 +266,22 @@ export const javascript = {
       if (fs.existsSync(s) && fs.statSync(s).isFile()) files.push(s);
       else walk(repo, s, files);
     }
-    return files.flatMap((f) => scanFile(repo, f)).map((t) => ({ ...t, lang: 'javascript', id: `${t.file}#${t.qualname}` }));
+    const entries = entryFiles(repo);
+    return files.flatMap((f) => scanFile(repo, f)).map((t) => ({ ...t, entry: entries.has(t.file), lang: 'javascript', id: `${t.file}#${t.qualname}` }));
   },
 
   importHint(target, fromDir, repo) {
     let rel = path.relative(fromDir, path.join(repo, target.file)).split(path.sep).join('/');
     if (!rel.startsWith('.')) rel = './' + rel;
+    if (target.access === 'default') return `import ${target.name} from '${rel}'`;
+    if (target.access === 'prop' || !target.esm) return `import mod from '${rel}'; const ${target.name} = mod.${target.name}`;
     return `import { ${target.name} } from '${rel}'`;
   },
 
   files() { return { props: 'ph_props.test.mjs', repro: 'repro_<name>.test.mjs' }; },
 
-  needsTs(files) { return files.some((f) => /\.[cm]?tsx?$/.test(f)); },
+  // tsx also resolves extensionless and directory imports in plain JS sources, so use it whenever available.
+  needsTs() { return true; },
 
   async runTests(repo, cfg, selectors, { cwd = repo, timeoutMs = 300000, seed, name, ts } = {}) {
     const reportFile = path.join(os.tmpdir(), `ph-report-${process.pid}-${hash(selectors.join(' ') + Math.random(), 8)}.json`);

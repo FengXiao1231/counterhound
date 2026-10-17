@@ -108,7 +108,7 @@ async function testCommand(files) {
   if (!files.length) { console.log('usage: ph-test <test file> [more files]'); return 2; }
   const cfg = loadConfig(repo, {});
   const lang = files.every((f) => f.endsWith('.py')) ? python : javascript;
-  const ts = lang === javascript && (fs.existsSync(path.join(repo, 'tsconfig.json')) || files.some((f) => /from\s+['"][^'"]+\.tsx?['"]/.test(fs.readFileSync(f, 'utf8'))));
+  const ts = lang === javascript;
   const abs = files.map((f) => path.resolve(repo, f));
   const r = await lang.runTests(repo, cfg, abs, { cwd: repo, timeoutMs: (cfg.testTimeoutSec || 300) * 1000, ts });
   if (r.timedOut) console.log('TIMEOUT: tests took too long and were killed. Use smaller inputs or fewer examples.');
