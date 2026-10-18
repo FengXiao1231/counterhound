@@ -169,7 +169,7 @@ export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, o
     const prompt = fixerPrompt({ bug, lang, reproRel, testCmd, notes: cfg.notes });
     writeFile(path.join(dir, 'prompt.md'), prompt);
     log(c.dim(`  ▸ fixing ${bug.bugId} ${bug.review?.title || bug.title}`));
-    const r = await agent.call({ prompt, cwd: sandbox, writeDirs: ['.'], runCommands: [testCmd], model: opts.model, timeoutMs: (cfg.agentTimeoutSec || 1200) * 1000, budgetUsd: remaining?.() });
+    const r = await agent.call({ prompt, cwd: sandbox, writeDirs: ['.'], runCommands: [testCmd], model: opts.model, timeoutMs: (cfg.agentTimeoutSec || 1200) * 1000, budgetUsd: remaining?.(), priceIn: cfg.codexPriceIn, priceOut: cfg.codexPriceOut });
     account(r);
     writeFile(path.join(dir, 'agent.txt'), `${r.text || ''}\n${r.error ? `ERROR: ${r.error}\n` : ''}${r.denials?.length ? `Permission denials:\n${r.denials.join('\n')}\n` : ''}`);
 

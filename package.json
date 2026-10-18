@@ -1,7 +1,7 @@
 {
   "name": "proofhound",
   "version": "0.1.0",
-  "description": "An AI bug hunter that only reports bugs it can prove: LLM-written property-based tests, deterministic repros, independent review.",
+  "description": "An AI bug hunter whose every report is a failing test you can run: LLM-written property-based tests, deterministic repros, independent review.",
   "type": "module",
   "bin": {
     "proofhound": "bin/proofhound.js"

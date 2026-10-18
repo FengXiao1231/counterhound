@@ -102,7 +102,7 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
     log(c.dim(`  ▸ hunting in ${group.file} (${group.classes?.length ? `${group.classes.map((k) => k.name).join(', ')} as state machine${group.classes.length > 1 ? 's' : ''}; ` : ''}${group.functions.map((f) => f.name).join(', ')})`));
     const r = await agent.call({
       prompt, cwd: repo, writeDirs: [workRel], runCommands: [testCmd], model: opts.model,
-      timeoutMs: (cfg.agentTimeoutSec || 1200) * 1000, budgetUsd: remaining(opts.budget),
+      timeoutMs: (cfg.agentTimeoutSec || 1200) * 1000, budgetUsd: remaining(opts.budget), priceIn: cfg.codexPriceIn, priceOut: cfg.codexPriceOut,
     });
     account(r);
     writeFile(path.join(workdir, 'agent.txt'), `${r.text || ''}\n\n${r.error ? `ERROR: ${r.error}\n` : ''}${r.denials?.length ? `Permission denials:\n${r.denials.join('\n')}\n` : ''}`);
@@ -143,7 +143,7 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
       const workdir = path.join(repo, f.workdir);
       const reproSource = fs.readFileSync(path.join(workdir, f.verification.reproFile), 'utf8');
       const prompt = reviewerPrompt({ finding: f, verification: f.verification, reproSource, testCmd, workdir: f.workdir, lang });
-      const r = await agent.call({ prompt, cwd: repo, writeDirs: [], runCommands: [testCmd], model: opts.reviewModel || opts.model, readOnly: true, timeoutMs: 600000, budgetUsd: remaining(opts.budget) });
+      const r = await agent.call({ prompt, cwd: repo, writeDirs: [], runCommands: [testCmd], model: opts.reviewModel || opts.model, readOnly: true, timeoutMs: 600000, budgetUsd: remaining(opts.budget), priceIn: cfg.codexPriceIn, priceOut: cfg.codexPriceOut });
       account(r);
       const j = extractJSON(r.text) || {};
       f.review = {

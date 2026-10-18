@@ -2,7 +2,7 @@
 
 # proofhound
 
-**An AI bug hunter that only reports bugs it can prove.**
+**An AI bug hunter whose every report is a failing test you can run.**
 
 It reads your code, works out what each function promises, writes property-based tests,
 and throws thousands of generated inputs at them. A failure only reaches you after it has
@@ -132,7 +132,7 @@ flowchart LR
 ## Use it on pull requests (GitHub Action)
 
 proofhound can check every pull request: it hunts only in the functions the PR changed, comments
-on the PR when it can prove a bug (with the input, the expected and actual result, and a failing
+on the PR when it has a reproducible failure (with the input, the expected and actual result, and a failing
 test), and fails the check. Add `.github/workflows/proofhound.yml`:
 
 ```yaml
@@ -216,7 +216,9 @@ Optional `.proofhound/config.json`:
   "env": { "MYAPP_SETTINGS": "test" },
   "maxExamples": 300,
   "testTimeoutSec": 120,
-  "agentTimeoutSec": 1200
+  "agentTimeoutSec": 1200,
+  "codexPriceIn": 1.25,
+  "codexPriceOut": 10
 }
 ```
 
@@ -228,7 +230,7 @@ With Claude Code, the hunter agent runs with a strict allowlist: read files, wri
 `.proofhound/runs/<id>/`, and run only `./.proofhound/ph-test`. It has no network tools.
 With Codex, the reviewer runs in its read-only sandbox, but the hunter runs in Codex's
 `workspace-write` sandbox, which has no per-tool allowlist: it can write anywhere in the project
-and run any command (proofhound prints a note when that is the case). Either way, the tests the
+and run any command (proofhound prints a note when that is the case). Codex also does not report what a run cost, so `--budget` only works with it when `codexPriceIn`/`codexPriceOut` (USD per million tokens) are set in `.proofhound.json`; otherwise cap the work with `--max-modules`, and proofhound says so. Either way, the tests the
 agent writes do execute your code, just like your own test suite does. On code you do not trust,
 run proofhound inside a container. With `--fix`, the fixing agent can write only inside its own
 temporary copy of the project; a patch that changes or deletes the project's existing tests is

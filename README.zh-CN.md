@@ -2,7 +2,7 @@
 
 # proofhound
 
-**只报告能证明的 Bug 的 AI 找 Bug 工具。**
+**每一条报告都附带一个能跑的失败测试的 AI 找 Bug 工具。**
 
 它会读你的代码，推断每个函数承诺了什么，写成属性测试，再用成千上万个自动生成的输入去打。
 一个失败要先被缩到最小输入、重放成确定性测试、定位到你的代码、再扛住一个专门挑刺的独立复核，
@@ -110,7 +110,7 @@ flowchart LR
 
 ## 在 PR 上自动运行（GitHub Action）
 
-proofhound 可以检查每一个 PR：只在这个 PR 改动过的函数里找 Bug。证明有 Bug 时，它会在 PR 下面留评论，写明输入、期望结果、实际结果，并附上失败测试，同时把这次检查标为失败。添加 `.github/workflows/proofhound.yml`：
+proofhound 可以检查每一个 PR：只在这个 PR 改动过的函数里找 Bug。找到可复现的失败时，它会在 PR 下面留评论，写明输入、期望结果、实际结果，并附上失败测试，同时把这次检查标为失败。添加 `.github/workflows/proofhound.yml`：
 
 ```yaml
 name: proofhound
@@ -192,7 +192,9 @@ proofhound doctor                检查工具链
   "env": { "MYAPP_SETTINGS": "test" },
   "maxExamples": 300,
   "testTimeoutSec": 120,
-  "agentTimeoutSec": 1200
+  "agentTimeoutSec": 1200,
+  "codexPriceIn": 1.25,
+  "codexPriceOut": 10
 }
 ```
 
@@ -201,7 +203,7 @@ proofhound doctor                检查工具链
 ## 安全
 
 用 Claude Code 时，猎手 Agent 在严格白名单下运行：可以读文件，只能在 `.proofhound/runs/<id>/` 里写，只能运行 `./.proofhound/ph-test`，没有联网工具。
-用 Codex 时，复核 Agent 在它的只读沙箱里运行，但猎手 Agent 运行在 Codex 的 `workspace-write` 沙箱里，这个沙箱没有按工具划分的白名单：它可以写项目里的任何文件、运行任何命令（proofhound 会在这种情况下打印一条提示）。
+用 Codex 时，复核 Agent 在它的只读沙箱里运行，但猎手 Agent 运行在 Codex 的 `workspace-write` 沙箱里，这个沙箱没有按工具划分的白名单：它可以写项目里的任何文件、运行任何命令（proofhound 会在这种情况下打印一条提示）。Codex 也不会报告一次运行花了多少钱，所以 `--budget` 只有在 `.proofhound.json` 里设置了 `codexPriceIn`/`codexPriceOut`（每百万 token 的美元价）时才对它生效；否则请用 `--max-modules` 限制工作量，proofhound 会提示这一点。
 无论哪种，Agent 写的测试都会执行你的代码，就像你自己的测试集一样。对不信任的代码，请在容器里运行 proofhound。加 `--fix` 时，修复 Agent 只能在它自己的临时项目副本里写文件；改动或删除了项目现有测试的补丁会被拒绝，补丁只展示给你，不会自动应用。
 
 proofhound 生成的所有东西都在 `.proofhound/` 里，里面自带一个 `.gitignore`，把运行记录、Go / Rust / Java 的构建缓存和报告全部忽略，只保留你自己的 `config.json`。

@@ -47,7 +47,8 @@ const codex = {
   // Codex's sandbox is per directory tree, not per tool: in workspace-write mode the whole project
   // is writable and any command can run, so the allowlist proofhound gives Claude Code (write only
   // in .proofhound/runs/, run only ph-test) is not enforced here. The reviewer does run read-only.
-  async call({ prompt, cwd, model, timeoutMs = 900000, readOnly, env }) {
+  async call({ prompt, cwd, model, timeoutMs = 900000, readOnly, env, budgetUsd, priceIn, priceOut }) {
+    if (budgetUsd && !(priceIn > 0 || priceOut > 0) && !codex.warnedBudget) { codex.warnedBudget = true; log(c.yellow('  note: codex does not report spend, so --budget cannot stop it by dollars; set codexPriceIn/codexPriceOut (USD per 1M tokens) in .proofhound.json to estimate, or cap work with --max-modules')); }
     const args = ['exec', '--json', '--skip-git-repo-check', '--sandbox', readOnly ? 'read-only' : 'workspace-write', '-C', cwd];
     if (!readOnly && !codex.warned) { codex.warned = true; log(c.yellow('  note: with codex the hunter can write anywhere in the project and run any command (codex has no per-tool allowlist); its edits outside .proofhound/ are not checked')); }
     if (model) args.push('-m', model);
@@ -68,7 +69,8 @@ const codex = {
       }
     }
     return {
-      ok: r.code === 0 && !r.timedOut, text, costUsd: null, tokensIn, tokensOut, turns, ms: r.ms,
+      // codex's JSON stream carries tokens but no price; spend is estimated when the user configured prices
+      ok: r.code === 0 && !r.timedOut, text, costUsd: (priceIn > 0 || priceOut > 0) ? (tokensIn * (priceIn || 0) + tokensOut * (priceOut || 0)) / 1e6 : null, costEstimated: true, tokensIn, tokensOut, turns, ms: r.ms,
       error: r.timedOut ? 'timed out' : r.code !== 0 ? (r.stderr || '').trim().slice(-500) : null,
     };
   },
