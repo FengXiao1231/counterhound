@@ -40,11 +40,11 @@ npx proofhound src/codec --budget 2
 需要：
 
 - **一个 AI 编程命令行工具**负责思考：[Claude Code](https://claude.com/claude-code)（`claude`）或 [Codex](https://github.com/openai/codex)（`codex`）。proofhound 以无界面模式驱动它，用的是你已有的订阅或 API Key。
-- **Python 项目：**在项目环境里 `pip install pytest hypothesis`（如果有 `.venv/` 会自动使用）。
-- **JS/TS 项目：**Node 20+。如果项目里没有 fast-check 和 tsx，首次运行会自动装到缓存目录。
-- **Go 项目：**Go 1.21+。[rapid](https://github.com/flyingmutant/rapid) 会加到你 `go.mod` 的一份私有副本里，你的 `go.mod`、`go.sum` 和包目录都不会被写入。
-- **Rust 项目：**cargo。测试作为一个独立 harness crate 的集成测试运行，它按路径依赖你的 crate 并使用 [proptest](https://github.com/proptest-rs/proptest)，所以只会测到公开 API，你的 `Cargo.toml` 不会被改动。
-- **Java 项目：**JDK 21+。proofhound 把你的主代码编译到 `.proofhound/` 里（不会写入 `target/` 或 `build/`），从 Maven 或 Gradle 取依赖的 classpath，用 JUnit 5 加 [QuickTheories](https://github.com/quicktheories/QuickTheories) 跑测试，两者首次运行时自动下载到缓存目录。
+- **Python 项目**：在项目环境里 `pip install pytest hypothesis`（如果有 `.venv/` 会自动使用）。
+- **JS/TS 项目**：Node 20+。如果项目里没有 fast-check 和 tsx，首次运行会自动装到缓存目录。
+- **Go 项目**：Go 1.21+。[rapid](https://github.com/flyingmutant/rapid) 会加到你 `go.mod` 的一份私有副本里，你的 `go.mod`、`go.sum` 和包目录都不会被写入。
+- **Rust 项目**：cargo。测试作为一个独立 harness crate 的集成测试运行，它按路径依赖你的 crate 并使用 [proptest](https://github.com/proptest-rs/proptest)，所以只会测到公开 API，你的 `Cargo.toml` 不会被改动。
+- **Java 项目**：JDK 21+。proofhound 把你的主代码编译到 `.proofhound/` 里（不会写入 `target/` 或 `build/`），从 Maven 或 Gradle 取依赖的 classpath，用 JUnit 5 加 [QuickTheories](https://github.com/quicktheories/QuickTheories) 跑测试，两者首次运行时自动下载到缓存目录。
 
 运行 `npx proofhound doctor` 检查环境。
 
@@ -74,13 +74,13 @@ flowchart LR
   F --> G[确认的 Bug<br/>+ 失败测试]
 ```
 
-1. **排序。**静态扫描（Python 用 `ast`，Go 用 `go/ast`，JS/TS、Rust 和 Java 用扫描器）列出公开函数和方法，按"好不好验证"打分：有文档、有类型、无副作用、名字像变换（`parse`、`encode`、`merge`、`normalize`……），如果存在逆函数还会加分（有 `encode`/`decode` 就天然有往返性质）。会碰网络、文件、时钟、随机数的函数排在后面。
-2. **猎捕。**每个模块交给一个编程 Agent：读源码、文档字符串、README 和调用处，用 [Hypothesis](https://hypothesis.works)、[fast-check](https://fast-check.dev)、[rapid](https://github.com/flyingmutant/rapid)、[proptest](https://github.com/proptest-rs/proptest) 或 [QuickTheories](https://github.com/quicktheories/QuickTheories) 写属性测试，比如往返、不变量、幂等、和参考实现对照、蜕变关系。它会运行测试，分清是自己写错了还是真失败，并为它相信的每个 Bug 写一个确定性的复现测试。Agent 只能在 `.proofhound/runs/` 里写文件，只能通过 proofhound 自己的测试运行器跑测试。
-3. **重放。**由 proofhound（不是 Agent）把每个复现测试在全新进程里重跑 N 次（默认 3 次）。只要有一次通过、失败原因前后不一致、用了随机数或时钟、或者根本加载不了，就丢弃。
-4. **归因。**检查调用栈。测试自身抛出的错误（`NameError`、参数传错、测试自己算错导致的 `KeyError`）、Hypothesis/fast-check 的错误、第三方库内部的错误，都算测试的问题，不算你的 Bug。崩溃（包括从 goroutine 调用栈和 Rust backtrace 里读出的 panic）会定位到你代码里最深的那一帧；如果是显式的 `raise`/`throw`/`panic` 会单独标出来，让复核者判断是不是文档里写明的行为。
-5. **去重。**出错位置相同、或同一函数上同一性质的发现会被合并。
-6. **复核。**另起一次全新上下文的 Agent 调用，拿到发现和已验证的失败，并被告知"大多数自动报告都是错的"。它要检查：输入是否符合函数约定、期望行为是否真的被承诺、这个行为是不是故意的、测试本身对不对。只有判为 `bug` 且置信度不低于 `--min-confidence`（默认 0.6）的才算确认；拿不准的单独列出。默认复核用的是和猎手相同的模型，只是新开一个上下文；传 `--review-model`（比如 `opus`）可以换一个更强的模型来挑刺。
-7. **修复（可选，`--fix`）。**对每个确认的 Bug，Agent 在项目的一次性副本里改代码（副本放在系统临时目录，不在项目里）。只有当复现测试的全新副本能通过、并且项目自己的测试（`pytest`、`npm test`、`go test ./...`、`cargo test`、`mvn test` / `gradle test`，或配置里的 `testCommand`）没有从通过变成失败时，proofhound 才保留这个补丁。你的工作目录始终不会被改动。
+1. **排序**。静态扫描（Python 用 `ast`，Go 用 `go/ast`，JS/TS、Rust 和 Java 用扫描器）列出公开函数和方法，按"好不好验证"打分：有文档、有类型、无副作用、名字像变换（`parse`、`encode`、`merge`、`normalize`……），如果存在逆函数还会加分（有 `encode`/`decode` 就天然有往返性质）。会碰网络、文件、时钟、随机数的函数排在后面。
+2. **猎捕**。每个模块交给一个编程 Agent：读源码、文档字符串、README 和调用处，用 [Hypothesis](https://hypothesis.works)、[fast-check](https://fast-check.dev)、[rapid](https://github.com/flyingmutant/rapid)、[proptest](https://github.com/proptest-rs/proptest) 或 [QuickTheories](https://github.com/quicktheories/QuickTheories) 写属性测试，比如往返、不变量、幂等、和参考实现对照、蜕变关系。它会运行测试，分清是自己写错了还是真失败，并为它相信的每个 Bug 写一个确定性的复现测试。Agent 只能在 `.proofhound/runs/` 里写文件，只能通过 proofhound 自己的测试运行器跑测试。
+3. **重放**。由 proofhound（不是 Agent）把每个复现测试在全新进程里重跑 N 次（默认 3 次）。只要有一次通过、失败原因前后不一致、用了随机数或时钟、或者根本加载不了，就丢弃。
+4. **归因**。检查调用栈。测试自身抛出的错误（`NameError`、参数传错、测试自己算错导致的 `KeyError`）、Hypothesis/fast-check 的错误、第三方库内部的错误，都算测试的问题，不算你的 Bug。崩溃（包括从 goroutine 调用栈和 Rust backtrace 里读出的 panic）会定位到你代码里最深的那一帧；如果是显式的 `raise`/`throw`/`panic` 会单独标出来，让复核者判断是不是文档里写明的行为。
+5. **去重**。出错位置相同、或同一函数上同一性质的发现会被合并。
+6. **复核**。另起一次全新上下文的 Agent 调用，拿到发现和已验证的失败，并被告知"大多数自动报告都是错的"。它要检查：输入是否符合函数约定、期望行为是否真的被承诺、这个行为是不是故意的、测试本身对不对。只有判为 `bug` 且置信度不低于 `--min-confidence`（默认 0.6）的才算确认；拿不准的单独列出。默认复核用的是和猎手相同的模型，只是新开一个上下文；传 `--review-model`（比如 `opus`）可以换一个更强的模型来挑刺。
+7. **修复（可选，`--fix`）**。对每个确认的 Bug，Agent 在项目的一次性副本里改代码（副本放在系统临时目录，不在项目里）。只有当复现测试的全新副本能通过、并且项目自己的测试（`pytest`、`npm test`、`go test ./...`、`cargo test`、`mvn test` / `gradle test`，或配置里的 `testCommand`）没有从通过变成失败时，proofhound 才保留这个补丁。你的工作目录始终不会被改动。
 
 ## 目前的成绩
 
@@ -94,7 +94,7 @@ flowchart LR
 | Rust（`rustlib`，7 个函数） | 5 | 5 | 0（文档写明返回 `Err` 和会 `assert!` 的诱饵没被误报） | 1分18秒 | $0.76 |
 | Java（`javalib`，9 个函数） | 5 | 5 | 0（文档写明会抛 `IllegalArgumentException` 的诱饵和本来就正确的 `reverse` 都没被误报） | 1分27秒 | $0.51 |
 
-**真实开源库：**25 个常用 Python 和 JS 库、204 个函数，总花费约 $9，**确认 20 个 Bug；人工逐个复核后，17 个是明确的 Bug，3 个有争议，没有一个是错的。**之后又跑了 15 个 Go 和 Rust 库、111 个函数，花费约 $5，**确认 7 个，6 个明确、1 个有争议，没有错的**，比如 gosimple/slug 关闭智能截断后 `slug.Make("a")` 返回 `""`，humantime 的严格解析函数 `parse_rfc3339` 接受 `"1970-01-01T00:00:00ZZ"`。之后又用 `--fix` 跑了 5 种语言的 41 个库、309 个函数，花费约 $15，**确认 26 个，19 个明确、7 个有争议，没有错的；写出 17 个补丁，17 个全部通过验证**，比如 jsemver 的 `nextPreReleaseVersion()` 把 `1.0.0-alpha.0` 变成 `1.0.0-alpha.0.1`，补丁只改了一行。它还在自己的源码里找出 7 个 Bug，都已修好。完整清单和一行复现代码见 [SHOWCASE.md](SHOWCASE.md)。部分例子（还没向上游报告）：
+**真实开源库**：25 个常用 Python 和 JS 库、204 个函数，总花费约 $9，**确认 20 个 Bug；人工逐个复核后，17 个是明确的 Bug，3 个有争议，没有一个是错的**。之后又跑了 15 个 Go 和 Rust 库、111 个函数，花费约 $5，**确认 7 个，6 个明确、1 个有争议，没有错的**，比如 gosimple/slug 关闭智能截断后 `slug.Make("a")` 返回 `""`，humantime 的严格解析函数 `parse_rfc3339` 接受 `"1970-01-01T00:00:00ZZ"`。之后又用 `--fix` 跑了 5 种语言的 41 个库、309 个函数，花费约 $15，**确认 26 个，19 个明确、7 个有争议，没有错的；写出 17 个补丁，17 个全部通过验证**，比如 jsemver 的 `nextPreReleaseVersion()` 把 `1.0.0-alpha.0` 变成 `1.0.0-alpha.0.1`，补丁只改了一行。它还在自己的源码里找出 7 个 Bug，都已修好。完整清单和一行复现代码见 [SHOWCASE.md](SHOWCASE.md)。部分例子（还没向上游报告）：
 
 | 项目 | 模块数 | 确认 | 例子 | 用时 | 花费 |
 |---|---|---|---|---|---|
