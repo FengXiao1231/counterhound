@@ -91,13 +91,13 @@ const LANG_GUIDE = {
 const API_GUIDE = {
   python: (api) => `Language notes (Python + Hypothesis, HTTP API through ${api.framework === 'fastapi' ? 'FastAPI\'s TestClient' : 'Flask\'s test client'}):
 - Get a client like this, at module level of each test file:
-    ${api.client.split('\n').join('\n    ')}
+    ${(api.client || '# find where the app is created (FastAPI()/Flask() or a create_app() factory) and import it; then TestClient(app) or app.test_client()').split('\n').join('\n    ')}
   Requests run in-process: no server, no network, no ports. ${api.framework === 'fastapi' ? 'An exception inside a handler propagates into the test (TestClient raises server exceptions), so a would-be 500 shows up with the traceback into the handler: report it as a crash at that line.' : 'With TESTING on, an exception inside a view propagates into the test, so a would-be 500 shows up with the traceback into the view.'}
 - Use \`from hypothesis import given, settings, strategies as st\` with strategies that build VALID request bodies and parameters from the schema (field types, min/max, required). Keep each example cheap: a handful of requests. Create the resources a test needs inside the test; do not depend on state left by other tests.
 - A repro is a plain pytest function that makes the fixed requests with concrete JSON and asserts on status codes and bodies. The project's fixtures listed above (for example a client or a database session) may be used in a repro.${api.openapiPath ? `\n- The app's OpenAPI document is at \`${api.openapiPath}\`: it is the contract. Check response bodies against the declared schemas and status codes against the declared responses.` : ''}`,
   javascript: (api) => `Language notes (JavaScript/TypeScript + fast-check, HTTP API through ${api.framework}):
 - Get a client like this:
-    ${api.client.split('\n').join('\n    ')}
+    ${(api.client || "// find where the app is created and import it; Fastify: app.inject(...), Hono: app.request(...), Express/Koa: app.listen(0) and fetch").split('\n').join('\n    ')}
 - Use fc.assert(fc.asyncProperty(...)) with arbitraries that build VALID request bodies from the schema or the handler's validation. Keep each example cheap. Create what a test needs inside the test.
 - A repro is a plain \`test('repro_<name>', async () => { ... })\` making the fixed requests with concrete JSON and asserting on status codes and bodies. A 5xx response is a bug: assert on the status so the failure is attributed to that request.`,
 };

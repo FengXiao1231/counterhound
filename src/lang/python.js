@@ -109,7 +109,12 @@ export const python = {
     if (r.code !== 0) throw new Error(`route scan failed: ${r.stderr.trim().split('\n').slice(-3).join(' ')}`);
     const data = JSON.parse(r.stdout);
     if (!data.routes.length) return null;
-    const app = data.apps[0] || null;
+    // prefer the app defined next to the routes (a docs folder or monorepo can hold several apps)
+    const dirOf = (f) => f.split('/').slice(0, -1).join('/');
+    const app = data.apps.find((a) => data.routes.some((r) => r.file === a.file))
+      || data.apps.find((a) => data.routes.some((r) => dirOf(r.file) === dirOf(a.file)))
+      || data.apps.find((a) => data.routes.some((r) => dirOf(r.file).startsWith(dirOf(a.file))))
+      || data.apps[0] || null;
     const api = { framework: data.framework, app, apps: data.apps, client: null, openapi: null };
     if (app) {
       api.client = app.framework === 'fastapi'

@@ -494,6 +494,9 @@ test('python route scanner: FastAPI and Flask routes, routers with prefixes, app
   assert.deepEqual([flask.api.app.module, flask.api.app.name, flask.api.app.factory], ['shop', 'create_app', true]);
   assert.match(flask.api.client, /app = create_app\(\)[\s\S]*test_client\(\)/);
   assert.deepEqual(flask.targets.map((t) => t.name), ['GET /api/orders/', 'POST /api/orders/', 'GET /api/orders/<int:order_id>']);
+  // restricting the scan to a folder still finds the app factory elsewhere
+  const part = python.listRoutes(tmp, {}, ['shop/orders.py']);
+  assert.deepEqual([part.api.app.name, part.targets.length], ['create_app', 3]);
   assert.equal(python.listRoutes(path.join(ROOT, 'test', 'fixtures', 'pylib'), {}), null);
   fs.rmSync(tmp, { recursive: true, force: true });
 });

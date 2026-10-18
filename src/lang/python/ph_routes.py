@@ -51,7 +51,8 @@ def signature(fn):
     return f"({', '.join(out)})" + (f' -> {ret}' if ret else '')
 
 
-def collect(root, path, out):
+def collect(root, path, out, want_routes=True):
+    """Apps, routers and mounts are collected from every file; routes only from the files asked for."""
     try:
         src = open(path, encoding='utf-8').read()
         tree = ast.parse(src)
@@ -105,7 +106,7 @@ def collect(root, path, out):
         })
 
     for node in ast.walk(tree):
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        if not want_routes or not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
         for deco in node.decorator_list:
             if not (isinstance(deco, ast.Call) and isinstance(deco.func, ast.Attribute) and isinstance(deco.func.value, ast.Name)):
@@ -130,16 +131,14 @@ def main():
     root = os.path.abspath(sys.argv[1] if len(sys.argv) > 1 else '.')
     only = sys.argv[2:]
     out = {'apps': [], 'routers': [], 'mounts': [], 'routes': []}
-    starts = [os.path.join(root, o) for o in only] or [root]
-    for start in starts:
-        if os.path.isfile(start):
-            collect(root, start, out)
-            continue
-        for dirpath, dirnames, filenames in os.walk(start):
-            dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS and not d.startswith('.') and not d.endswith('.egg-info')]
-            for f in filenames:
-                if f.endswith('.py') and not f.startswith('test_') and f != 'conftest.py':
-                    collect(root, os.path.join(dirpath, f), out)
+    starts = [os.path.abspath(os.path.join(root, o)) for o in only]
+    wanted = lambda p: not starts or any(p == s or p.startswith(s + os.sep) for s in starts)
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in SKIP_DIRS and not d.startswith('.') and not d.endswith('.egg-info')]
+        for f in filenames:
+            if f.endswith('.py') and not f.startswith('test_') and f != 'conftest.py':
+                p = os.path.join(dirpath, f)
+                collect(root, p, out, wanted(p))
     # a router mounted with a prefix: apply it to the routes declared on that router (matched by variable name)
     for m in out['mounts']:
         var = m['router'].split('.')[-1]
