@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Language support
+    url: https://github.com/FengXiao1231/proofhound/blob/main/README.md#roadmap
+    about: Check the roadmap before asking for a new language

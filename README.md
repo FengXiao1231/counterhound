@@ -11,6 +11,11 @@ and survived an independent reviewer whose job is to refute it.
 
 `npx proofhound`
 
+[![tests](https://github.com/FengXiao1231/proofhound/actions/workflows/test.yml/badge.svg)](https://github.com/FengXiao1231/proofhound/actions/workflows/test.yml)
+[![node](https://img.shields.io/badge/node-%3E%3D20-339933)](package.json)
+[![dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen)](package.json)
+[![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 **English** · [简体中文](README.zh-CN.md) · Python, JavaScript/TypeScript, Go, Rust & Java · MIT
 
 <img src="assets/report.png" width="720" alt="proofhound report for a real run on boltons">

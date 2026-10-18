@@ -1,0 +1,20 @@
+name: Bug in proofhound
+description: A crash, a wrong classification, a run that did not finish
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: Output of the run (or of `npx proofhound doctor`)
+      render: shell
+  - type: input
+    id: setup
+    attributes:
+      label: Language, agent, model, OS
+      placeholder: Go 1.22 · codex · macOS 15
