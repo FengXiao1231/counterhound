@@ -3,4 +3,4 @@ I tested 4 properties on `filenamifyPath` and reported 0 bugs; all 4 passed.
 The properties were that the directory is preserved, that the basename equals what `filenamify` returns, that the function is idempotent, and that relative paths behave. I did not test the `options` argument, so non-default `replacement` and `maxLength` values are untested. `findings.json` is `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-192205/g01-filenamify-path-js; cat > .proofhound/runs/20261017-192205/g01-filenamify-path-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport path from 'node:path';\
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-192205/g01-filenamify-path-js; cat > .counterhound/runs/20261017-192205/g01-filenamify-path-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport path from 'node:path';\

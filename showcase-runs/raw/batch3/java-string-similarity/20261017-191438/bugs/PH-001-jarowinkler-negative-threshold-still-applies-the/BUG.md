@@ -78,4 +78,4 @@ Property: *with a negative threshold, similarity equals the plain Jaro similarit
 QuickTheories shrank the failure to: `Failing test case: {a, aaaaaaaaaa}`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

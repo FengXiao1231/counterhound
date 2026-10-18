@@ -47,4 +47,4 @@ Property: *in the output, any line containing more than one word is no wider tha
 rapid shrank the failure to: `Failing test case: s: "a\ta", lim: 0x1`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

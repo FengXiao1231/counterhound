@@ -5,7 +5,7 @@ I tested 5 properties and reported 2 bugs. Both repro files fail as intended.
 
 A third failure, an integer value with a prefix modifier (for example `{x:2}` with `12345`), raised a `TypeError`. I left it out because the template syntax and docs only describe prefixes on strings, so it's arguably unspecified.
 
-Everything is in `.proofhound/runs/20261017-191824/g02-uritemplate-variable-py/`. `findings.json` holds the two reports. `test_ph_props.py` holds the property tests, and the repros are `test_repro_zero.py` and `test_repro_reserved_space.py`.
+Everything is in `.counterhound/runs/20261017-191824/g02-uritemplate-variable-py/`. `findings.json` holds the two reports. `test_ph_props.py` holds the property tests, and the repros are `test_repro_zero.py` and `test_repro_reserved_space.py`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-191824/g02-uritemplate-variable-py"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-191824/g02-uritemplate-variable-py"}

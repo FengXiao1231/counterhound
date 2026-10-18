@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-190434",
   "diff": null,
   "fixRun": true,
@@ -75,7 +75,7 @@
       "evidence": "split() uses \\p{L} with the u flag, so astral letters count as word letters, but capitalCaseTransformFactory does upper(word[0]) / word.slice(1), which cuts a surrogate pair in half; toUpperCase of a lone high surrogate is a no-op. Doc: 'Convert a string to pascal snake case (Foo_Bar)'.",
       "group": "g01-packages-change-case-src-index-ts",
       "file": "packages/change-case/src/index.ts",
-      "workdir": ".proofhound/runs/20261017-190434/g01-packages-change-case-src-index-ts",
+      "workdir": ".counterhound/runs/20261017-190434/g01-packages-change-case-src-index-ts",
       "verification": {
         "verified": true,
         "reproFile": "repro_astral_capitalize.test.mjs",
@@ -113,10 +113,10 @@
         "files": [
           "packages/change-case/src/index.ts"
         ],
-        "suite": "not run (no test command found; set \"testCommand\" in .proofhound/config.json)"
+        "suite": "not run (no test command found; set \"testCommand\" in .counterhound/config.json)"
       },
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { pascalSnakeCase } from '../../../../../packages/change-case/src/index.ts';\n\ntest('repro_astral_capitalize', () => {\n  // U+10428 DESERET SMALL LETTER LONG I; its uppercase is U+10400\n  assert.equal(pascalSnakeCase('\\u{10428}a', { locale: false }), '\\u{10400}a');\n});\n",
-      "bugDir": ".proofhound/runs/20261017-190434/bugs/PH-001-capitalisation-splits-surrogate-pairs-so-words-s"
+      "bugDir": ".counterhound/runs/20261017-190434/bugs/PH-001-capitalisation-splits-surrogate-pairs-so-words-s"
     }
   ]
 }

@@ -1,4 +1,4 @@
 I tested 6 properties and reported 0 bugs. Four passed. The two that failed hinge on unspecified float behaviour (the negative-zero string `-0B` for a tiny negative like `-5e-324`, and `parse` returning a non-integer for a float), so I didn't report them.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-064613/g01-index-js; echo ok"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-064613/g01-index-js; echo ok"}

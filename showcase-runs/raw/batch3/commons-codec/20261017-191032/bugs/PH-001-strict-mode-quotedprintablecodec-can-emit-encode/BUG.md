@@ -57,4 +57,4 @@ Property: *in strict mode (full RFC 1521 ruleset) every encoded line, including 
 QuickTheories shrank the failure to: `Failing test case: [32, 32, 32, 13, 32, 13, 13, 32, 32, 32, 32, 32, 32, 32, 13, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 13, 32, 32, 13, 13, 13, 32, 32, 32, 32, 32, 32, 32, 32, 13, 32, 32, 13, 13, 32, 32, 13, 32, 32, 32]`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

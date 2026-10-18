@@ -6,7 +6,7 @@ import sys
 
 SKIP_DIRS = {
     '.git', '.hg', '.venv', 'venv', 'env', '.env', 'node_modules', 'build', 'dist', 'site-packages',
-    '.tox', '.nox', '__pycache__', '.proofhound', '.mypy_cache', '.pytest_cache', 'docs', 'doc',
+    '.tox', '.nox', '__pycache__', '.counterhound', '.mypy_cache', '.pytest_cache', 'docs', 'doc',
 }
 MAX_DEPTH = 3
 

@@ -2,7 +2,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index 691c82f..4fffb19 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -11,4 +11,3 @@ proofhound · Python · claude (sonnet) · 2 modules, 6 functions
+@@ -11,4 +11,3 @@ counterhound · Python · claude (sonnet) · 2 modules, 6 functions
    bug (0.90) parse_time raises ValueError for hh.hhhh with many trailing 9s (microsecond rounds to 1000000)
  
    writing fixes for 1 bug…

@@ -1,8 +1,8 @@
-I tested 0 properties and reported 0 bugs. The Bash tool was denied in don't-ask mode, so I couldn't create the test files or run `./.proofhound/ph-test`. I wrote `findings.json` as `[]` and no test or repro files exist.
+I tested 0 properties and reported 0 bugs. The Bash tool was denied in don't-ask mode, so I couldn't create the test files or run `./.counterhound/ph-test`. I wrote `findings.json` as `[]` and no test or repro files exist.
 
 I read `utils/binary-search.js` by hand and found no bugs. The binary search and bound functions look correct. The one oddity is that `searchWithComparator` calls `comparator(array[mid], value)`, while the two bound-with-comparator functions call `comparator(value, array[mid])`. That only matters for asymmetric comparators, and nothing in the code promises otherwise, so I don't count it as a bug.
 
 If you allow Bash for the `ph-test` command, I can write and run the property tests. I would compare each function against a linear-scan reference, including the `lo`/`hi` sub-range cases.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-041709/g01-utils-binary-search-js && cat > .proofhound/runs/20261018-041709/g01-utils-binary-search-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport mod from '../
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-041709/g01-utils-binary-search-js && cat > .counterhound/runs/20261018-041709/g01-utils-binary-search-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport mod from '../

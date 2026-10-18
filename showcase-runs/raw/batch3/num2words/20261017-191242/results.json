@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191242",
   "diff": null,
   "fixRun": true,
@@ -80,7 +80,7 @@
       "evidence": "parse_paisa does int('01')*100 -> '10'; 1 paisa = 0.01 taka. Docstring example 9999.15 -> \u09aa\u09a8\u09c7\u09b0 \u09aa\u09af\u09bc\u09b8\u09be shows the two decimals are paisa.",
       "group": "g01-num2words-lang_BN-py",
       "file": "num2words/lang_BN.py",
-      "workdir": ".proofhound/runs/20261017-191242/g01-num2words-lang_BN-py",
+      "workdir": ".counterhound/runs/20261017-191242/g01-num2words-lang_BN-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_paisa_leading_zero.py",
@@ -120,7 +120,7 @@
         "suite": "not compared (the suite already fails without the fix: python3 -m pytest -q -x -p no:cacheprovider --no-header)"
       },
       "reproSource": "from num2words.lang_BN import Num2Word_BN\n\n\ndef test_repro_paisa_leading_zero():\n    # 0.01 taka is one paisa, not ten\n    assert Num2Word_BN().to_currency('0.01') == '\u09b6\u09c2\u09a8\u09cd\u09af \u099f\u09be\u0995\u09be \u098f\u0995 \u09aa\u09af\u09bc\u09b8\u09be'\n",
-      "bugDir": ".proofhound/runs/20261017-191242/bugs/PH-001-bengali-to-currency-treats-paisa-values-0-01-0-0"
+      "bugDir": ".counterhound/runs/20261017-191242/bugs/PH-001-bengali-to-currency-treats-paisa-values-0-01-0-0"
     },
     {
       "title": "to_cardinal drops zeros after the decimal point (1.05 reads as 1.5)",
@@ -135,7 +135,7 @@
       "evidence": "parse_number converts the fractional string with int(), discarding leading zeros; _dosomik_to_bengali_word reads digit by digit, so the intent is digit-wise reading. 1.05 and 1.5 are different numbers.",
       "group": "g01-num2words-lang_BN-py",
       "file": "num2words/lang_BN.py",
-      "workdir": ".proofhound/runs/20261017-191242/g01-num2words-lang_BN-py",
+      "workdir": ".counterhound/runs/20261017-191242/g01-num2words-lang_BN-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_decimal_leading_zero.py",
@@ -175,7 +175,7 @@
         "suite": "not compared (the suite already fails without the fix: python3 -m pytest -q -x -p no:cacheprovider --no-header)"
       },
       "reproSource": "from num2words.lang_BN import Num2Word_BN\n\n\ndef test_repro_decimal_leading_zero():\n    # 1.05 and 1.5 must not read the same\n    n = Num2Word_BN()\n    assert n.to_cardinal('1.05') != n.to_cardinal('1.5')\n",
-      "bugDir": ".proofhound/runs/20261017-191242/bugs/PH-002-bn-to-cardinal-drops-leading-zeros-in-the-fracti"
+      "bugDir": ".counterhound/runs/20261017-191242/bugs/PH-002-bn-to-cardinal-drops-leading-zeros-in-the-fracti"
     }
   ]
 }

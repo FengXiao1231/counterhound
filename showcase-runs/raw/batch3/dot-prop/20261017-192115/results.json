@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-192115",
   "diff": null,
   "fixRun": true,
@@ -62,7 +62,7 @@
       "evidence": "readme: stringifyPath 'Returns a string path that can be used with other dot-prop functions'; type is Array<string | number>. Number.isInteger(1e21) is true so formatPathSegment uses `[${segment}]`, which stringifies in exponent notation.",
       "group": "g01-index-js",
       "file": "index.js",
-      "workdir": ".proofhound/runs/20261017-192115/g01-index-js",
+      "workdir": ".counterhound/runs/20261017-192115/g01-index-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_large_number_segment.test.mjs",
@@ -103,7 +103,7 @@
         "suite": "passed (npm test --silent)"
       },
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport {stringifyPath, parsePath} from '../../../../../index.js';\n\ntest('repro_large_number_segment', () => {\n\t// stringifyPath output must be a valid path string that parsePath accepts.\n\tconst path = stringifyPath([1e21]);\n\tassert.doesNotThrow(() => parsePath(path), `stringifyPath([1e21]) gave unparseable ${JSON.stringify(path)}`);\n});\n",
-      "bugDir": ".proofhound/runs/20261017-192115/bugs/PH-001-stringifypath-emits-an-unparseable-index-like-1e"
+      "bugDir": ".counterhound/runs/20261017-192115/bugs/PH-001-stringifypath-emits-an-unparseable-index-like-1e"
     }
   ]
 }

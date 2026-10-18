@@ -3,14 +3,14 @@ import os from 'node:os';
 import path from 'node:path';
 import { run, sh, hash, readJSON } from '../util.js';
 
-const CACHE = process.env.PROOFHOUND_JAVA_CACHE || path.join(os.homedir(), '.cache', 'proofhound', 'java');
+const CACHE = process.env.COUNTERHOUND_JAVA_CACHE || path.join(os.homedir(), '.cache', 'counterhound', 'java');
 const CENTRAL = 'https://repo1.maven.org/maven2';
 const JARS = [
   'org/junit/platform/junit-platform-console-standalone/1.14.4/junit-platform-console-standalone-1.14.4.jar',
   'org/quicktheories/quicktheories/0.26/quicktheories-0.26.jar',
 ];
 const LAUNCHER = path.join(CACHE, path.basename(JARS[0]));
-const SKIP_DIRS = new Set(['target', 'build', 'out', '.git', 'node_modules', '.gradle', '.idea', '.proofhound', 'test', 'tests', 'testFixtures', 'jmh', 'examples', 'samples']);
+const SKIP_DIRS = new Set(['target', 'build', 'out', '.git', 'node_modules', '.gradle', '.idea', '.counterhound', 'test', 'tests', 'testFixtures', 'jmh', 'examples', 'samples']);
 
 // --- toolchain: the runner and property-testing jars, and the project's classpath ---
 
@@ -85,11 +85,11 @@ function dependencyClasspath(repo, out) {
 }
 
 /**
- * Compile the project's main sources into .proofhound/java/classes (never into target/ or build/),
+ * Compile the project's main sources into .counterhound/java/classes (never into target/ or build/),
  * once per change of the sources. Returns { classes, deps, roots }.
  */
 function ensureBuilt(repo, cfg = {}) {
-  const out = path.join(repo, '.proofhound', 'java');
+  const out = path.join(repo, '.counterhound', 'java');
   const roots = sourceRoots(repo);
   const files = roots.flatMap(javaFiles);
   const stamp = hash(files.map((f) => `${f}:${fs.statSync(f).mtimeMs}`).join('\n'), 16);
@@ -104,7 +104,7 @@ function ensureBuilt(repo, cfg = {}) {
   const r = sh('javac', ['-encoding', 'UTF-8', '-nowarn', '-parameters', '-proc:full', '-d', classes, ...(deps ? ['-cp', deps] : []), `@${list}`], { cwd: repo });
   if (r.code !== 0) {
     const errs = (r.stdout + r.stderr).split('\n').filter((l) => /error:/.test(l)).slice(0, 5).join('\n');
-    throw new Error(`could not compile the project's sources with javac${warning ? ` (${warning})` : ''}:\n${errs}\nSet "classpath" in .proofhound/config.json if dependencies are missing.`);
+    throw new Error(`could not compile the project's sources with javac${warning ? ` (${warning})` : ''}:\n${errs}\nSet "classpath" in .counterhound/config.json if dependencies are missing.`);
   }
   fs.writeFileSync(path.join(out, 'build.json'), JSON.stringify({ stamp, deps }));
   return { classes, deps, roots };
@@ -202,7 +202,7 @@ function sourceLine(file, line) {
 }
 
 /**
- * Turn a Java stack trace into proofhound's error shape. `resolve(className, fileName)` maps a frame
+ * Turn a Java stack trace into counterhound's error shape. `resolve(className, fileName)` maps a frame
  * to a source path, or null for JDK and library frames, which are dropped: a JDK method that throws on
  * the project's behalf is attributed to the project frame that called it.
  */
@@ -263,9 +263,9 @@ export const java = {
     const r = sh('javac', ['-version'], { cwd: repo });
     if (r.code !== 0) return { ok: false, problem: 'javac was not found. Install a JDK 21+ (for example from https://adoptium.net)' };
     const v = (r.stdout + r.stderr).match(/javac (\d+)/);
-    if (v && +v[1] < 21) return { ok: false, problem: `javac ${v[1]} is too old; proofhound needs JDK 21+` };
+    if (v && +v[1] < 21) return { ok: false, problem: `javac ${v[1]} is too old; counterhound needs JDK 21+` };
     try { ensureJars(); } catch (e) { return { ok: false, problem: e.message }; }
-    return { ok: true, info: `${(r.stdout + r.stderr).split('\n').find((l) => /^javac /.test(l)) || 'javac'}, JUnit 5 + QuickTheories (proofhound cache)` };
+    return { ok: true, info: `${(r.stdout + r.stderr).split('\n').find((l) => /^javac /.test(l)) || 'javac'}, JUnit 5 + QuickTheories (counterhound cache)` };
   },
 
   prepare(repo, workRoot, cfg) { ensureJars(); ensureBuilt(repo, cfg); },

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-064016",
   "repo": "boltons",
   "lang": "python",
@@ -149,7 +149,7 @@
       "evidence": "Docstring: 'Complements TracebackInfo.to_dict'. The source is `return cls(d['frames'])` with a '# TODO: check this.' comment.",
       "group": "g03-boltons-tbutils-py",
       "file": "boltons/tbutils.py",
-      "workdir": ".proofhound/runs/20261017-064016/g03-boltons-tbutils-py",
+      "workdir": ".counterhound/runs/20261017-064016/g03-boltons-tbutils-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_from_dict.py",
@@ -185,7 +185,7 @@
       "status": "confirmed",
       "bugId": "PH-002",
       "reproSource": "from boltons.tbutils import TracebackInfo\n\n\ndef test_repro_from_dict():\n    def f():\n        raise ValueError('x')\n    try:\n        f()\n    except ValueError:\n        ti = TracebackInfo.from_traceback()\n    d = ti.to_dict()\n    ti2 = TracebackInfo.from_dict(d)\n    assert ti2.to_dict() == d\n    str(ti2)\n",
-      "bugDir": ".proofhound/runs/20261017-064016/bugs/PH-002-tracebackinfo-from-dict-leaves-frames-as-plain-d"
+      "bugDir": ".counterhound/runs/20261017-064016/bugs/PH-002-tracebackinfo-from-dict-leaves-frames-as-plain-d"
     },
     {
       "title": "QueryParamDict.to_text leaves ';' unquoted, but from_text treats ';' as a pair separator",
@@ -200,7 +200,7 @@
       "evidence": "to_text docs: full_quote=True percent-quotes special characters (fully-quoted URLs are 'necessary for sending over the network'). _QUERY_SAFE keeps sub-delims such as ';' unquoted, while parse_qsl in the same module splits on both '&' and ';', so the two halves of the module disagree and data is corrupted.",
       "group": "g01-boltons-urlutils-py",
       "file": "boltons/urlutils.py",
-      "workdir": ".proofhound/runs/20261017-064016/g01-boltons-urlutils-py",
+      "workdir": ".counterhound/runs/20261017-064016/g01-boltons-urlutils-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_semicolon.py",
@@ -231,7 +231,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "from boltons.urlutils import QueryParamDict\n\n\ndef test_repro_semicolon():\n    d = QueryParamDict([('a', 'b;c')])\n    text = d.to_text(full_quote=True)\n    assert QueryParamDict.from_text(text).items(multi=True) == [('a', 'b;c')], text\n",
-      "bugDir": ".proofhound/runs/20261017-064016/bugs/PH-001-queryparamdict-to-text-leaves-unquoted-in-values"
+      "bugDir": ".counterhound/runs/20261017-064016/bugs/PH-001-queryparamdict-to-text-leaves-unquoted-in-values"
     },
     {
       "title": "format_histogram on empty Stats raises ZeroDivisionError",
@@ -246,7 +246,7 @@
       "evidence": "Stats has a `default` for empty data and get_quantile/describe handle empty data; get_histogram_counts explicitly handles empty data by returning [(0.0, 0)] (_get_bin_bounds returns [0.0]), but format_histogram_counts divides by the max count, which is 0.",
       "group": "g05-boltons-statsutils-py",
       "file": "boltons/statsutils.py",
-      "workdir": ".proofhound/runs/20261017-064016/g05-boltons-statsutils-py",
+      "workdir": ".counterhound/runs/20261017-064016/g05-boltons-statsutils-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_empty_hist.py",
@@ -282,7 +282,7 @@
       "status": "confirmed",
       "bugId": "PH-003",
       "reproSource": "from boltons.statsutils import Stats\n\n\ndef test_repro_empty_hist():\n    # empty Stats are supported elsewhere (default value); must not raise ZeroDivisionError\n    out = Stats([]).format_histogram()\n    assert isinstance(out, str)\n",
-      "bugDir": ".proofhound/runs/20261017-064016/bugs/PH-003-stats-format-histogram-raises-zerodivisionerror"
+      "bugDir": ".counterhound/runs/20261017-064016/bugs/PH-003-stats-format-histogram-raises-zerodivisionerror"
     },
     {
       "title": "relative_time() ignores ndigits beyond 6 significant digits",
@@ -297,7 +297,7 @@
       "evidence": "Docstring: ndigits is 'The number of decimal digits to round to'. decimal_relative_time returns 1.123456, but relative_time formats with f'{abs(drt):g}', which keeps only 6 significant digits, so the requested precision is silently lost.",
       "group": "g06-boltons-timeutils-py",
       "file": "boltons/timeutils.py",
-      "workdir": ".proofhound/runs/20261017-064016/g06-boltons-timeutils-py",
+      "workdir": ".counterhound/runs/20261017-064016/g06-boltons-timeutils-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_relative_time_ndigits.py",
@@ -328,7 +328,7 @@
       "status": "confirmed",
       "bugId": "PH-004",
       "reproSource": "from datetime import datetime, timedelta\nfrom boltons.timeutils import relative_time\n\n\ndef test_repro_relative_time_ndigits():\n    d = datetime(2000, 1, 1)\n    other = d + timedelta(seconds=1, microseconds=123456)\n    assert relative_time(d, other, ndigits=6) == '1.123456 seconds ago'\n",
-      "bugDir": ".proofhound/runs/20261017-064016/bugs/PH-004-relative-time-drops-requested-decimal-digits-bec"
+      "bugDir": ".counterhound/runs/20261017-064016/bugs/PH-004-relative-time-drops-requested-decimal-digits-bec"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-192205",
   "diff": null,
   "fixRun": true,
@@ -70,7 +70,7 @@
       "evidence": "Source comment: 'Normalize to NFC first to stabilize byte representation and length calculations across platforms.' The input is NFC-normalized but the replacement is inserted afterwards without normalization, so the stated stabilization goal is not met.",
       "group": "g02-filenamify-js",
       "file": "filenamify.js",
-      "workdir": ".proofhound/runs/20261017-192205/g02-filenamify-js",
+      "workdir": ".counterhound/runs/20261017-192205/g02-filenamify-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_replacement_not_nfc.test.mjs",

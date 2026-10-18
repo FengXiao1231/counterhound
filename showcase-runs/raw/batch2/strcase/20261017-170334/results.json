@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-170334",
   "repo": "strcase",
   "lang": "go",
@@ -73,7 +73,7 @@
       "evidence": "ToLowerCamel is documented as converting to lowerCamelCase; the existing test shows a leading space is ignored (\" some string\" -> \"someString\"), but a leading '_', '-' or '.' sets capNext at i==0 and capitalizes the first letter.",
       "group": "g02-camel-go",
       "file": "camel.go",
-      "workdir": ".proofhound/runs/20261017-170334/g02-camel-go",
+      "workdir": ".counterhound/runs/20261017-170334/g02-camel-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_lowercamel_leading_sep_test.go",
@@ -105,7 +105,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "package strcase\n\nimport \"testing\"\n\nfunc TestReproLowerCamelLeadingSeparator(t *testing.T) {\n\tif got := ToLowerCamel(\"_some_string\"); got != \"someString\" {\n\t\tt.Fatalf(\"ToLowerCamel(%q) = %q, want %q\", \"_some_string\", got, \"someString\")\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-170334/bugs/PH-001-tolowercamel-returns-an-uppercase-first-letter-w"
+      "bugDir": ".counterhound/runs/20261017-170334/bugs/PH-001-tolowercamel-returns-an-uppercase-first-letter-w"
     }
   ]
 }

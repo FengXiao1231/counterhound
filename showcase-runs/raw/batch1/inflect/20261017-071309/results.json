@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-071309",
   "repo": "inflect",
   "lang": "python",
@@ -59,7 +59,7 @@
       "evidence": "plural_noun accepts any Word; lowercase 'son of a gun' -> 'sons of guns' is tested in tests/test_pwd.py. The dual-compound branch of _plnoun drops the 'a', so the result has fewer words than the input, and postprocess's per-word capitalisation loop indexes result[index] for each original word, which overruns when the original word 'A' is capitalised.",
       "group": "g01-inflect-__init__-py",
       "file": "inflect/__init__.py",
-      "workdir": ".proofhound/runs/20261017-071309/g01-inflect-__init__-py",
+      "workdir": ".counterhound/runs/20261017-071309/g01-inflect-__init__-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_title_case_dual_compound.py",
@@ -92,7 +92,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import inflect\n\n\ndef test_repro_title_case_dual_compound():\n    p = inflect.engine()\n    assert p.plural_noun(\"son of a gun\") == \"sons of guns\"\n    # Capitalised version of the same phrase must not crash\n    assert p.plural_noun(\"Son Of A Gun\") == \"Sons Of Guns\"\n",
-      "bugDir": ".proofhound/runs/20261017-071309/bugs/PH-001-plural-noun-raises-indexerror-on-title-cased-son"
+      "bugDir": ".counterhound/runs/20261017-071309/bugs/PH-001-plural-noun-raises-indexerror-on-title-cased-son"
     }
   ]
 }

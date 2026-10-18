@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191438",
   "diff": null,
   "fixRun": true,
@@ -73,7 +73,7 @@
       "evidence": "Constructor javadoc: 'Set threshold to a negative value to get the Jaro distance.' The code adds the bonus when j > threshold, so a negative threshold always adds it; Jaro needs threshold >= 1.",
       "group": "g01-o-debatty-java-stringsimilarity-JaroWinkler-java",
       "file": "src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java",
-      "workdir": ".proofhound/runs/20261017-191438/g01-o-debatty-java-stringsimilarity-JaroWinkler-java",
+      "workdir": ".counterhound/runs/20261017-191438/g01-o-debatty-java-stringsimilarity-JaroWinkler-java",
       "verification": {
         "verified": true,
         "reproFile": "ReproNegativeThresholdTest.java",
@@ -114,7 +114,7 @@
         "suite": "passed (mvn -q -B test)"
       },
       "reproSource": "package info.debatty.java.stringsimilarity;\n\nimport org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.*;\n\nclass ReproNegativeThresholdTest {\n    @Test\n    void negativeThresholdGivesJaro() {\n        // Jaro(\"ab\",\"ac\") = (1/2 + 1/2 + 1) / 3 = 2/3\n        assertEquals(2.0 / 3.0, new JaroWinkler(-1).similarity(\"ab\", \"ac\"), 1e-9);\n    }\n}\n",
-      "bugDir": ".proofhound/runs/20261017-191438/bugs/PH-001-jarowinkler-negative-threshold-still-applies-the"
+      "bugDir": ".counterhound/runs/20261017-191438/bugs/PH-001-jarowinkler-negative-threshold-still-applies-the"
     }
   ]
 }

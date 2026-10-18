@@ -70,7 +70,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index f75394a..1e9afcb 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -11,4 +11,3 @@ proofhound · Go · claude (sonnet) · 2 modules, 9 functions
+@@ -11,4 +11,3 @@ counterhound · Go · claude (sonnet) · 2 modules, 9 functions
    bug (0.95) Format/String mutates receiver for negative durations, so a second call gives a wrong result
  
    writing fixes for 1 bug…

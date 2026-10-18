@@ -7,4 +7,4 @@ The other five properties passed: create→get→PUT idempotence, paging with no
 I ran the tests against an in-memory SQLite config (`create_app(Cfg)`) instead of plain `create_app()`, so `app.db` wasn't touched. The scratch file `test_probe.py` is left in the work directory.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-052716/g01-app-api-users-py && cat > .proofhound/runs/20261018-052716/g01-app-api-users-py/test_ph_props.py <<'EOF'\nimport base64\nfrom hypothesis import given, settings, strategies as st, HealthCheck\nfrom config import Config\nfrom app import create_
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-052716/g01-app-api-users-py && cat > .counterhound/runs/20261018-052716/g01-app-api-users-py/test_ph_props.py <<'EOF'\nimport base64\nfrom hypothesis import given, settings, strategies as st, HealthCheck\nfrom config import Config\nfrom app import create_

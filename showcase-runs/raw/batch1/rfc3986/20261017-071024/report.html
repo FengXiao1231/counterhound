@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>proofhound · rfc3986</title>
+<title>counterhound · rfc3986</title>
 <style>
 :root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
 @media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
@@ -74,7 +74,7 @@ def test_repro_bytes_unsplit_no_authority():
     u=&#39;&#39;,
     lazy=True,
 )</code></p>
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-071024/bugs/PH-001-parseresultbytes-unsplit-raises-attributeerror-f/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-071024/bugs/PH-001-parseresultbytes-unsplit-raises-attributeerror-f/BUG.md</code></p></details>
 </article>
 <article class="bug confirmed">
   <header>
@@ -110,7 +110,7 @@ def test_repro_extend_query_blank():
      )],
     b=[],  # or any other generated value
 )</code></p>
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-071024/bugs/PH-002-uribuilder-extend-query-with-drops-existing-quer/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-071024/bugs/PH-002-uribuilder-extend-query-with-drops-existing-quer/BUG.md</code></p></details>
 </article>
 <article class="bug confirmed">
   <header>
@@ -141,7 +141,7 @@ def test_repro_path_becomes_authority():
   <p class="err"><code>AssertionError: assert &#39;b&#39; is None</code></p></details>
   <details><summary>Why this is a bug</summary><p>RFC 3986 section 3.3: when no authority is present the path cannot begin with &#39;//&#39;; section 6.2.2 normalization must be semantics-preserving. remove_dot_segments produces &#39;//b&#39; and unsplit() concatenates it directly after &#39;a:&#39;.</p><p><b>Independent review:</b> &#39;a:/.//b&#39; is a valid URI: scheme &#39;a&#39;, no authority, path &#39;/.//b&#39;. Normalization runs remove_dot_segments to get &#39;//b&#39;, and unsplit() then emits &#39;a:&#39; followed by &#39;//b&#39;. That string re-parses with authority &#39;b&#39; and no path, so normalization changed the URI&#39;s meaning, which RFC 3986 §6.2 forbids and §3.3 rules out for a no-authority path. This is a narrow edge case, and a fix is small: when there is no authority and the path starts with &#39;//&#39;, keep a &#39;/.&#39; prefix as the WHATWG URL spec does, or skip dot-segment removal that would create the leading &#39;//&#39;. I couldn&#39;t run the repro myself because shell access was denied, so this rests on reading the source and on the harness&#39;s three failing runs.</p>
   
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-071024/bugs/PH-003-normalize-uri-turns-a-path-beginning-with-into-a/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-071024/bugs/PH-003-normalize-uri-turns-a-path-beginning-with-into-a/BUG.md</code></p></details>
 </article>
 <article class="bug confirmed">
   <header>
@@ -169,13 +169,13 @@ def test_repro_empty_authority_dropped():
     # must not change the URI&#39;s structure.
     assert normalize_uri(&quot;file:///etc/hosts&quot;) == &quot;file:///etc/hosts&quot;</code></pre>
   <p class="err"><code>AssertionError: assert &#39;file:/etc/hosts&#39; == &#39;file:///etc/hosts&#39;</code></p></details>
-  <details><summary>Why this is a bug</summary><p>RFC 3986 section 5.3 recomposition: if authority is defined (even empty), append &#39;//&#39; + authority. Docstring says normalize_uri equals uri_reference(uri).normalize().unsplit(); normalization (6.2.2) must not change the URI&#39;s meaning. unsplit() uses truthiness of authority, so &#39;//&#39; is lost (also &#39;//&#39; -&gt; &#39;&#39;).</p><p><b>Independent review:</b> normalize() rebuilds the authority with normalize_authority(), which returns &#39;&#39; for an empty authority. unsplit() then tests `if self.authority:`, so the &#39;//&#39; is dropped, and `file:///etc/hosts` becomes `file:/etc/hosts`. RFC 3986 5.3 says &#39;//&#39; is emitted whenever the authority is defined, even if empty, and normalization shouldn&#39;t change a URI&#39;s structure. I read the source and found no test or documentation saying the drop is intended. I could not run the code (Bash was denied), so this rests on reading the source and the proofhound run, which failed 3/3. The fix is delicate because it has to tell None from &#39;&#39; for authority across parsing, normalization and unsplit, which is why I&#39;m only moderately confident a maintainer would take it.</p>
+  <details><summary>Why this is a bug</summary><p>RFC 3986 section 5.3 recomposition: if authority is defined (even empty), append &#39;//&#39; + authority. Docstring says normalize_uri equals uri_reference(uri).normalize().unsplit(); normalization (6.2.2) must not change the URI&#39;s meaning. unsplit() uses truthiness of authority, so &#39;//&#39; is lost (also &#39;//&#39; -&gt; &#39;&#39;).</p><p><b>Independent review:</b> normalize() rebuilds the authority with normalize_authority(), which returns &#39;&#39; for an empty authority. unsplit() then tests `if self.authority:`, so the &#39;//&#39; is dropped, and `file:///etc/hosts` becomes `file:/etc/hosts`. RFC 3986 5.3 says &#39;//&#39; is emitted whenever the authority is defined, even if empty, and normalization shouldn&#39;t change a URI&#39;s structure. I read the source and found no test or documentation saying the drop is intended. I could not run the code (Bash was denied), so this rests on reading the source and the counterhound run, which failed 3/3. The fix is delicate because it has to tell None from &#39;&#39; for authority across parsing, normalization and unsplit, which is why I&#39;m only moderately confident a maintainer would take it.</p>
   <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_unsplit_roundtrip(
     # The test always failed when commented parts were varied together.
     u=(lambda s, a, p, q, f: (s + &#39;:&#39; if s else &#39;&#39;) + (&#39;//&#39; + a if a is not None else &#39;&#39;) + ((&#39;/&#39; if a is not None and p and (not p.startswith(&#39;/&#39;)) else &#39;&#39;) + p) + (&#39;?&#39; + q if q is not None else &#39;&#39;) + (&#39;#&#39; + f if f is not None else &#39;&#39;))(
         &#39;&#39;,  # or any other generated value
   </code></p>
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-071024/bugs/PH-004-normalize-uri-drops-an-empty-but-present-authori/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-071024/bugs/PH-004-normalize-uri-drops-an-empty-but-present-authori/BUG.md</code></p></details>
 </article>
 
 
@@ -187,7 +187,7 @@ def test_repro_empty_authority_dropped():
 <table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
 <tr><td><code>src/rfc3986/builder.py</code></td><td>URIBuilder.add_path, URIBuilder.extend_path, URIBuilder.from_uri, URIBuilder.add_credentials, URIBuilder.add_query_from, URIBuilder.extend_query_with</td><td>1</td><td>1</td><td>47s</td></tr><tr><td><code>src/rfc3986/parseresult.py</code></td><td>ParseResultBytes.from_string, ParseResult.from_string, ParseResultBytes.unsplit, ParseResult.unsplit, ParseResult.encode, split_authority</td><td>1</td><td>1</td><td>60s</td></tr><tr><td><code>src/rfc3986/api.py</code></td><td>normalize_uri, urlparse, is_valid_uri, uri_reference, iri_reference</td><td>2</td><td>2</td><td>1m27s</td></tr>
 </table>
-<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+<footer>Generated by counterhound. Raw data: <code>results.json</code> next to this file.</footer>
 </main>
 <script>
 document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));

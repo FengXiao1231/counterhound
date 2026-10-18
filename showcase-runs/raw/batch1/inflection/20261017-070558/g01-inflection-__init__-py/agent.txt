@@ -1,4 +1,4 @@
 I tested 10 properties and reported 1 bug: `camelize('', False)` raises `IndexError`. The repro file `test_repro_camelize_empty.py` fails for that reason. The other nine properties passed.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-070558/g01-inflection-__init__-py"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-070558/g01-inflection-__init__-py"}

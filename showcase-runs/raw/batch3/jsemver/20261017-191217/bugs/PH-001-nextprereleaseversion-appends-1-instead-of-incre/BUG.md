@@ -68,4 +68,4 @@ Property: *with no ids, the last numeric identifier of the pre-release is increm
 QuickTheories shrank the failure to: `Failing test case: {aaa, 0}`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

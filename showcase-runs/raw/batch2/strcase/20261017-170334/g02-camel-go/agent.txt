@@ -1,4 +1,4 @@
 I tested 4 properties and reported 1 bug. `ToLowerCamel("_some_string")` returns `SomeString`, not `someString`. The repro fails for that reason.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170334/g02-camel-go && cat > .proofhound/runs/20261017-170334/g02-camel-go/ph_props_test.go <<'EOF'\npackage strcase\n\nimport (\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc TestPhLowerCamelFirstLetterLower(t *testing.T) {\n\trapid.Check(t, fun
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170334/g02-camel-go && cat > .counterhound/runs/20261017-170334/g02-camel-go/ph_props_test.go <<'EOF'\npackage strcase\n\nimport (\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc TestPhLowerCamelFirstLetterLower(t *testing.T) {\n\trapid.Check(t, fun

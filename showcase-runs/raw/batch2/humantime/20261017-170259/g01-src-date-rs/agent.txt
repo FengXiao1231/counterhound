@@ -2,7 +2,7 @@ I tested 5 properties and reported 1 bug: `parse_rfc3339` accepts trailing garba
 
 The repro file fails now for that reason. The other four properties passed. They cover round-trip across all format precisions, truncation, the `+00:00` suffix, and no panic on arbitrary strings.
 
-Everything is in `.proofhound/runs/20261017-170259/g01-src-date-rs/`: `ph_props.rs`, `repro_trailing_garbage.rs` and `findings.json`.
+Everything is in `.counterhound/runs/20261017-170259/g01-src-date-rs/`: `ph_props.rs`, `repro_trailing_garbage.rs` and `findings.json`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170259/g01-src-date-rs && cat > .proofhound/runs/20261017-170259/g01-src-date-rs/ph_props.rs <<'EOF'\nuse humantime::*;\nuse proptest::prelude::*;\nuse std::time::{Duration, UNIX_EPOCH};\n\nproptest! {\n    #[test]\n    fn ph_roundtrip_nanos(s in 0u64..
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170259/g01-src-date-rs && cat > .counterhound/runs/20261017-170259/g01-src-date-rs/ph_props.rs <<'EOF'\nuse humantime::*;\nuse proptest::prelude::*;\nuse std::time::{Duration, UNIX_EPOCH};\n\nproptest! {\n    #[test]\n    fn ph_roundtrip_nanos(s in 0u64..

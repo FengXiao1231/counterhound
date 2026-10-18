@@ -1,4 +1,4 @@
 node_modules/
-.proofhound/
+.counterhound/
 __pycache__/
 *.pyc

@@ -1,4 +1,4 @@
 I tested 9 properties across `ParseBigBytes`, `BigBytes` and `BigIBytes`, and all 9 passed, so I reported 0 bugs. `findings.json` is `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170204/g02-bigbytes-go && cat > .proofhound/runs/20261017-170204/g02-bigbytes-go/ph_props_test.go <<'EOF'\npackage humanize\n\nimport (\n\t\"fmt\"\n\t\"math/big\"\n\t\"regexp\"\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nvar phUnits 
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170204/g02-bigbytes-go && cat > .counterhound/runs/20261017-170204/g02-bigbytes-go/ph_props_test.go <<'EOF'\npackage humanize\n\nimport (\n\t\"fmt\"\n\t\"math/big\"\n\t\"regexp\"\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nvar phUnits 

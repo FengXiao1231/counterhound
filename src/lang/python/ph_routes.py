@@ -7,7 +7,7 @@ import sys
 SKIP_DIRS = {
     '.git', '.hg', '.venv', 'venv', 'env', '.env', 'node_modules', 'build', 'dist', 'site-packages',
     'tests', 'test', 'testing', 'docs', 'doc', 'examples', 'example', '.tox', '.nox', '__pycache__',
-    '.proofhound', '.mypy_cache', '.pytest_cache', 'migrations', 'alembic', 'scripts',
+    '.counterhound', '.mypy_cache', '.pytest_cache', 'migrations', 'alembic', 'scripts',
 }
 METHODS = {'get', 'post', 'put', 'patch', 'delete', 'head', 'options'}
 APP_CLASSES = {'FastAPI': 'fastapi', 'Flask': 'flask', 'APIRouter': 'fastapi', 'Blueprint': 'flask'}

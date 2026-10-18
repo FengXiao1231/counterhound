@@ -9,4 +9,4 @@ The properties were:
 - `parameters: false`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-071700/g01-src-index-ts && cat > .proofhound/runs/20261017-071700/g01-src-index-ts/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport { format, parse } from '../../../
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-071700/g01-src-index-ts && cat > .counterhound/runs/20261017-071700/g01-src-index-ts/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport { format, parse } from '../../../

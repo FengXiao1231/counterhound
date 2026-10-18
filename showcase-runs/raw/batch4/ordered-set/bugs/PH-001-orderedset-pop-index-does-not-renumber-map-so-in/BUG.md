@@ -44,4 +44,4 @@ Property: *after pop(i), index(x) equals the position of x in the set's iteratio
 
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

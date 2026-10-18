@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191122",
   "diff": null,
   "fixRun": true,
@@ -77,7 +77,7 @@
       "evidence": "Format is a pure formatting method (String() is also used by fmt via Stringer, and Duration() is a getter); the code negates d.duration in place at durafmt.go:94 whenever input[0]=='-', so each call flips the sign again and formatting has side effects.",
       "group": "g01-durafmt-go",
       "file": "durafmt.go",
-      "workdir": ".proofhound/runs/20261017-191122/g01-durafmt-go",
+      "workdir": ".counterhound/runs/20261017-191122/g01-durafmt-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_format_mutates_negative_test.go",
@@ -118,7 +118,7 @@
         "suite": "passed (go test -count=1 ./...)"
       },
       "reproSource": "package durafmt\n\nimport (\n\t\"testing\"\n\t\"time\"\n)\n\nfunc TestReproFormatMutatesNegative(t *testing.T) {\n\td := Parse(-1000 * time.Nanosecond)\n\tfirst := d.String()\n\tsecond := d.String()\n\tif first != second {\n\t\tt.Fatalf(\"String() not repeatable: first %q, second %q\", first, second)\n\t}\n\tif d.Duration() != -1000*time.Nanosecond {\n\t\tt.Fatalf(\"Duration() mutated to %v\", d.Duration())\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-191122/bugs/PH-001-format-string-negates-d-duration-in-place-for-ne"
+      "bugDir": ".counterhound/runs/20261017-191122/bugs/PH-001-format-string-negates-d-duration-in-place-for-ne"
     }
   ]
 }

@@ -1,4 +1,4 @@
 I tested 10 properties across `Bytes`, `BytesN`, `IBytes`, `IBytesN` and `ParseBytes`. All of them passed, so I reported 0 bugs and wrote `findings.json` as `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo2/go-humanize/.proofhound/runs/20261017-170204/g01-bytes-go"}
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo2/go-humanize/.counterhound/runs/20261017-170204/g01-bytes-go"}

@@ -1,4 +1,4 @@
-// --fix: for each confirmed bug, an agent edits a sandbox copy of the project. proofhound keeps the
+// --fix: for each confirmed bug, an agent edits a sandbox copy of the project. counterhound keeps the
 // patch only if the bug's repro now passes and the project's own test suite is no worse than before.
 import fs from 'node:fs';
 import os from 'node:os';
@@ -9,7 +9,7 @@ import { writeTestWrapper } from './hunt.js';
 
 // Directories that are linked into the sandbox rather than copied: large, and never part of a fix.
 const LINK = new Set(['node_modules', '.venv', 'venv', 'env']);
-const SKIP = new Set(['.git', '.proofhound', 'target', 'build', '.gradle', '__pycache__', '.pytest_cache', '.mypy_cache', '.idea', '.tox', 'dist', 'coverage']);
+const SKIP = new Set(['.git', '.counterhound', 'target', 'build', '.gradle', '__pycache__', '.pytest_cache', '.mypy_cache', '.idea', '.tox', 'dist', 'coverage']);
 const MAX_BYTES = 300 * 1024 * 1024;
 
 /** Copy the project into `dest`, linking heavy dependency folders. Returns false if it is too big. */
@@ -32,8 +32,8 @@ export function makeSandbox(repo, dest) {
     }
   };
   copy(repo, dest);
-  const cfg = path.join(repo, '.proofhound', 'config.json');
-  if (fs.existsSync(cfg)) { fs.mkdirSync(path.join(dest, '.proofhound'), { recursive: true }); fs.copyFileSync(cfg, path.join(dest, '.proofhound', 'config.json')); }
+  const cfg = path.join(repo, '.counterhound', 'config.json');
+  if (fs.existsSync(cfg)) { fs.mkdirSync(path.join(dest, '.counterhound'), { recursive: true }); fs.copyFileSync(cfg, path.join(dest, '.counterhound', 'config.json')); }
 }
 
 /** Files that differ between the sandbox and the project (repo-relative), skipping linked and generated dirs. */
@@ -114,8 +114,8 @@ export function isTestFile(rel) {
 export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, opts, account, overBudget, remaining }) {
   if (!bugs.length) return;
   log(c.dim(`\n  writing fixes for ${bugs.length} bug${bugs.length > 1 ? 's' : ''}…`));
-  const shared = { ...cfg, cargoTargetDir: cfg.cargoTargetDir || path.join(repo, '.proofhound', 'rust', 'target'), suiteTargetDir: path.join(repo, '.proofhound', 'rust', 'suite-target') };
-  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'proofhound-fix-'));
+  const shared = { ...cfg, cargoTargetDir: cfg.cargoTargetDir || path.join(repo, '.counterhound', 'rust', 'target'), suiteTargetDir: path.join(repo, '.counterhound', 'rust', 'suite-target') };
+  const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'counterhound-fix-'));
   // One snapshot of the project, taken now: every sandbox is copied from it and patches are diffed
   // against it, so files that change in the project meanwhile (logs, build output) never leak into a patch.
   const pristine = path.join(tmpRoot, 'pristine');
@@ -148,13 +148,13 @@ export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, o
 
   async function attempt(bug, dir, sandbox) {
     const testCmd = writeTestWrapper(sandbox, binPath);
-    // the agent's test runs reuse proofhound's Rust build cache instead of rebuilding in the sandbox
-    const cfgFile = path.join(sandbox, '.proofhound', 'config.json');
+    // the agent's test runs reuse counterhound's Rust build cache instead of rebuilding in the sandbox
+    const cfgFile = path.join(sandbox, '.counterhound', 'config.json');
     const fileCfg = fs.existsSync(cfgFile) ? JSON.parse(fs.readFileSync(cfgFile, 'utf8')) : {};
     fs.writeFileSync(cfgFile, JSON.stringify({ ...fileCfg, cargoTargetDir: shared.cargoTargetDir }, null, 2));
     // the repro, placed inside the sandbox so it runs against the sandboxed code
     const workdir = path.join(repo, bug.workdir);
-    const checkDir = path.join(sandbox, '.proofhound', 'check');
+    const checkDir = path.join(sandbox, '.counterhound', 'check');
     const placeRepro = () => {
       fs.rmSync(checkDir, { recursive: true, force: true });
       fs.mkdirSync(checkDir, { recursive: true });
@@ -192,7 +192,7 @@ export async function fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, o
     }
     // 2. the project's own suite must not go from green to red
     const base = await getBaseline();
-    let suite = 'not run (no test command found; set "testCommand" in .proofhound/config.json)';
+    let suite = 'not run (no test command found; set "testCommand" in .counterhound/config.json)';
     if (base.ran) {
       if (!base.ok) suite = `not compared (the suite already fails without the fix: ${base.command})`;
       else {

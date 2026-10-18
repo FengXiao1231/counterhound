@@ -30,7 +30,7 @@ test('slug never ends with a dash', () => {
 });
 
 const repo = '/repo';
-const workdir = '/repo/.proofhound/runs/1/g01';
+const workdir = '/repo/.counterhound/runs/1/g01';
 const frame = (file, line = 1, code = '') => ({ file, line, func: 'f', code });
 
 test('classify: assertion in the test is a wrong result', () => {
@@ -113,7 +113,7 @@ test('impure functions rank lower', () => {
 
 test('relocateImports keeps relative imports working from a new folder', () => {
   const src = "import { a } from '../../../../src/a.js';\nimport fc from 'fast-check';";
-  const out = relocateImports(src, '/r/.proofhound/runs/1/g01', '/r/.proofhound/runs/1/bugs/PH-001-x');
+  const out = relocateImports(src, '/r/.counterhound/runs/1/g01', '/r/.counterhound/runs/1/bugs/PH-001-x');
   assert.match(out, /from '\.\.\/\.\.\/\.\.\/\.\.\/\.\.\/src\/a\.js'/);
   assert.match(out, /from 'fast-check'/);
 });
@@ -128,13 +128,13 @@ test('parseArgs', () => {
   assert.throws(() => parseArgs(['--bogus']));
 });
 
-test('javascript adapter runs fast-check tests and extracts the counterexample', { skip: !fs.existsSync(path.join(os.homedir(), '.cache/proofhound/js/node_modules/fast-check')) && 'fast-check cache not installed' }, async () => {
+test('javascript adapter runs fast-check tests and extracts the counterexample', { skip: !fs.existsSync(path.join(os.homedir(), '.cache/counterhound/js/node_modules/fast-check')) && 'fast-check cache not installed' }, async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-jsrun-'));
   fs.writeFileSync(path.join(dir, 'package.json'), '{"type":"module"}');
   fs.writeFileSync(path.join(dir, 'lib.js'), 'export function boom(x) { if (x > 5) return null.foo; return x; }\n');
-  const work = path.join(dir, '.proofhound', 'w');
+  const work = path.join(dir, '.counterhound', 'w');
   fs.mkdirSync(work, { recursive: true });
-  javascript.prepare(dir, path.join(dir, '.proofhound'));
+  javascript.prepare(dir, path.join(dir, '.counterhound'));
   fs.writeFileSync(path.join(work, 'p.test.mjs'), "import test from 'node:test';\nimport fc from 'fast-check';\nimport { boom } from '../../lib.js';\ntest('never throws', () => { fc.assert(fc.property(fc.integer(), (x) => { boom(x); })); });\n");
   const r = await javascript.runTests(dir, {}, [path.join(work, 'p.test.mjs')], { cwd: dir });
   assert.equal(r.tests.length, 1);
@@ -195,14 +195,14 @@ stack backtrace:
    1: textkit::truncate
              at /repo/src/lib.rs:29:6
    2: ph_props::ph_t::{closure#1}
-             at /repo/.proofhound/runs/x/g/ph_props.rs:12:17
+             at /repo/.counterhound/runs/x/g/ph_props.rs:12:17
 
-thread 'ph_t' (12) panicked at /repo/.proofhound/runs/x/g/ph_props.rs:4:1:
+thread 'ph_t' (12) panicked at /repo/.counterhound/runs/x/g/ph_props.rs:4:1:
 Test failed: byte index 1 is not a char boundary.
 minimal failing input: s = "é", n = 1
 \tsuccesses: 0
 `;
-  const e = parseRustFailure(section, '/repo/.proofhound/runs/x/g');
+  const e = parseRustFailure(section, '/repo/.counterhound/runs/x/g');
   assert.equal(e.type, 'panic');
   assert.equal(e.message, 'byte index 1 is not a char boundary');
   assert.equal(e.frames.at(-1).file, '/repo/src/lib.rs');
@@ -211,20 +211,20 @@ minimal failing input: s = "é", n = 1
 
 test('go: goroutine traces and t.Fatalf output are parsed', async () => {
   const { parseGoFailure } = await import('../src/lang/go.js');
-  const remap = new Map([['/repo/pkg/zz_proofhound_repro_x_test.go', '/repo/.proofhound/w/repro_x_test.go'], ['zz_proofhound_repro_x_test.go', '/repo/.proofhound/w/repro_x_test.go']]);
+  const remap = new Map([['/repo/pkg/zz_counterhound_repro_x_test.go', '/repo/.counterhound/w/repro_x_test.go'], ['zz_counterhound_repro_x_test.go', '/repo/.counterhound/w/repro_x_test.go']]);
   const panic = parseGoFailure([
     '=== RUN   TestReproX\n', '--- FAIL: TestReproX (0.00s)\n', 'panic: runtime error: index out of range [-1] [recovered]\n', '\tpanic: runtime error: index out of range [-1]\n', '\n',
     'goroutine 18 [running]:\n', 'testing.tRunner.func1.2({0x6cbee0, 0xc0001ca078})\n', '\t/usr/local/go/src/testing/testing.go:1734 +0x21c\n',
     'panic({0x6cbee0?, 0xc0001ca078?})\n', '\t/usr/local/go/src/runtime/panic.go:792 +0x132\n',
     'example.com/m/pkg.Median({0x0?, 0x0?, 0x0?})\n', '\t/repo/pkg/m.go:42 +0xf9\n',
-    'example.com/m/pkg.TestReproX(0xc000082700)\n', '\t/repo/pkg/zz_proofhound_repro_x_test.go:6 +0x1f\n',
+    'example.com/m/pkg.TestReproX(0xc000082700)\n', '\t/repo/pkg/zz_counterhound_repro_x_test.go:6 +0x1f\n',
   ], remap);
   assert.equal(panic.type, 'runtime.Error');
-  assert.deepEqual(panic.frames.map((f) => `${f.file}:${f.line}`), ['/repo/.proofhound/w/repro_x_test.go:6', '/repo/pkg/m.go:42']);
-  const fatal = parseGoFailure(['=== RUN   TestReproX\n', '    zz_proofhound_repro_x_test.go:9: got 2, want 1\n', '--- FAIL: TestReproX (0.00s)\n'], remap);
+  assert.deepEqual(panic.frames.map((f) => `${f.file}:${f.line}`), ['/repo/.counterhound/w/repro_x_test.go:6', '/repo/pkg/m.go:42']);
+  const fatal = parseGoFailure(['=== RUN   TestReproX\n', '    zz_counterhound_repro_x_test.go:9: got 2, want 1\n', '--- FAIL: TestReproX (0.00s)\n'], remap);
   assert.equal(fatal.type, 'AssertionError');
   assert.equal(fatal.message, 'got 2, want 1');
-  assert.equal(fatal.frames[0].file, '/repo/.proofhound/w/repro_x_test.go');
+  assert.equal(fatal.frames[0].file, '/repo/.counterhound/w/repro_x_test.go');
 });
 
 test('go scanner lists exported functions and methods', { skip: spawnSync('go', ['version']).status !== 0 && 'needs go' }, async () => {
@@ -297,7 +297,7 @@ test('PR summary lists confirmed bugs with their repro, and says when nothing ch
   assert.match(none, /nothing to check/);
 });
 
-test('PR comment: updates the earlier proofhound comment, skips clean runs when asked', async () => {
+test('PR comment: updates the earlier counterhound comment, skips clean runs when asked', async () => {
   const http = await import('node:http');
   const { postComment } = await import('../src/github.js');
   const { MARKER } = await import('../src/report/summary.js');
@@ -314,7 +314,7 @@ test('PR comment: updates the earlier proofhound comment, skips clean runs when 
     });
   });
   await new Promise((r) => server.listen(0, r));
-  const env = { GITHUB_TOKEN: 'tok', GITHUB_REPOSITORY: 'o/r', PROOFHOUND_PR: '7', GITHUB_API_URL: `http://127.0.0.1:${server.address().port}` };
+  const env = { GITHUB_TOKEN: 'tok', GITHUB_REPOSITORY: 'o/r', COUNTERHOUND_PR: '7', GITHUB_API_URL: `http://127.0.0.1:${server.address().port}` };
   try {
     assert.equal(await postComment(`${MARKER}\nclean`, { env, onlyIfBugs: true, hasBugs: false }), 'skipped');
     assert.equal(await postComment(`${MARKER}\nbugs`, { env, onlyIfBugs: true, hasBugs: true }), 'created');
@@ -352,16 +352,16 @@ java.lang.NumberFormatException: For input string: ""
 \tat com.x.Codec.decode(Codec.java:12)
 \tat com.x.PhPropsTest.lambda$rt$0(PhPropsTest.java:9)
 \tat org.quicktheories.impl.Core.run(Core.java:35)`;
-  const files = { 'Codec.java': '/r/src/main/java/com/x/Codec.java', 'PhPropsTest.java': '/r/.proofhound/w/PhPropsTest.java' };
+  const files = { 'Codec.java': '/r/src/main/java/com/x/Codec.java', 'PhPropsTest.java': '/r/.counterhound/w/PhPropsTest.java' };
   const e = parseJavaTrace(text, (cls, file) => (cls.startsWith('com.x.') ? files[file] : null));
   assert.equal(e.type, 'java.lang.NumberFormatException');
   assert.equal(e.message, 'For input string: ""');
   assert.equal(e.example, 'Failing test case: []');
-  assert.deepEqual(e.frames.map((f) => `${f.file}:${f.line}`), ['/r/.proofhound/w/PhPropsTest.java:9', '/r/src/main/java/com/x/Codec.java:12']);
+  assert.deepEqual(e.frames.map((f) => `${f.file}:${f.line}`), ['/r/.counterhound/w/PhPropsTest.java:9', '/r/src/main/java/com/x/Codec.java:12']);
   assert.equal(parseJavaTrace('org.opentest4j.AssertionFailedError: expected: <1> but was: <2>\n\tat com.x.T.t(T.java:3)', () => null).type, 'AssertionError');
 });
 
-test('bugs proofhound found in itself stay fixed', async () => {
+test('bugs counterhound found in itself stay fixed', async () => {
   const u = await import('../src/util.js');
   const { parseDiff } = await import('../src/diff.js');
   const { parseJavaTrace } = await import('../src/lang/java.js');
@@ -458,7 +458,7 @@ test('javascript scanner: class methods that change `this` are stateful; test he
   assert.match(cart.remove.doc, /Remove `qty` of `sku`/);
   assert.equal(cart.add.ownerInit, '()');
   assert.ok(isStateful(cart.quantity));
-  assert.equal(javascript.importHint(cart.add, path.join(repo, '.proofhound/runs/x/g'), repo), "import { Cart } from '../../../../src/cart.js'");
+  assert.equal(javascript.importHint(cart.add, path.join(repo, '.counterhound/runs/x/g'), repo), "import { Cart } from '../../../../src/cart.js'");
   // free functions in the same project are untouched, and nothing inside the class body is taken for one
   assert.ok(targets.some((t) => t.name === 'truncate' && !t.owner));
   assert.ok(!targets.some((t) => t.name === 'constructor' || t.name === 'for'));

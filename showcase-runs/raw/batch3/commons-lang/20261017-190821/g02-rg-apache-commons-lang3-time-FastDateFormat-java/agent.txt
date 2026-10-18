@@ -11,5 +11,5 @@ The properties:
 All 7 pass. The earlier failures all came from my own test inputs. I dropped the lossy `X` and `zzz` patterns and the pre-1970 times, and I excluded the `ZZ` pattern from the `SimpleDateFormat` comparison. `ZZ` prints `Z` for UTC by design.
 
 Permission denials:
-Bash: {"command":"cd /tmp/claude-0/zoo3/commons-lang/.proofhound/runs/20261017-190821/g02-rg-apache-commons-lang3-time-FastDateFormat-java/ && cat > PhPropsTest.java <<'EOF'\npackage org.apache.commons.lang3.time;\n\nimport java.text.*;\nimport java.util.*;\nimport org.junit.jupiter.api.Test;\nimport stat
+Bash: {"command":"cd /tmp/claude-0/zoo3/commons-lang/.counterhound/runs/20261017-190821/g02-rg-apache-commons-lang3-time-FastDateFormat-java/ && cat > PhPropsTest.java <<'EOF'\npackage org.apache.commons.lang3.time;\n\nimport java.text.*;\nimport java.util.*;\nimport org.junit.jupiter.api.Test;\nimport stat
 Bash: {"command":"sed -n 1p /dev/null","description":"noop"}

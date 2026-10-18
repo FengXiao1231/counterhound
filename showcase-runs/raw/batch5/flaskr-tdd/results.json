@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261018-052601",
   "diff": null,
   "fixRun": false,
@@ -67,7 +67,7 @@
       "evidence": "The handler's own result dict defaults to {status: 0, message: 'Error'} and sets status 1 'Post Deleted' unconditionally after query.delete(), ignoring the returned row count. REST convention: deleting an unknown id gives 404, and a repeat delete is 404.",
       "group": "g01-project-app-py",
       "file": "project/app.py",
-      "workdir": ".proofhound/runs/20261018-052601/g01-project-app-py",
+      "workdir": ".counterhound/runs/20261018-052601/g01-project-app-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_delete_missing.py",

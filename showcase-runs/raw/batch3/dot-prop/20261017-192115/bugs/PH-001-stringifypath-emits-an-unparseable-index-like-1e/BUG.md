@@ -68,4 +68,4 @@ Property: *for any finite number segment, parsePath(stringifyPath(segs)) does no
 fast-check shrank the failure to: `Counterexample: [[1e+21,""]]`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

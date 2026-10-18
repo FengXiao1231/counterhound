@@ -5,4 +5,4 @@ The other five properties passed. They were the marshal/unmarshal round trip, `C
 The repro `repro_prerelease_ignored_extra_segment_test.go` fails now, with `1.0.0.0-alpha.Compare(1.0.0) = 0, want -1`. `findings.json` is in the same directory.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170434/g01-version-go && cat > .proofhound/runs/20261017-170434/g01-version-go/ph_props_test.go <<'EOF'\npackage version\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phVer() *rapid.Generator[string] {\n\treturn rapid.
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170434/g01-version-go && cat > .counterhound/runs/20261017-170434/g01-version-go/ph_props_test.go <<'EOF'\npackage version\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phVer() *rapid.Generator[string] {\n\treturn rapid.

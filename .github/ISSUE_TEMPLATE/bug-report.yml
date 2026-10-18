@@ -1,4 +1,4 @@
-name: Bug in proofhound
+name: Bug in counterhound
 description: A crash, a wrong classification, a run that did not finish
 labels: [bug]
 body:
@@ -11,7 +11,7 @@ body:
   - type: textarea
     id: output
     attributes:
-      label: Output of the run (or of `npx proofhound doctor`)
+      label: Output of the run (or of `npx counterhound doctor`)
       render: shell
   - type: input
     id: setup

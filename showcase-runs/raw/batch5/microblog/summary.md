@@ -1,5 +1,5 @@
-<!-- proofhound-report -->
-### proofhound found 2 provable bugs
+<!-- counterhound-report -->
+### counterhound found 2 provable bugs
 
 Checked 8 functions in 2 modules with property-based tests. 2 reported → 2 reproduced → 2 unique → 2 confirmed by an independent review.
 
@@ -78,4 +78,4 @@ def test_update_user_non_object_json_body_is_4xx_not_crash():
 ```
 </details>
 
-<sub>5m02s · $0.55 of model usage · [proofhound](https://github.com/FengXiao1231/proofhound) only reports failures that replay deterministically and survive review.</sub>
+<sub>5m02s · $0.55 of model usage · [counterhound](https://github.com/FengXiao1231/counterhound) only reports failures that replay deterministically and survive review.</sub>

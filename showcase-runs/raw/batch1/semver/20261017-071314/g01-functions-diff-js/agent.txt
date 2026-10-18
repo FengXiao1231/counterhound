@@ -1,7 +1,7 @@
-I couldn't run any tests, so I haven't reported any bugs. The one command I tried, `./.proofhound/ph-test` on a new props file, was denied because Claude Code is in don't-ask mode. I didn't try any other way to run the tests.
+I couldn't run any tests, so I haven't reported any bugs. The one command I tried, `./.counterhound/ph-test` on a new props file, was denied because Claude Code is in don't-ask mode. I didn't try any other way to run the tests.
 
 - **What I read:** `functions/diff.js` is the only file I read. It matches upstream semver's `diff`. The oddities I noticed, such as `1.0.0-1` to `1.1.1` returning `major`, are documented in the code's own comments. I didn't see a defensible bug from reading alone.
-- **What I wrote:** The props file is at `.proofhound/runs/20261017-071314/g01-functions-diff-js/ph_props.test.mjs`. The same denied command also contained the `mkdir`, so that directory and file may not exist. I'd need to re-create them.
+- **What I wrote:** The props file is at `.counterhound/runs/20261017-071314/g01-functions-diff-js/ph_props.test.mjs`. The same denied command also contained the `mkdir`, so that directory and file may not exist. I'd need to re-create them.
 - **Properties covered:**
   - `diff` returns `null` exactly when the versions compare equal.
   - `diff(a, b)` equals `diff(b, a)`.
@@ -10,7 +10,7 @@ I couldn't run any tests, so I haven't reported any bugs. The one command I trie
   - Same main version with different prerelease tags gives `prerelease`.
 - **Findings file:** I haven't written `findings.json`. It should be `[]` unless a run turns something up.
 
-To continue, allow Bash for `./.proofhound/ph-test` (plus `mkdir` for the run directory), or tell me how you'd like to proceed.
+To continue, allow Bash for `./.counterhound/ph-test` (plus `mkdir` for the run directory), or tell me how you'd like to proceed.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-071314/g01-functions-diff-js && cat > .proofhound/runs/20261017-071314/g01-functions-diff-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport diff from '../../../../
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-071314/g01-functions-diff-js && cat > .counterhound/runs/20261017-071314/g01-functions-diff-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport diff from '../../../../

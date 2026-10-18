@@ -2,7 +2,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index 01c8e1f..64280c1 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -11,4 +11,3 @@ proofhound · Python · claude (sonnet) · 2 modules, 6 functions
+@@ -11,4 +11,3 @@ counterhound · Python · claude (sonnet) · 2 modules, 6 functions
    bug (0.90) set_small_word_list() with default list changes SUBPHRASE behaviour (drops dash separators)
  
    writing fixes for 1 bug…

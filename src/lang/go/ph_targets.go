@@ -1,4 +1,4 @@
-// ph_targets lists exported functions and methods of a Go module as JSON, for proofhound's ranking.
+// ph_targets lists exported functions and methods of a Go module as JSON, for counterhound's ranking.
 // Usage: go run ph_targets.go <root> [paths...]
 package main
 

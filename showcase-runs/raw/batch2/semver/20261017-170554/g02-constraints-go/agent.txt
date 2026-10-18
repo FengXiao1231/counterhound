@@ -3,4 +3,4 @@ I tested 7 properties and reported 0 bugs; all passed, and `findings.json` is `[
 The properties covered Check/Validate agreement, `String`/`MarshalText`/`UnmarshalText` round-trips, OR-union, a reference implementation of the operators, ranges, and partial wildcards.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170554/g02-constraints-go && cat > .proofhound/runs/20261017-170554/g02-constraints-go/ph_props_test.go <<'EOF'\npackage semver\n\nimport (\n\t\"fmt\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phPart() *rapid.Generator[string] {\n\treturn ra
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170554/g02-constraints-go && cat > .counterhound/runs/20261017-170554/g02-constraints-go/ph_props_test.go <<'EOF'\npackage semver\n\nimport (\n\t\"fmt\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phPart() *rapid.Generator[string] {\n\treturn ra

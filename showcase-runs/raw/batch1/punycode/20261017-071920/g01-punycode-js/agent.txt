@@ -3,4 +3,4 @@ I tested 7 properties and reported 1 bug: `toASCII` and `toUnicode` silently dro
 I confirmed the bug with a standalone repro, and `findings.json` is written. All round-trip, ASCII-output and idempotence properties for `encode`, `decode`, `toASCII` and `toUnicode` passed.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-071920/g01-punycode-js"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-071920/g01-punycode-js"}

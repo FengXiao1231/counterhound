@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-071404",
   "repo": "qs",
   "lang": "javascript",
@@ -85,7 +85,7 @@
       "evidence": "Top-level code does `objKeys = filter; ... objKeys.sort(options.sort)`, sorting the user's array. Inner recursion sorts a fresh Object.keys copy, so only the filter path leaks the mutation; a serializer is expected not to modify its options, and reusing one filter array across calls is the documented usage.",
       "group": "g03-lib-stringify-js",
       "file": "lib/stringify.js",
-      "workdir": ".proofhound/runs/20261017-071404/g03-lib-stringify-js",
+      "workdir": ".counterhound/runs/20261017-071404/g03-lib-stringify-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_filter_mutation.test.mjs",
@@ -117,7 +117,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport stringify from '../../../../../lib/stringify.js';\n\ntest('repro_filter_mutation', () => {\n  const filter = ['i', 'a'];\n  const out = stringify({ i: 1, a: 2 }, { filter, sort: (a, b) => a.localeCompare(b) });\n  assert.equal(out, 'a=2&i=1');\n  assert.deepEqual(filter, ['i', 'a']);\n});\n",
-      "bugDir": ".proofhound/runs/20261017-071404/bugs/PH-001-stringify-sorts-the-caller-s-filter-array-in-pla"
+      "bugDir": ".counterhound/runs/20261017-071404/bugs/PH-001-stringify-sorts-the-caller-s-filter-array-in-pla"
     },
     {
       "title": "parse() collapses comma-separated arrays into a string when interpretNumericEntities is used with iso-8859-1",
@@ -132,7 +132,7 @@
       "evidence": "parseValues splits the value into an array via parseArrayValue (comma:true), then `val = interpretNumericEntities(String(val))` at lib/parse.js:191 stringifies the array with Array#toString, rejoining it with ',' and returning a string. The README documents comma:true as parsing comma-separated values into arrays; without interpretNumericEntities the same input yields ['b','c'].",
       "group": "g02-lib-parse-js",
       "file": "lib/parse.js",
-      "workdir": ".proofhound/runs/20261017-071404/g02-lib-parse-js",
+      "workdir": ".counterhound/runs/20261017-071404/g02-lib-parse-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_comma_numeric_entities.test.mjs",
@@ -161,7 +161,7 @@
       "status": "confirmed",
       "bugId": "PH-002",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport parse from '../../../../../lib/parse.js';\n\ntest('repro_comma_numeric_entities', () => {\n  assert.deepEqual(\n    parse('a=b,c', { comma: true, charset: 'iso-8859-1', interpretNumericEntities: true }),\n    { a: ['b', 'c'] }\n  );\n});\n",
-      "bugDir": ".proofhound/runs/20261017-071404/bugs/PH-002-interpretnumericentities-with-comma-true-in-iso"
+      "bugDir": ".counterhound/runs/20261017-071404/bugs/PH-002-interpretnumericentities-with-comma-true-in-iso"
     }
   ]
 }

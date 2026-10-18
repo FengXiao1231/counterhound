@@ -9,4 +9,4 @@ The bug's property test is `jaroLowerBound`, which compared against a negative-t
 My `mkdir` was denied, but the file writes created the work directory anyway. `findings.json` is in the run folder.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-191438/g01-o-debatty-java-stringsimilarity-JaroWinkler-java"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-191438/g01-o-debatty-java-stringsimilarity-JaroWinkler-java"}

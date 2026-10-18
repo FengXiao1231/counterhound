@@ -13,4 +13,4 @@ The 6 properties are in `ph_props.rs` in the run directory:
 If you can run the harness with lints capped (for example `RUSTFLAGS=--cap-lints=warn`) or on an older toolchain, the same file should run unchanged.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170204/g01-src-cases-camelcase-mod-rs && cat > .proofhound/runs/20261017-170204/g01-src-cases-camelcase-mod-rs/ph_props.rs <<'EOF'\nuse inflector::cases::camelcase::{to_camel_case, is_camel_case};\nuse proptest::prelude::*;\n\nproptest! {\n    #[test]\n
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170204/g01-src-cases-camelcase-mod-rs && cat > .counterhound/runs/20261017-170204/g01-src-cases-camelcase-mod-rs/ph_props.rs <<'EOF'\nuse inflector::cases::camelcase::{to_camel_case, is_camel_case};\nuse proptest::prelude::*;\n\nproptest! {\n    #[test]\n

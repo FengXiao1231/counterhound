@@ -1,10 +1,10 @@
 {
-  "name": "proofhound",
+  "name": "counterhound",
   "version": "0.1.0",
   "description": "An AI bug hunter whose every report is a failing test you can run: LLM-written property-based tests, deterministic repros, independent review.",
   "type": "module",
   "bin": {
-    "proofhound": "bin/proofhound.js"
+    "counterhound": "bin/counterhound.js"
   },
   "files": [
     "bin",
@@ -31,11 +31,11 @@
     "fuzzing"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/FengXiao1231/proofhound#readme",
+  "homepage": "https://github.com/FengXiao1231/counterhound#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/FengXiao1231/proofhound.git"
+    "url": "git+https://github.com/FengXiao1231/counterhound.git"
   },
-  "bugs": "https://github.com/FengXiao1231/proofhound/issues",
+  "bugs": "https://github.com/FengXiao1231/counterhound/issues",
   "author": "FengXiao"
 }

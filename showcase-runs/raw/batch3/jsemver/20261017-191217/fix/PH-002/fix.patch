@@ -2,7 +2,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index ee35df6..2ec6931 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -14,4 +14,3 @@ proofhound · Java · claude (sonnet) · 2 modules, 12 functions
+@@ -14,4 +14,3 @@ counterhound · Java · claude (sonnet) · 2 modules, 12 functions
  
    writing fixes for 2 bugs…
    ▸ fixing PH-001 nextPreReleaseVersion() appends ".1" instead of incrementing when the last pre-release identifier is "0"

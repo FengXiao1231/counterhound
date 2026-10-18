@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191242",
   "diff": null,
   "fixRun": true,
@@ -57,7 +57,7 @@
       "evidence": "README advertises noisy input ('duration: 1h:20min' is parsed) and negatives ('-1hr 40mins' => -1*h - 40*m). The sign is detected only at the first character of the whole string (index.js line 56), so the two documented features do not combine: the number is parsed from the noisy string but its sign is lost, giving a result with the wrong sign and no error.",
       "group": "g01-index-js",
       "file": "index.js",
-      "workdir": ".proofhound/runs/20261017-191242/g01-index-js",
+      "workdir": ".counterhound/runs/20261017-191242/g01-index-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_negative_after_noise.test.mjs",

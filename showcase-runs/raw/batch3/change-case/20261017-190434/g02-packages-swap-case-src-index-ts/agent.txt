@@ -10,4 +10,4 @@ The properties were:
 - Turkish locale: `swapCase('iI', 'tr')` gives `'İı'`.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/change-case/.proofhound/runs/20261017-190434/g02-packages-swap-case-src-index-ts && cd /tmp/claude-0/zoo3/change-case/.proofhound/runs/20261017-190434/g02-packages-swap-case-src-index-ts && cat > ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/change-case/.counterhound/runs/20261017-190434/g02-packages-swap-case-src-index-ts && cd /tmp/claude-0/zoo3/change-case/.counterhound/runs/20261017-190434/g02-packages-swap-case-src-index-ts && cat > ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport

@@ -71,4 +71,4 @@ Property: *every digit after the decimal point is spoken, including leading zero
 Hypothesis shrank the failure to: `Failing test case: test_cardinal_decimal_digits_preserved( whole=0, # or any other generated value frac=1, )`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

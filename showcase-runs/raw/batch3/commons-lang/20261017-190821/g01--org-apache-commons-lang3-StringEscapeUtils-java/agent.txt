@@ -9,4 +9,4 @@ The other 12 properties passed on all six target functions. They covered:
 - **Null handling:** every function returns null for null input.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-190821/g01--org-apache-commons-lang3-StringEscapeUtils-java/"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-190821/g01--org-apache-commons-lang3-StringEscapeUtils-java/"}

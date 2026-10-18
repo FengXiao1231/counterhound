@@ -6,7 +6,7 @@ Idempotence held on ASCII input and on Unicode input once I excluded uppercase l
 
 I didn't report the `"Ę𝔖A"` failure. That input contains an uppercase letter with no lowercase form, so the output keeps an uppercase character and re-splits on the second pass. That is arguably not a bug.
 
-Everything is in `.proofhound/runs/20261017-170610/g02-src-snake-rs/`, with the finding in `findings.json`.
+Everything is in `.counterhound/runs/20261017-170610/g02-src-snake-rs/`, with the finding in `findings.json`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170610/g02-src-snake-rs"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170610/g02-src-snake-rs"}

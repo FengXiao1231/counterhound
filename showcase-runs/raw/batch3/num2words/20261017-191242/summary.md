@@ -1,5 +1,5 @@
-<!-- proofhound-report -->
-### proofhound found 2 provable bugs (2 with a verified fix)
+<!-- counterhound-report -->
+### counterhound found 2 provable bugs (2 with a verified fix)
 
 Checked 12 functions in 2 modules with property-based tests. 2 reported → 2 reproduced → 2 unique → 2 confirmed by an independent review.
 
@@ -95,4 +95,4 @@ index ef86ed7..699da86 100644
 ```
 </details>
 
-<sub>1m52s · $0.64 of model usage · [proofhound](https://github.com/FengXiao1231/proofhound) only reports failures that replay deterministically and survive review.</sub>
+<sub>1m52s · $0.64 of model usage · [counterhound](https://github.com/FengXiao1231/counterhound) only reports failures that replay deterministically and survive review.</sub>

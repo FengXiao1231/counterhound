@@ -1,5 +1,5 @@
 I tested 10 properties across the six target functions and reported 0 bugs. All 10 pass, and `findings.json` is `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/commons-csv/.proofhound/runs/20261017-192020/g02--main-java-org-apache-commons-csv-CSVParser-java; cat /tmp/claude-0/zoo3/commons-csv/.proofhound/ph-test | head -30"}
-Bash: {"command":"sed -i 's/createTempFile(\"ph\"/createTempFile(\"phtest\"/; s/\" + hc + \"\\\\nh1/\" + hc + \"\\\\nh1/' .proofhound/runs/20261017-192020/g02--main-java-org-apache-commons-csv-CSVParser-java/PhPropsTest.java"}
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/commons-csv/.counterhound/runs/20261017-192020/g02--main-java-org-apache-commons-csv-CSVParser-java; cat /tmp/claude-0/zoo3/commons-csv/.counterhound/ph-test | head -30"}
+Bash: {"command":"sed -i 's/createTempFile(\"ph\"/createTempFile(\"phtest\"/; s/\" + hc + \"\\\\nh1/\" + hc + \"\\\\nh1/' .counterhound/runs/20261017-192020/g02--main-java-org-apache-commons-csv-CSVParser-java/PhPropsTest.java"}

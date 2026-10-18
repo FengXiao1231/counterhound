@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191814",
   "diff": null,
   "fixRun": true,
@@ -79,7 +79,7 @@
       "evidence": "escapeCssIdentifier is documented to escape characters 'that would otherwise not be valid in a selector' (CSSOM serialize-an-identifier), so its output should be usable in a selector; it emits '\\ ' for space, which select() then mishandles at the end of the query",
       "group": "g01-src-main-java-org-jsoup-select-Selector-java",
       "file": "src/main/java/org/jsoup/select/Selector.java",
-      "workdir": ".proofhound/runs/20261017-191814/g01-src-main-java-org-jsoup-select-Selector-java",
+      "workdir": ".counterhound/runs/20261017-191814/g01-src-main-java-org-jsoup-select-Selector-java",
       "verification": {
         "verified": true,
         "reproFile": "ReproTrailingSpaceTest.java",
@@ -120,7 +120,7 @@
         "suite": "passed (mvn -q -B test)"
       },
       "reproSource": "package org.jsoup.select;\nimport org.junit.jupiter.api.Test;\nimport org.jsoup.nodes.*;\nimport static org.junit.jupiter.api.Assertions.*;\n\nclass ReproTrailingSpaceTest {\n    @Test void escapedTrailingSpaceSurvivesSelect() {\n        Element d = new Element(\"div\");\n        d.appendElement(\"p\").attr(\"id\", \"a \");\n        String q = \"#\" + Selector.escapeCssIdentifier(\"a \");\n        assertEquals(\"#a\\\\ \", q);\n        assertEquals(1, Selector.select(q, d).size());\n    }\n}\n",
-      "bugDir": ".proofhound/runs/20261017-191814/bugs/PH-001-selector-parsing-drops-an-escaped-trailing-space"
+      "bugDir": ".counterhound/runs/20261017-191814/bugs/PH-001-selector-parsing-drops-an-escaped-trailing-space"
     }
   ]
 }

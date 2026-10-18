@@ -5,4 +5,4 @@ The bug: `Selector.select("#a\\ ", root)` returns nothing for an element with id
 `ReproTrailingSpaceTest.java` fails now with 0 elements instead of 1. The report is in `findings.json`.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/jsoup/.proofhound/runs/20261017-191814/g01-src-main-java-org-jsoup-select-Selector-java/ && cat > /tmp/claude-0/zoo3/jsoup/.proofhound/runs/20261017-191814/g01-src-main-java-org-jsoup-select-Selector-java/PhPropsTest.java <<'EOF'\npackage org.jsoup.select;\nim
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/jsoup/.counterhound/runs/20261017-191814/g01-src-main-java-org-jsoup-select-Selector-java/ && cat > /tmp/claude-0/zoo3/jsoup/.counterhound/runs/20261017-191814/g01-src-main-java-org-jsoup-select-Selector-java/PhPropsTest.java <<'EOF'\npackage org.jsoup.select;\nim

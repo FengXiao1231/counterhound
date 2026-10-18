@@ -1,5 +1,5 @@
-<!-- proofhound-report -->
-### proofhound found 2 provable bugs
+<!-- counterhound-report -->
+### counterhound found 2 provable bugs
 
 Checked 1 functions in 1 modules with property-based tests. 2 reported → 2 reproduced → 2 unique → 2 confirmed by an independent review.
 
@@ -57,4 +57,4 @@ test('repro_remove_negative', () => {
 ```
 </details>
 
-<sub>1m04s · $0.31 of model usage · [proofhound](https://github.com/FengXiao1231/proofhound) only reports failures that replay deterministically and survive review.</sub>
+<sub>1m04s · $0.31 of model usage · [counterhound](https://github.com/FengXiao1231/counterhound) only reports failures that replay deterministically and survive review.</sub>

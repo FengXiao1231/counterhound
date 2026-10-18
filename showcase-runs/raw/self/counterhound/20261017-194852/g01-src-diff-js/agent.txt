@@ -1,0 +1,10 @@
+I wrote 1 property test and reported 1 bug (`parseDiff` takes an added line starting with `++ ` for a file header), but I couldn't run anything. Bash was denied in this session, so `./.counterhound/ph-test` never ran. I found the bug by reading `src/diff.js` and haven't confirmed that the repro fails.
+
+The bug: with `--unified=0`, an added line whose content is `++ x` is printed as `+++ x`. The `+++ ` regex in `parseDiff` matches it, so the parser switches to a bogus file `x` and puts any later hunks under it. The real file loses those ranges, so diff mode can miss changed functions.
+
+The files are in `.counterhound/runs/20261017-194852/g01-src-diff-js/`: `ph_props.test.mjs`, `repro_added_line_looks_like_header.test.mjs` and `findings.json`.
+
+I did not test `touchedTargets`, `defaultBase` or `changedLines`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-194852/g01-src-diff-js; cat .counterhound/ph-test | head -5"}

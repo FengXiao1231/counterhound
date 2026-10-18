@@ -10,7 +10,7 @@ const RAPID = 'pgregory.net/rapid@v1.3.0';
 const TARGET_FILE = 'ph-target.json';
 
 function goEnv(cfg) {
-  // Workspace mode forbids -modfile; proofhound always tests one module at a time.
+  // Workspace mode forbids -modfile; counterhound always tests one module at a time.
   return { ...process.env, ...(cfg.env || {}), GOWORK: 'off', GOFLAGS: '', GOTOOLCHAIN: process.env.GOTOOLCHAIN || 'local' };
 }
 
@@ -27,7 +27,7 @@ function moduleDir(dir, repo) {
  * project's own go.mod and go.sum are never touched.
  */
 function ensureModfile(repo, modDir, cfg) {
-  const dir = path.join(repo, '.proofhound', 'go', hash(modDir, 8));
+  const dir = path.join(repo, '.counterhound', 'go', hash(modDir, 8));
   const mod = path.join(dir, 'go.mod');
   const src = path.join(modDir, 'go.mod');
   const stamp = path.join(dir, 'source.txt');
@@ -61,7 +61,7 @@ function packageFor(repo, file) {
   return found[0] || repo;
 }
 
-const virtualName = (file) => `zz_proofhound_${path.basename(file).replace(/(_test)?\.go$/, '')}_test.go`;
+const virtualName = (file) => `zz_counterhound_${path.basename(file).replace(/(_test)?\.go$/, '')}_test.go`;
 
 function testNames(file) {
   return [...fs.readFileSync(file, 'utf8').matchAll(/^func\s+(Test\w*)\s*\(\s*\w+\s+\*testing\.T\s*\)/gm)].map((m) => m[1]);
@@ -71,7 +71,7 @@ function sourceLine(file, line) {
   try { return fs.readFileSync(file, 'utf8').split('\n')[line - 1] || ''; } catch { return ''; }
 }
 
-/** Turn one failed test's output into proofhound's error shape. `remap` maps virtual paths to work files. */
+/** Turn one failed test's output into counterhound's error shape. `remap` maps virtual paths to work files. */
 export function parseGoFailure(lines, remap) {
   const fix = (f) => remap.get(f) || remap.get(path.basename(f)) || f;
   const frame = (file, line, func) => { const f = fix(file); return { file: f, line: +line, func, code: sourceLine(f, +line).trim().slice(0, 300) }; };

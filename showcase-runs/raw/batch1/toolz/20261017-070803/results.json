@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-070803",
   "repo": "toolz",
   "lang": "python",
@@ -95,7 +95,7 @@
       "evidence": "memoize wraps arbitrary functions (docstring: 'Cache a function's result'), and its docs discuss kwargs handling; f(a=0) is valid for the original. The default key for unary functions unconditionally uses args[0], ignoring that the sole parameter may be passed by keyword.",
       "group": "g03-toolz-functoolz-py",
       "file": "toolz/functoolz.py",
-      "workdir": ".proofhound/runs/20261017-070803/g03-toolz-functoolz-py",
+      "workdir": ".counterhound/runs/20261017-070803/g03-toolz-functoolz-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_memoize_unary_kwarg.py",
@@ -131,7 +131,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "from toolz.functoolz import memoize\n\n\ndef test_repro_memoize_unary_kwarg():\n    def f(a):\n        return a + 1\n\n    assert f(a=0) == 1\n    assert memoize(f)(a=0) == 1\n",
-      "bugDir": ".proofhound/runs/20261017-070803/bugs/PH-001-memoize-of-a-unary-function-raises-indexerror-wh"
+      "bugDir": ".counterhound/runs/20261017-070803/bugs/PH-001-memoize-of-a-unary-function-raises-indexerror-wh"
     }
   ]
 }

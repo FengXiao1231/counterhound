@@ -2,7 +2,7 @@
 import { fmtMs, fmtUsd } from '../util.js';
 import { FENCE } from './bugs.js';
 
-export const MARKER = '<!-- proofhound-report -->';
+export const MARKER = '<!-- counterhound-report -->';
 
 const KIND = { crash: 'crash', 'internal-assert': 'internal assert', assertion: 'wrong result' };
 const cell = (s, n = 160) => String(s ?? '').replace(/\s+/g, ' ').replace(/\|/g, '\\|').slice(0, n);
@@ -46,16 +46,16 @@ export function summaryMarkdown(result, { reportUrl } = {}) {
     : `${k.functions} functions in ${k.modules} modules`;
   const lines = [MARKER];
   if (result.diff && !k.functions) {
-    lines.push('### proofhound: nothing to check', '', `This change does not touch any function proofhound can test (${result.diff.files} changed file${result.diff.files === 1 ? '' : 's'} compared with \`${result.diff.base}\`).`);
+    lines.push('### counterhound: nothing to check', '', `This change does not touch any function counterhound can test (${result.diff.files} changed file${result.diff.files === 1 ? '' : 's'} compared with \`${result.diff.base}\`).`);
     return lines.join('\n') + '\n';
   }
   lines.push(bugs.length
-    ? `### proofhound found ${bugs.length} provable bug${bugs.length > 1 ? 's' : ''}${k.fixed ? ` (${k.fixed} with a verified fix)` : ''}`
-    : '### proofhound: no provable bugs');
+    ? `### counterhound found ${bugs.length} provable bug${bugs.length > 1 ? 's' : ''}${k.fixed ? ` (${k.fixed} with a verified fix)` : ''}`
+    : '### counterhound: no provable bugs');
   lines.push('', `Checked ${scope} with property-based tests. ${k.reported} reported → ${k.verified} reproduced → ${k.verified - k.duplicates} unique → ${k.confirmed} confirmed by an independent review.`, '');
   for (const b of bugs) lines.push(bugBlock(b, result.lang), '');
   if (look.length) lines.push(`${look.length} more failure${look.length > 1 ? 's' : ''} reproduced, but the reviewer was not sure ${look.length > 1 ? 'they are bugs' : 'it is a bug'}: ${look.map((b) => cell(b.review?.title || b.title, 100)).join('; ')}.`, '');
   const meta = [fmtMs(result.ms), result.spend?.usd ? `${fmtUsd(result.spend.usd)} of model usage` : null, reportUrl ? `[full report](${reportUrl})` : null].filter(Boolean).join(' · ');
-  lines.push(`<sub>${meta} · [proofhound](https://github.com/FengXiao1231/proofhound) only reports failures that replay deterministically and survive review.</sub>`);
+  lines.push(`<sub>${meta} · [counterhound](https://github.com/FengXiao1231/counterhound) only reports failures that replay deterministically and survive review.</sub>`);
   return lines.join('\n') + '\n';
 }

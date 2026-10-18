@@ -9,4 +9,4 @@ I didn't run the three repro files on their own. Each one asserts the correct re
 The `variables` property and the kwargs-override property passed.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-191824/g01-uritemplate-api-py"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-191824/g01-uritemplate-api-py"}

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-190756",
   "diff": null,
   "fixRun": true,
@@ -76,7 +76,7 @@
       "evidence": "Doc of Offset: 'the byte offset in the source the lexer stopped at, that is, the position right after the most recently returned token.' The parser (parse.go) uses lex.Offset() for error positions, so errors reported at a token inside a class point past it.",
       "group": "g02-syntax-lexer-go",
       "file": "syntax/lexer.go",
-      "workdir": ".proofhound/runs/20261017-190756/g02-syntax-lexer-go",
+      "workdir": ".counterhound/runs/20261017-190756/g02-syntax-lexer-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_offset_test.go",
@@ -109,7 +109,7 @@
         "reason": "not attempted: --budget was used up"
       },
       "reproSource": "package syntax\n\nimport \"testing\"\n\nfunc TestReproOffsetAfterRangeOpen(t *testing.T) {\n\tl := NewLexer(\"[a-c]\")\n\ttk := l.Next()\n\tif tk.Type != RangeOpen {\n\t\tt.Fatalf(\"unexpected token %v\", tk)\n\t}\n\tif got := l.Offset(); got != 1 {\n\t\tt.Fatalf(\"Offset() after %v = %d, want 1 (right after the returned token)\", tk, got)\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-190756/bugs/PH-001-lexer-offset-points-past-the-end-of-the-class-fo"
+      "bugDir": ".counterhound/runs/20261017-190756/bugs/PH-001-lexer-offset-points-past-the-end-of-the-class-fo"
     }
   ]
 }

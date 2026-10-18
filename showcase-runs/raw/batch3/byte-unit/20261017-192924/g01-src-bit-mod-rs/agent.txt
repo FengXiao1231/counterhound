@@ -13,4 +13,4 @@ I also had `Bash` denied for ordinary commands such as `ls` and `cat`. I only go
 **Decision for you:** should I rerun with `bit` and `u128` enabled? If so, change the default features or give `ph-test` a flag for them, and I'll finish the run.
 
 Permission denials:
-Bash: {"command":"cd /tmp/claude-0/zoo3/byte-unit; cat .proofhound/ph-test | head -30; mkdir -p .proofhound/runs/20261017-192924/g01-src-bit-mod-rs; grep -n \"pub fn\\|pub const fn\" src/unit/*.rs | head -20"}
+Bash: {"command":"cd /tmp/claude-0/zoo3/byte-unit; cat .counterhound/ph-test | head -30; mkdir -p .counterhound/runs/20261017-192924/g01-src-bit-mod-rs; grep -n \"pub fn\\|pub const fn\" src/unit/*.rs | head -20"}

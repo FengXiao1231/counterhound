@@ -11,4 +11,4 @@ The properties are in `ph_props.rs` in the work directory. They cover:
 - first word capitalised
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170204/g02-src-cases-classcase-mod-rs"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170204/g02-src-cases-classcase-mod-rs"}

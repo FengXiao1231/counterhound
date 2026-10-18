@@ -3,4 +3,4 @@ I tested 12 properties covering all six functions and reported 0 bugs. All 12 pa
 `findings.json` contains `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/rust-lang-glob/.proofhound/runs/20261017-191709/g01-src-lib-rs"}
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/rust-lang-glob/.counterhound/runs/20261017-191709/g01-src-lib-rs"}

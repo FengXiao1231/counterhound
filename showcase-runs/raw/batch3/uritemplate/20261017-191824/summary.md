@@ -1,5 +1,5 @@
-<!-- proofhound-report -->
-### proofhound found 3 provable bugs
+<!-- counterhound-report -->
+### counterhound found 3 provable bugs
 
 Checked 9 functions in 2 modules with property-based tests. 5 reported → 5 reproduced → 5 unique → 3 confirmed by an independent review.
 
@@ -74,4 +74,4 @@ def test_repro_reserved_space():
 
 2 more failures reproduced, but the reviewer was not sure they are bugs: Integer 0 expands as empty value in ? / & / ; expansions; Integer 0 expands as empty in {?x} and {;x}.
 
-<sub>1m51s · $0.70 of model usage · [proofhound](https://github.com/FengXiao1231/proofhound) only reports failures that replay deterministically and survive review.</sub>
+<sub>1m51s · $0.70 of model usage · [counterhound](https://github.com/FengXiao1231/counterhound) only reports failures that replay deterministically and survive review.</sub>

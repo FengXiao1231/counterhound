@@ -3,4 +3,4 @@ I tested 9 properties and reported 1 bug. `parse('duration: -1h')` returns `3600
 The repro file fails as expected, and `findings.json` is written.
 
 Permission denials:
-Bash: {"command":"cd /tmp/claude-0/zoo3/parse-duration/.proofhound/runs/20261017-191242/g01-index-js && cat > ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport parse from '../../../../index.js';\nconst units = ['ns','us
+Bash: {"command":"cd /tmp/claude-0/zoo3/parse-duration/.counterhound/runs/20261017-191242/g01-index-js && cat > ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport parse from '../../../../index.js';\nconst units = ['ns','us

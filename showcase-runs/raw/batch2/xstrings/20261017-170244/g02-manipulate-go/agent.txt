@@ -3,4 +3,4 @@ I tested 7 properties covering all six functions and reported 0 bugs, so `findin
 The two partition tests first failed on an empty separator, which was a flaw in my test and an input the docs don't cover, so I skip it. All 7 pass after that change.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo2/xstrings/.proofhound/runs/20261017-170244/g02-manipulate-go; grep -n \"func isAlphabet\" -A8 /tmp/claude-0/zoo2/xstrings/*.go"}
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo2/xstrings/.counterhound/runs/20261017-170244/g02-manipulate-go; grep -n \"func isAlphabet\" -A8 /tmp/claude-0/zoo2/xstrings/*.go"}

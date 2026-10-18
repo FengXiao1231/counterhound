@@ -1,4 +1,4 @@
 I tested 4 properties and reported 1 bug: `WrapString("a b", 1)` returns `"a b"` instead of `"a\nb"`, because the `wordBufLen < lim` check on line 64 skips the break when `lim` is 1.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170810/g01-wordwrap-go && cat > .proofhound/runs/20261017-170810/g01-wordwrap-go/ph_props_test.go <<'EOF'\npackage wordwrap\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\t\"unicode\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phStripSpace(s string) string {\n
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170810/g01-wordwrap-go && cat > .counterhound/runs/20261017-170810/g01-wordwrap-go/ph_props_test.go <<'EOF'\npackage wordwrap\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\t\"unicode\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phStripSpace(s string) string {\n

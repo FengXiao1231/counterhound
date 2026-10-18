@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-190605",
   "diff": null,
   "fixRun": true,
@@ -80,7 +80,7 @@
       "evidence": "INSTANCE_BASE64_ENCODER/DECODER in StringLookupFactory use StandardCharsets.ISO_8859_1; the sibling URL lookups document and use UTF-8, and the encoder silently loses data for any char above U+00FF.",
       "group": "g02-che-commons-text-lookup-StringLookupFactory-java",
       "file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
-      "workdir": ".proofhound/runs/20261017-190605/g02-che-commons-text-lookup-StringLookupFactory-java",
+      "workdir": ".counterhound/runs/20261017-190605/g02-che-commons-text-lookup-StringLookupFactory-java",
       "verification": {
         "verified": true,
         "reproFile": "ReproBase64Utf8Test.java",

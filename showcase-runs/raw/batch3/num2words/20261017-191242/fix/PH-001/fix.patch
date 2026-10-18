@@ -15,7 +15,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index c0ee229..85672ee 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -13,5 +13,3 @@ proofhound · Python · claude (sonnet) · 2 modules, 12 functions
+@@ -13,5 +13,3 @@ counterhound · Python · claude (sonnet) · 2 modules, 12 functions
    bug (0.90) to_cardinal drops zeros after the decimal point (1.05 reads as 1.5)
  
    writing fixes for 2 bugs…

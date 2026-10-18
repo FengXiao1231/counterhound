@@ -2,7 +2,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index 8806672..cfd8404 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -11,4 +11,3 @@ proofhound · Java · claude (sonnet) · 2 modules, 11 functions
+@@ -11,4 +11,3 @@ counterhound · Java · claude (sonnet) · 2 modules, 11 functions
    bug (0.80) Escaped trailing space in identifier is lost because the query is trimmed
  
    writing fixes for 1 bug…

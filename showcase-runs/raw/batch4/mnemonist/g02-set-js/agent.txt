@@ -1,8 +1,8 @@
-I couldn't run any tests, so I tested 0 properties and report 0 bugs. The run was blocked at the first command. Bash was denied because Claude Code is in don't-ask mode, and the same denial would apply to `./.proofhound/ph-test`, the only way allowed to run tests. The denied command also created the work directory and the props file, so neither exists yet.
+I couldn't run any tests, so I tested 0 properties and report 0 bugs. The run was blocked at the first command. Bash was denied because Claude Code is in don't-ask mode, and the same denial would apply to `./.counterhound/ph-test`, the only way allowed to run tests. The denied command also created the work directory and the props file, so neither exists yet.
 
 I read `set.js` and found nothing wrong in the six target functions. A guess I didn't test: `jaccard` of two empty sets returns 0, which is a convention choice, not a bug.
 
-I'm stopping here rather than writing `findings.json` as `[]`, since that would claim a clean result I never checked. If you allow Bash for `./.proofhound/ph-test <file>`, I'll write the property tests and run them. If you'd rather I only write the files, I can do that with the Write tool, but I'd have nothing to confirm against.
+I'm stopping here rather than writing `findings.json` as `[]`, since that would claim a clean result I never checked. If you allow Bash for `./.counterhound/ph-test <file>`, I'll write the property tests and run them. If you'd rather I only write the files, I can do that with the Write tool, but I'd have nothing to confirm against.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-041709/g02-set-js && cat > .proofhound/runs/20261018-041709/g02-set-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport mod from '../../../../set.js';\nconst arb = f
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-041709/g02-set-js && cat > .counterhound/runs/20261018-041709/g02-set-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport mod from '../../../../set.js';\nconst arb = f

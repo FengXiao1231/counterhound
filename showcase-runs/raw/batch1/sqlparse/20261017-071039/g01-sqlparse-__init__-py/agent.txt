@@ -5,4 +5,4 @@ The two fixes:
 - **Trailing comments:** my `split` count test used statements ending in `-- c`, which swallows the following `;`. I removed those statements from that test.
 
 Permission denials:
-Bash: {"command":"sed -i 's/^def test_parse_roundtrip(s):/def test_parse_roundtrip(s):\\n    assume(s.strip())/; s/^def test_parse_roundtrip_unicode(s):/def test_parse_roundtrip_unicode(s):\\n    assume(s.strip())/; s/^@given(stmts)\\ndef test_split_count//' .proofhound/runs/20261017-071039/g01-sqlparse-_
+Bash: {"command":"sed -i 's/^def test_parse_roundtrip(s):/def test_parse_roundtrip(s):\\n    assume(s.strip())/; s/^def test_parse_roundtrip_unicode(s):/def test_parse_roundtrip_unicode(s):\\n    assume(s.strip())/; s/^@given(stmts)\\ndef test_split_count//' .counterhound/runs/20261017-071039/g01-sqlparse-_

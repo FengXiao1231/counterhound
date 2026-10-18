@@ -31,7 +31,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index df9f005..2c08c89 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -11,4 +11,3 @@ proofhound · JavaScript/TypeScript · claude (sonnet) · 2 modules, 7 functions
+@@ -11,4 +11,3 @@ counterhound · JavaScript/TypeScript · claude (sonnet) · 2 modules, 7 functions
    bug (0.80) Capitalisation indexes by UTF-16 code unit, so words starting with astral letters are not capitalised
  
    writing fixes for 1 bug…

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-190916",
   "diff": null,
   "fixRun": true,
@@ -74,7 +74,7 @@
       "evidence": "Docstring lists 'hh.hhTZD' with arbitrary decimal fraction as supported; the regex accepts any number of digits. The hour-fraction branch skips the ROUND_FLOOR quantize used by the minute/second branches and then calls to_integral() (rounding), so microsecond can become 1000000.",
       "group": "g02-src-isodate-isotime-py",
       "file": "src/isodate/isotime.py",
-      "workdir": ".proofhound/runs/20261017-190916/g02-src-isodate-isotime-py",
+      "workdir": ".counterhound/runs/20261017-190916/g02-src-isodate-isotime-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_hour_fraction_rounding.py",
@@ -116,7 +116,7 @@
         "suite": "passed (python3 -m pytest -q -x -p no:cacheprovider --no-header)"
       },
       "reproSource": "from isodate.isotime import parse_time\n\n\ndef test_repro_hour_fraction_rounding():\n    # 10.99999999999999 hours is just under 11:00:00; must not raise\n    t = parse_time(\"10.99999999999999\")\n    assert t.hour in (10, 11)\n",
-      "bugDir": ".proofhound/runs/20261017-190916/bugs/PH-001-parse-time-raises-valueerror-for-hour-fractions"
+      "bugDir": ".counterhound/runs/20261017-190916/bugs/PH-001-parse-time-raises-valueerror-for-hour-fractions"
     }
   ]
 }

@@ -1,5 +1,5 @@
-<!-- proofhound-report -->
-### proofhound found 2 provable bugs
+<!-- counterhound-report -->
+### counterhound found 2 provable bugs
 
 Checked 6 functions in 1 modules with property-based tests. 2 reported → 2 reproduced → 2 unique → 2 confirmed by an independent review.
 
@@ -55,4 +55,4 @@ def test_repro_symdiff_update_dups():
 ```
 </details>
 
-<sub>58s · $0.28 of model usage · [proofhound](https://github.com/FengXiao1231/proofhound) only reports failures that replay deterministically and survive review.</sub>
+<sub>58s · $0.28 of model usage · [counterhound](https://github.com/FengXiao1231/counterhound) only reports failures that replay deterministically and survive review.</sub>

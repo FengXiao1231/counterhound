@@ -5,4 +5,4 @@ The bug is an inconsistency in how delimiters are split. A space followed by a c
 The other 8 properties passed, including the overwrite, remove-boundaries and `Converter`-agreement checks.
 
 Permission denials:
-Bash: {"command":"grep -n \"pub fn\\|pub const fn\\|^pub enum\\|^    [A-Z][A-Za-z]*,$\" /tmp/claude-0/zoo2/convert-case/src/case.rs | head -80; ls /tmp/claude-0/zoo2/convert-case/.proofhound"}
+Bash: {"command":"grep -n \"pub fn\\|pub const fn\\|^pub enum\\|^    [A-Z][A-Za-z]*,$\" /tmp/claude-0/zoo2/convert-case/src/case.rs | head -80; ls /tmp/claude-0/zoo2/convert-case/.counterhound"}

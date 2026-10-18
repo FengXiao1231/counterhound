@@ -19,7 +19,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index 07800c4..9dc2eec 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -9,4 +9,3 @@ proofhound · JavaScript/TypeScript · claude (sonnet) · 1 module, 6 functions
+@@ -9,4 +9,3 @@ counterhound · JavaScript/TypeScript · claude (sonnet) · 1 module, 6 functions
    bug (0.85) stringifyUrl corrupts existing index-format array in the URL's query ('a=[object Object]')
  
    writing fixes for 1 bug…

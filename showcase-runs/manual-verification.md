@@ -22,7 +22,7 @@ humansize "-1 Bytes", gobwas/glob Lexer.Offset, levenshtein InsCost(0) NaN, urit
 Re-ran by hand: levenshtein Calculate("aaa","bbbab",2,1,2,2) = 2 vs 6 unlimited; uritemplate expand('{+x}', {'x': 'a b%41'}) = 'a b%41';
 num2words bn 0.01 currency = "দশ পয়সা", 1.05 == 1.5 reading.
 17 patches written, 17 verified (repro passes; project suite passed for 12, already failing for 3, none for 2), all apply with git apply --check.
-The raw run's patches also contained a hunk for the run's own log file (ph-err.txt); proofhound now diffs against a snapshot, and the
+The raw run's patches also contained a hunk for the run's own log file (ph-err.txt); counterhound now diffs against a snapshot, and the
 copies here have those hunks removed. 9 bugs got no patch because the per-library --budget 0.5 was used up (now --fix-budget).
 
 ## Batch 4: 12 stateful libraries, model-based tests (2026-10-18)

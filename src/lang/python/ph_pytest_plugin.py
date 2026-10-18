@@ -1,4 +1,4 @@
-"""pytest plugin used by proofhound: records structured failure data for each test as JSON."""
+"""pytest plugin used by counterhound: records structured failure data for each test as JSON."""
 import json
 import os
 import traceback
@@ -11,14 +11,14 @@ try:
     from hypothesis import HealthCheck, settings
 
     settings.register_profile(
-        'proofhound',
+        'counterhound',
         database=None,
         deadline=None,
-        max_examples=int(os.environ.get('PROOFHOUND_MAX_EXAMPLES', '300')),
+        max_examples=int(os.environ.get('COUNTERHOUND_MAX_EXAMPLES', '300')),
         suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much, HealthCheck.data_too_large],
         print_blob=True,
     )
-    settings.load_profile('proofhound')
+    settings.load_profile('counterhound')
 except Exception:  # hypothesis missing: plain tests still work
     pass
 
@@ -67,7 +67,7 @@ def pytest_collectreport(report):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    path = os.environ.get('PROOFHOUND_REPORT')
+    path = os.environ.get('COUNTERHOUND_REPORT')
     if path:
         with open(path, 'w', encoding='utf-8') as f:
             json.dump({'exitstatus': int(exitstatus), 'tests': _RESULTS}, f)

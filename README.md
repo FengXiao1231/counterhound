@@ -1,6 +1,6 @@
 <div align="center">
 
-# proofhound
+# counterhound
 
 **An AI bug hunter whose every report is a failing test you can run.**
 
@@ -9,23 +9,23 @@ and throws thousands of generated inputs at them. A failure only reaches you aft
 been shrunk to a minimal input, replayed as a deterministic test, traced to your code,
 and survived an independent reviewer whose job is to refute it.
 
-`npx proofhound`
+`npx counterhound`
 
-[![tests](https://github.com/FengXiao1231/proofhound/actions/workflows/test.yml/badge.svg)](https://github.com/FengXiao1231/proofhound/actions/workflows/test.yml)
+[![tests](https://github.com/FengXiao1231/counterhound/actions/workflows/test.yml/badge.svg)](https://github.com/FengXiao1231/counterhound/actions/workflows/test.yml)
 [![node](https://img.shields.io/badge/node-%3E%3D20-339933)](package.json)
 [![dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
 **English** · [简体中文](README.zh-CN.md) · Python, JavaScript/TypeScript, Go, Rust & Java · MIT
 
-<img src="assets/report.png" width="720" alt="proofhound report for a real run on boltons">
+<img src="assets/report.png" width="720" alt="counterhound report for a real run on boltons">
 
 </div>
 
 ## Why
 
 AI code review tools are noisy. They guess, and you spend your afternoon checking whether
-each guess is real. proofhound flips that around: the AI is only allowed to *propose*.
+each guess is real. counterhound flips that around: the AI is only allowed to *propose*.
 Execution decides.
 
 Each step can only remove findings, never add them:
@@ -40,28 +40,28 @@ expected and what happened, and the evidence that the behaviour is really promis
 
 ```bash
 cd your-project
-npx proofhound                    # hunt in the 6 most promising modules
-npx proofhound targets            # see what would be tested (no AI calls)
-npx proofhound --only parse_url   # focus on a function, module or file
-npx proofhound src/codec --budget 2
-npx proofhound --api              # hunt the HTTP API (FastAPI, Flask, Express, Fastify) instead of functions
+npx counterhound                    # hunt in the 6 most promising modules
+npx counterhound targets            # see what would be tested (no AI calls)
+npx counterhound --only parse_url   # focus on a function, module or file
+npx counterhound src/codec --budget 2
+npx counterhound --api              # hunt the HTTP API (FastAPI, Flask, Express, Fastify) instead of functions
 ```
 
 You need:
 
-- **An agent CLI** that does the thinking: [Claude Code](https://claude.com/claude-code) (`claude`) or [Codex](https://github.com/openai/codex) (`codex`). proofhound drives it headlessly, so it uses the subscription or API key you already have.
-- **Python projects:** `pip install pytest hypothesis` in the project's environment (proofhound uses `.venv/` automatically if it exists).
+- **An agent CLI** that does the thinking: [Claude Code](https://claude.com/claude-code) (`claude`) or [Codex](https://github.com/openai/codex) (`codex`). counterhound drives it headlessly, so it uses the subscription or API key you already have.
+- **Python projects:** `pip install pytest hypothesis` in the project's environment (counterhound uses `.venv/` automatically if it exists).
 - **JS/TS projects:** Node 20+. fast-check and tsx are fetched into a cache on first run if your project does not have them.
 - **Go projects:** Go 1.21+. [rapid](https://github.com/flyingmutant/rapid) is added to a private copy of your `go.mod`; your `go.mod`, `go.sum` and package directories are never written to.
 - **Rust projects:** cargo. Tests run as integration tests of a separate harness crate that depends on yours by path, with [proptest](https://github.com/proptest-rs/proptest), so only your public API is exercised and your `Cargo.toml` is untouched.
-- **Java projects:** JDK 21+. proofhound compiles your main sources into `.proofhound/` (never `target/` or `build/`), takes the dependency classpath from Maven or Gradle, and runs JUnit 5 with [QuickTheories](https://github.com/quicktheories/QuickTheories), both fetched into a cache on first run.
+- **Java projects:** JDK 21+. counterhound compiles your main sources into `.counterhound/` (never `target/` or `build/`), takes the dependency classpath from Maven or Gradle, and runs JUnit 5 with [QuickTheories](https://github.com/quicktheories/QuickTheories), both fetched into a cache on first run.
 
-Run `npx proofhound doctor` to check everything.
+Run `npx counterhound doctor` to check everything.
 
 ## What you get
 
 ```
-proofhound · Python · claude (sonnet) · 6 modules, 36 functions
+counterhound · Python · claude (sonnet) · 6 modules, 36 functions
 
   ▸ hunting in boltons/tbutils.py (from_string, from_dict, from_frame, …)
   ✓ TracebackInfo.from_dict does not rebuild Callpoint objects (crash, failed 3/3)
@@ -77,7 +77,7 @@ proofhound · Python · claude (sonnet) · 6 modules, 36 functions
     actual   AttributeError: 'dict' object has no attribute 'to_dict'
 ```
 
-Each run writes `.proofhound/runs/<id>/`:
+Each run writes `.counterhound/runs/<id>/`:
 
 | File | What it is |
 |---|---|
@@ -102,12 +102,12 @@ flowchart LR
 ```
 
 1. **Rank.** A static scan (Python `ast`, Go `go/ast`, scanners for JS/TS, Rust and Java) lists public functions and methods and scores them by how checkable they are: documented, typed, pure, named like a transformation (`parse`, `encode`, `merge`, `normalize`…), with a bonus when an inverse exists (`encode`/`decode` means a round-trip property for free). Functions that touch the network, files, clocks or randomness rank low. A class whose public methods change its state (a cart, an account, a cache, a parser with a cursor) is ranked as one target, in Python and JavaScript: its `add`/`remove`/`update` methods would score badly as free functions, but together they are the best kind of target. With `--api` the targets are the routes of a FastAPI, Flask, Express, Fastify, Koa or Hono app instead (decorators, routers and blueprints with their prefixes, app factories), ranked by their contract and by having a partner to round-trip with (POST and GET, PUT, a list endpoint).
-2. **Hunt.** For each module, a coding agent reads the source, docstrings, README and call sites, and writes property-based tests with [Hypothesis](https://hypothesis.works), [fast-check](https://fast-check.dev), [rapid](https://github.com/flyingmutant/rapid), [proptest](https://github.com/proptest-rs/proptest) or [QuickTheories](https://github.com/quicktheories/QuickTheories): round-trips, invariants, idempotence, agreement with a reference implementation, metamorphic relations. For a stateful class it writes a model-based test instead (`hypothesis.stateful`, `fc.commands`): random sequences of the class's methods against a simple model, checking what the queries promise after every step, so the repro is a short sequence of calls. For an HTTP API it drives the app in-process (FastAPI's `TestClient`, Flask's test client, Fastify's `inject`, or a loopback server for Express) and checks the contract: no 5xx or unhandled exception on valid input, bodies that match the declared response model or OpenAPI schema, create-then-read, idempotent PUT, 404 after DELETE, paging that returns every item exactly once. An exception inside a handler is attributed to that line like any other crash. It is told which fixtures, factories and test helpers the project's own tests define (`conftest.py`, `factories.py`, `test/helpers.*`), and uses them to build valid users, orders or sessions instead of guessing; `tests/conftest.py` is loaded for its tests too. It runs them, separates its own mistakes from real failures, and writes a deterministic repro for each bug it believes in. The agent can only write inside `.proofhound/runs/` and can only run tests through proofhound's own runner.
-3. **Replay.** proofhound, not the agent, re-runs every repro N times (default 3) in fresh processes. It is dropped if it ever passes, if the failure changes between runs, if it uses randomness or clocks, or if it cannot be loaded.
+2. **Hunt.** For each module, a coding agent reads the source, docstrings, README and call sites, and writes property-based tests with [Hypothesis](https://hypothesis.works), [fast-check](https://fast-check.dev), [rapid](https://github.com/flyingmutant/rapid), [proptest](https://github.com/proptest-rs/proptest) or [QuickTheories](https://github.com/quicktheories/QuickTheories): round-trips, invariants, idempotence, agreement with a reference implementation, metamorphic relations. For a stateful class it writes a model-based test instead (`hypothesis.stateful`, `fc.commands`): random sequences of the class's methods against a simple model, checking what the queries promise after every step, so the repro is a short sequence of calls. For an HTTP API it drives the app in-process (FastAPI's `TestClient`, Flask's test client, Fastify's `inject`, or a loopback server for Express) and checks the contract: no 5xx or unhandled exception on valid input, bodies that match the declared response model or OpenAPI schema, create-then-read, idempotent PUT, 404 after DELETE, paging that returns every item exactly once. An exception inside a handler is attributed to that line like any other crash. It is told which fixtures, factories and test helpers the project's own tests define (`conftest.py`, `factories.py`, `test/helpers.*`), and uses them to build valid users, orders or sessions instead of guessing; `tests/conftest.py` is loaded for its tests too. It runs them, separates its own mistakes from real failures, and writes a deterministic repro for each bug it believes in. The agent can only write inside `.counterhound/runs/` and can only run tests through counterhound's own runner.
+3. **Replay.** counterhound, not the agent, re-runs every repro N times (default 3) in fresh processes. It is dropped if it ever passes, if the failure changes between runs, if it uses randomness or clocks, or if it cannot be loaded.
 4. **Attribute.** The traceback is inspected. Errors raised inside the test itself (`NameError`, wrong call signatures, a `KeyError` in the test's own bookkeeping), errors from Hypothesis or fast-check, and errors from vendored code are test bugs, not your bugs. Crashes (including Go and Rust panics, read from goroutine traces and backtraces) are pinned to the deepest frame in your code, and an explicit `raise`/`throw`/`panic` is flagged so the reviewer can check whether it is documented behaviour.
 5. **Dedup.** Findings with the same crash site, or the same property on the same function, are merged.
 6. **Review.** A separate agent run, with a fresh context, gets the finding and the verified failure and is told that most automated reports are wrong. By default it is the same model as the hunter; pass `--review-model` (for example `opus`) to have a different, stronger model do the refuting. It checks whether the input is valid under the contract, whether the expected behaviour is really promised, whether the behaviour is intentional, and whether the test is correct. Only `bug` verdicts at or above `--min-confidence` (default 0.6) are confirmed; unsure ones are listed separately.
-7. **Fix (optional, `--fix`).** For each confirmed bug, an agent edits a throwaway copy of the project (outside it, in the system temp dir). proofhound keeps the patch only if a fresh copy of the repro now passes and the project's own test suite (`pytest`, `npm test`, `go test ./...`, `cargo test`, `mvn test` / `gradle test`, or `testCommand` from the config) does not go from green to red. Your working tree is never touched.
+7. **Fix (optional, `--fix`).** For each confirmed bug, an agent edits a throwaway copy of the project (outside it, in the system temp dir). counterhound keeps the patch only if a fresh copy of the repro now passes and the project's own test suite (`pytest`, `npm test`, `go test ./...`, `cargo test`, `mvn test` / `gradle test`, or `testCommand` from the config) does not go from green to red. Your working tree is never touched.
 
 ## Results so far
 
@@ -131,12 +131,12 @@ flowchart LR
 
 ## Use it on pull requests (GitHub Action)
 
-proofhound can check every pull request: it hunts only in the functions the PR changed, comments
+counterhound can check every pull request: it hunts only in the functions the PR changed, comments
 on the PR when it has a reproducible failure (with the input, the expected and actual result, and a failing
-test), and fails the check. Add `.github/workflows/proofhound.yml`:
+test), and fails the check. Add `.github/workflows/counterhound.yml`:
 
 ```yaml
-name: proofhound
+name: counterhound
 on: pull_request
 
 permissions:
@@ -154,7 +154,7 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
       - run: pip install -e . pytest hypothesis
-      - uses: FengXiao1231/proofhound@v0
+      - uses: FengXiao1231/counterhound@v0
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           budget: 2
@@ -173,17 +173,17 @@ jobs:
 | `working-directory` | `.` | Project directory inside the repository |
 | `args` | | Extra options, e.g. `--lang go --notes "..."` |
 
-The HTML report, `results.json` and the repro tests are uploaded as the `proofhound-report` artifact, and the summary is shown on the run page. Pull requests from forks get no secrets on `pull_request`, so the action fails with a clear message there. Do not switch to `pull_request_target` to work around it: that would run the fork's code with your secrets.
+The HTML report, `results.json` and the repro tests are uploaded as the `counterhound-report` artifact, and the summary is shown on the run page. Pull requests from forks get no secrets on `pull_request`, so the action fails with a clear message there. Do not switch to `pull_request_target` to work around it: that would run the fork's code with your secrets.
 
-The same diff mode works locally: `npx proofhound --diff main`.
+The same diff mode works locally: `npx counterhound --diff main`.
 
 ## Options
 
 ```
-proofhound [paths...]            hunt for bugs (default: the current directory)
-proofhound targets [paths...]    show which functions would be tested, no AI calls
-proofhound report                rebuild the HTML report for the latest run
-proofhound doctor                check that the toolchain is ready
+counterhound [paths...]            hunt for bugs (default: the current directory)
+counterhound targets [paths...]    show which functions would be tested, no AI calls
+counterhound report                rebuild the HTML report for the latest run
+counterhound doctor                check that the toolchain is ready
 
 --lang <python|js|go|rust|java>  language (auto-detected)
 --agent <claude|codex>    which coding-agent CLI does the thinking (auto-detected)
@@ -207,7 +207,7 @@ proofhound doctor                check that the toolchain is ready
 --json                    print results as JSON on stdout
 ```
 
-Optional `.proofhound/config.json`:
+Optional `.counterhound/config.json`:
 
 ```json
 {
@@ -227,16 +227,16 @@ Optional `.proofhound/config.json`:
 ## Safety
 
 With Claude Code, the hunter agent runs with a strict allowlist: read files, write only inside
-`.proofhound/runs/<id>/`, and run only `./.proofhound/ph-test`. It has no network tools.
+`.counterhound/runs/<id>/`, and run only `./.counterhound/ph-test`. It has no network tools.
 With Codex, the reviewer runs in its read-only sandbox, but the hunter runs in Codex's
 `workspace-write` sandbox, which has no per-tool allowlist: it can write anywhere in the project
-and run any command (proofhound prints a note when that is the case). Codex also does not report what a run cost, so `--budget` only works with it when `codexPriceIn`/`codexPriceOut` (USD per million tokens) are set in `.proofhound.json`; otherwise cap the work with `--max-modules`, and proofhound says so. Either way, the tests the
+and run any command (counterhound prints a note when that is the case). Codex also does not report what a run cost, so `--budget` only works with it when `codexPriceIn`/`codexPriceOut` (USD per million tokens) are set in `.counterhound.json`; otherwise cap the work with `--max-modules`, and counterhound says so. Either way, the tests the
 agent writes do execute your code, just like your own test suite does. On code you do not trust,
-run proofhound inside a container. With `--fix`, the fixing agent can write only inside its own
+run counterhound inside a container. With `--fix`, the fixing agent can write only inside its own
 temporary copy of the project; a patch that changes or deletes the project's existing tests is
 rejected, and the patch is shown to you, never applied.
 
-Everything proofhound generates lives in `.proofhound/`, which carries a `.gitignore` that hides
+Everything counterhound generates lives in `.counterhound/`, which carries a `.gitignore` that hides
 all of it (runs, build caches for Go, Rust and Java, reports) except your own `config.json`.
 
 ## Cost
@@ -248,7 +248,7 @@ cap a run, `--only` to aim it, and a cheaper `--review-model` if you like.
 
 - Stateful (model-based) testing and fixture reuse for Go, Rust and Java, as Python and JavaScript have now
 - HTTP APIs: Django REST framework and NestJS routes; an OpenAPI-only mode for apps that can only be reached over the network
-- `proofhound fix` for an earlier run, so patches do not need a new hunt
+- `counterhound fix` for an earlier run, so patches do not need a new hunt
 - Kotlin
 
 ## Credits
@@ -256,7 +256,7 @@ cap a run, `--only` to aim it, and a cheaper `--review-model` if you like.
 The idea that agents can mine properties and find real bugs with property-based testing
 comes from Anthropic's research, [*Finding bugs with agentic property-based testing*](https://www.anthropic.com/research/property-based-testing),
 and its Python prototype [agentic-pbt](https://github.com/mmaaz-git/agentic-pbt).
-proofhound turns it into a tool for five languages with execution-based verification,
+counterhound turns it into a tool for five languages with execution-based verification,
 attribution, deduplication and adversarial review.
 
 ## License

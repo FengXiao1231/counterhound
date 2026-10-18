@@ -1,4 +1,4 @@
 I tested 3 properties on `New` (`Get` returns the input, no stale state after `Release`, two instances stay independent). All 3 passed, and I reported 0 bugs, so `findings.json` is `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-191949/g01-stringy-go && cat > .proofhound/runs/20261017-191949/g01-stringy-go/ph_props_test.go <<'EOF'\npackage stringy\n\nimport (\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc TestPhNewGet(t *testing.T) {\n\trapid.Check(t, func(t *rapid.T) {\
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-191949/g01-stringy-go && cat > .counterhound/runs/20261017-191949/g01-stringy-go/ph_props_test.go <<'EOF'\npackage stringy\n\nimport (\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc TestPhNewGet(t *testing.T) {\n\trapid.Check(t, func(t *rapid.T) {\

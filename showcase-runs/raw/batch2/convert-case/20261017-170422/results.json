@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-170422",
   "repo": "convert-case",
   "lang": "rust",
@@ -77,7 +77,7 @@
       "evidence": "boundary::split has a byte-level fast path when all boundaries are Space/Hyphen/Underscore and a grapheme-cluster path otherwise; the General path comment says it needs graphemes, and Boundary::len docs count graphemes. The same string and same effective delimiters give different words depending on unrelated boundaries.",
       "group": "g01-src-lib-rs",
       "file": "src/lib.rs",
-      "workdir": ".proofhound/runs/20261017-170422/g01-src-lib-rs",
+      "workdir": ".counterhound/runs/20261017-170422/g01-src-lib-rs",
       "verification": {
         "verified": true,
         "reproFile": "repro_fast_vs_general_path.rs",
@@ -109,7 +109,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "use convert_case::{Boundary, Case, Casing};\n\n#[test]\nfn repro_fast_vs_general_path() {\n    let s = \" \\u{301}\"; // space + combining acute: one grapheme cluster\n    // LowerUpper can never match in this string, so it must not change the result.\n    let only_space = s.set_boundaries(&[Boundary::Space]).to_case(Case::Snake);\n    let with_extra = s\n        .set_boundaries(&[Boundary::Space, Boundary::LowerUpper])\n        .to_case(Case::Snake);\n    assert_eq!(only_space, with_extra);\n}\n",
-      "bugDir": ".proofhound/runs/20261017-170422/bugs/PH-001-byte-level-fast-path-in-boundary-split-splits-in"
+      "bugDir": ".counterhound/runs/20261017-170422/bugs/PH-001-byte-level-fast-path-in-boundary-split-splits-in"
     },
     {
       "title": "Camel (and Sentence) pattern treats a leading empty word as the first word",
@@ -124,7 +124,7 @@
       "evidence": "Pattern::Camel doc: 'Makes the first non-empty word lowercase and the remaining capitalized.' Pattern::Sentence doc says the same for 'first non-empty word capitalized' (convert(\"_a_a\") with Snake->Sentence gives \" a a\" instead of \" A a\"). Pattern::mutate uses index i == 0 instead of the first non-empty word.",
       "group": "g02-src-converter-rs",
       "file": "src/converter.rs",
-      "workdir": ".proofhound/runs/20261017-170422/g02-src-converter-rs",
+      "workdir": ".counterhound/runs/20261017-170422/g02-src-converter-rs",
       "verification": {
         "verified": true,
         "reproFile": "repro_camel_leading_empty_word.rs",

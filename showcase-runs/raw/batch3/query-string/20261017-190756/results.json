@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-190756",
   "diff": null,
   "fixRun": true,
@@ -62,7 +62,7 @@
       "evidence": "stringifyUrl parses the existing query with {sort:false, ...options}; in parse(), index-format arrays are only converted from index-keyed objects to arrays by keysSorter, which is skipped when sort === false, so an object is returned and stringified as [object Object]. The README documents arrayFormat 'index' parsing to arrays, and an existing test ('stringifyUrl uses parsing options when parsing existing query from url') shows the intent that array formats work for existing URL queries. Likewise parse(q,{arrayFormat:'index',sort:false}) returns an object instead of an array.",
       "group": "g01-base-js",
       "file": "base.js",
-      "workdir": ".proofhound/runs/20261017-190756/g01-base-js",
+      "workdir": ".counterhound/runs/20261017-190756/g01-base-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_index_nosort.test.mjs",
@@ -103,7 +103,7 @@
         "suite": "passed (npm test --silent)"
       },
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport {stringifyUrl} from '../../../../../base.js';\n\ntest('repro_index_nosort: stringifyUrl keeps existing index-format array in url', () => {\n\tassert.equal(\n\t\tstringifyUrl({url: 'https://foo.bar?a[0]=x&a[1]=y', query: {}}, {arrayFormat: 'index', encode: false}),\n\t\t'https://foo.bar?a[0]=x&a[1]=y',\n\t);\n});\n",
-      "bugDir": ".proofhound/runs/20261017-190756/bugs/PH-001-stringifyurl-turns-an-existing-index-format-arra"
+      "bugDir": ".counterhound/runs/20261017-190756/bugs/PH-001-stringifyurl-turns-an-existing-index-format-arra"
     }
   ]
 }

@@ -42,4 +42,4 @@ Property: *from_text(to_text(d)) gives back the same items as d, for any string 
 Hypothesis shrank the failure to: `Failing test case: test_qp_roundtrip_blank( pairs=[( '0', # or any other generated value ';', )], )`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

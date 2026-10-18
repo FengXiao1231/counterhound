@@ -73,11 +73,11 @@ const API_FILES = {
 };
 
 export default async function fakeAgent({ prompt, cwd }) {
-  if (prompt.includes("proofhound's bug hunter")) {
+  if (prompt.includes("counterhound's bug hunter")) {
     const rel = prompt.match(/Create files only inside `([^`]+)\/`/)[1];
     const dir = path.join(cwd, rel);
     if (prompt.includes('HTTP API (fastapi')) {
-      for (const need of ['app `app.main:app`', '`GET /items/{item_id}` → `read_item(item_id: int) -> Item`', 'fixture `client` -> TestClient (tests/conftest.py)', 'client = TestClient(app)', '.proofhound/openapi.json']) {
+      for (const need of ['app `app.main:app`', '`GET /items/{item_id}` → `read_item(item_id: int) -> Item`', 'fixture `client` -> TestClient (tests/conftest.py)', 'client = TestClient(app)', '.counterhound/openapi.json']) {
         if (!prompt.includes(need)) throw new Error(`api prompt lacks: ${need}`);
       }
       for (const [name, src] of Object.entries(API_FILES)) fs.writeFileSync(path.join(dir, name), src);
@@ -125,7 +125,7 @@ export default async function fakeAgent({ prompt, cwd }) {
     const file = path.join(cwd, 'textkit', 'lists.py');
     fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('range(0, len(xs) - size + 1, size)', 'range(0, len(xs), size)'));
     // a log file in the real project that keeps growing while the fix runs must not end up in the patch
-    if (process.env.PROOFHOUND_FAKE_TOUCH) fs.appendFileSync(process.env.PROOFHOUND_FAKE_TOUCH, 'still running\n');
+    if (process.env.COUNTERHOUND_FAKE_TOUCH) fs.appendFileSync(process.env.COUNTERHOUND_FAKE_TOUCH, 'still running\n');
     return 'Iterate up to len(xs) so the last partial chunk is kept.';
   }
   if (prompt.includes('skeptical, experienced maintainer')) {

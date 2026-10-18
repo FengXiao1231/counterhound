@@ -7,7 +7,7 @@ import sys
 SKIP_DIRS = {
     '.git', '.hg', '.venv', 'venv', 'env', '.env', 'node_modules', 'build', 'dist', 'site-packages',
     'tests', 'test', 'testing', 'docs', 'doc', 'examples', 'example', 'benchmarks', 'bench', '.tox',
-    '.nox', '__pycache__', '.proofhound', '.mypy_cache', '.pytest_cache', 'scripts', 'tools', 'migrations',
+    '.nox', '__pycache__', '.counterhound', '.mypy_cache', '.pytest_cache', 'scripts', 'tools', 'migrations',
 }
 SKIP_FILES = {'setup.py', 'conftest.py', 'noxfile.py', 'fabfile.py', 'manage.py', '__main__.py', 'conf.py'}
 IMPURE_NAMES = {

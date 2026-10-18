@@ -8,5 +8,5 @@ I tested 4 properties (each run over many generated inputs) and reported 0 bugs.
 My first run of the tests failed to compile, so I fixed the test file and re-ran. The ByteBuffer overloads weren't in the target list, so I left them untested.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-191032/g01-in-java-org-apache-commons-codec-binary-Hex-java && cat > .proofhound/runs/20261017-191032/g01-in-java-org-apache-commons-codec-binary-Hex-java/PhPropsTest.java <<'EOF'\npackage org.apache.commons.codec.binary;\n\nimport java.nio.charset.*;\n
-Bash: {"command":"sed -i 's/checkAssert(l -> {/checkAssert(l -> { try {/; s/^            });$/            } catch (Exception e) { throw new RuntimeException(e); } });/; s/^                assertArrayEquals(b, (byte\\[\\]) h.decode((Object) h.encode(b)), cs);$/&/' .proofhound/runs/20261017-191032/g01-in-ja
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-191032/g01-in-java-org-apache-commons-codec-binary-Hex-java && cat > .counterhound/runs/20261017-191032/g01-in-java-org-apache-commons-codec-binary-Hex-java/PhPropsTest.java <<'EOF'\npackage org.apache.commons.codec.binary;\n\nimport java.nio.charset.*;\n
+Bash: {"command":"sed -i 's/checkAssert(l -> {/checkAssert(l -> { try {/; s/^            });$/            } catch (Exception e) { throw new RuntimeException(e); } });/; s/^                assertArrayEquals(b, (byte\\[\\]) h.decode((Object) h.encode(b)), cs);$/&/' .counterhound/runs/20261017-191032/g01-in-ja

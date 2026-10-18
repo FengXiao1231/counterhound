@@ -46,4 +46,4 @@ Property: *removing with source=[State] (or dest=[State]) removes exactly the sa
 Hypothesis shrank the failure to: `Failing test case: test_remove_by_source_list( trs=[( 'A', 'A', # or any other generated value )], srcs=['A'], use_state=True, )`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

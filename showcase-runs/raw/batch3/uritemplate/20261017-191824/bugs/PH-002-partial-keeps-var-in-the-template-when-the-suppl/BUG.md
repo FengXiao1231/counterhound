@@ -42,4 +42,4 @@ Property: *partial with all variables supplied equals expand*.
 Hypothesis shrank the failure to: `Failing test case: test_partial_full_equals_expand( n='a', # or any other generated value v='', )`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

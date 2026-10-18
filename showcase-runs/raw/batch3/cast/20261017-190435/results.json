@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-190435",
   "diff": null,
   "fixRun": true,
@@ -79,7 +79,7 @@
       "evidence": "The function is an E-variant that returns an error for uncastable input; the reflect fallback is explicitly meant to accept arbitrary map kinds, and sibling ToStringMapStringE returns an error (not a panic) for map[int]string. The map[any]T and map[any]any branches convert keys with ToString, but the reflect fallback passes the original key to SetMapIndex.",
       "group": "g02-map-go",
       "file": "map.go",
-      "workdir": ".proofhound/runs/20261017-190435/g02-map-go",
+      "workdir": ".counterhound/runs/20261017-190435/g02-map-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_int_nonstring_key_panic_test.go",
@@ -125,7 +125,7 @@
         "suite": "passed (go test -count=1 ./...)"
       },
       "reproSource": "package cast\n\nimport \"testing\"\n\nfunc TestReproIntNonStringKeyPanic(t *testing.T) {\n\tgot, err := ToStringMapIntE(map[int]int{0: 0})\n\tif err == nil && len(got) != 1 {\n\t\tt.Fatalf(\"got %v\", got)\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-190435/bugs/PH-001-tostringmapinte-tostringmapint64e-panic-on-maps"
+      "bugDir": ".counterhound/runs/20261017-190435/bugs/PH-001-tostringmapinte-tostringmapint64e-panic-on-maps"
     },
     {
       "title": "ToStringMapStringSliceE treats map[any]string values differently from map[string]string",
@@ -140,7 +140,7 @@
       "evidence": "The map[string]string branch does m[k] = []string{val}; the map[any]string branch calls ToStringSlice(val), which whitespace-splits the string, so equivalent inputs give different outputs and strings with spaces are split / empty strings dropped.",
       "group": "g02-map-go",
       "file": "map.go",
-      "workdir": ".proofhound/runs/20261017-190435/g02-map-go",
+      "workdir": ".counterhound/runs/20261017-190435/g02-map-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_slice_anystring_inconsistent_test.go",

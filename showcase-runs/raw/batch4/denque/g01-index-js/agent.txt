@@ -6,4 +6,4 @@ I tested 3 properties and reported 2 bugs. Both are negative-index bugs: `remove
 The model-based test hit the first bug before it got further. I ran only the two repros afterwards, so no other `remove`, `splice` or `removeOne` bug has been ruled out.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-041605/g01-index-js; cat > .proofhound/runs/20261018-041605/g01-index-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport Denque from '../../../../index.js';\n\ncons
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-041605/g01-index-js; cat > .counterhound/runs/20261018-041605/g01-index-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport Denque from '../../../../index.js';\n\ncons

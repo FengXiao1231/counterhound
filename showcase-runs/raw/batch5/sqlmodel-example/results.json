@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261018-053219",
   "diff": null,
   "fixRun": false,
@@ -65,7 +65,7 @@
       "evidence": "HeroBase declares name: str and secret_name: str (non-optional), and the DB column is NOT NULL, but HeroUpdate declares them as `str | None = None`, so the request validates and then fails in the handler at session.commit() in update_hero (main.py line 91). Invalid input should be a 4xx, not a 5xx.",
       "group": "g01-al-fastapi-app_testing-tutorial001_py310-main-py",
       "file": "docs_src/tutorial/fastapi/app_testing/tutorial001_py310/main.py",
-      "workdir": ".proofhound/runs/20261018-053219/g01-al-fastapi-app_testing-tutorial001_py310-main-py",
+      "workdir": ".counterhound/runs/20261018-053219/g01-al-fastapi-app_testing-tutorial001_py310-main-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_patch_null_name.py",
@@ -93,7 +93,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import importlib\n\nfrom fastapi.testclient import TestClient\nfrom sqlalchemy.pool import StaticPool\nfrom sqlmodel import Session, SQLModel, create_engine\n\nfrom docs_src.tutorial.fastapi.app_testing.tutorial001_py310 import main as _main\n\n\ndef test_patch_null_name_is_not_a_server_error(clear_sqlmodel):\n    main = importlib.reload(_main)\n    engine = create_engine(\n        \"sqlite://\", connect_args={\"check_same_thread\": False}, poolclass=StaticPool\n    )\n    SQLModel.metadata.create_all(engine)\n\n    def override():\n        with Session(engine) as s:\n            yield s\n\n    main.app.dependency_overrides[main.get_session] = override\n    client = TestClient(main.app, raise_server_exceptions=False)\n    pr = client.post(\"/heroes/\", json={\"name\": \"a\", \"secret_name\": \"b\", \"age\": None})\n    assert pr.status_code == 200, (pr.status_code, pr.text)\n    h = pr.json()\n    r = client.patch(f\"/heroes/{h['id']}\", json={\"name\": None})\n    assert r.status_code < 500, (r.status_code, r.text)\n",
-      "bugDir": ".proofhound/runs/20261018-053219/bugs/PH-001-tutorial-app-patch-heroes-id-with-name-or-secret"
+      "bugDir": ".counterhound/runs/20261018-053219/bugs/PH-001-tutorial-app-patch-heroes-id-with-name-or-secret"
     }
   ]
 }

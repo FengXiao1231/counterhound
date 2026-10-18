@@ -38,7 +38,7 @@ Save it as `test_repro_set_small_default.py` in your tests and run `pytest test_
 
 ## Suggested fix
 
-The repro passes with this patch; the project's tests not run (no test command found; set "testCommand" in .proofhound/config.json). Apply it with `git apply fix.patch`.
+The repro passes with this patch; the project's tests not run (no test command found; set "testCommand" in .counterhound/config.json). Apply it with `git apply fix.patch`.
 
 ```diff
 diff --git a/titlecase/__init__.py b/titlecase/__init__.py
@@ -69,4 +69,4 @@ Property: *Calling set_small_word_list() with its default (SMALL) leaves titleca
 Hypothesis shrank the failure to: `Failing test case: test_set_small_default_roundtrip( ws=['foo'], )`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

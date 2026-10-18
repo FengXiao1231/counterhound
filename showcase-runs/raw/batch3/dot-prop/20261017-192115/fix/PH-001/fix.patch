@@ -17,7 +17,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index 586c5bc..382d93c 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -9,4 +9,3 @@ proofhound · JavaScript/TypeScript · claude (sonnet) · 1 module, 6 functions
+@@ -9,4 +9,3 @@ counterhound · JavaScript/TypeScript · claude (sonnet) · 1 module, 6 functions
    bug (0.80) stringifyPath emits unparseable path for integer-valued numbers >= 1e21
  
    writing fixes for 1 bug…

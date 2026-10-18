@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>proofhound · boltons</title>
+<title>counterhound · boltons</title>
 <style>
 :root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
 @media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
@@ -77,7 +77,7 @@ def test_repro_semicolon():
          &#39;;&#39;,
      )],
 )</code></p>
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-064016/bugs/PH-001-queryparamdict-to-text-leaves-unquoted-in-values/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-064016/bugs/PH-001-queryparamdict-to-text-leaves-unquoted-in-values/BUG.md</code></p></details>
 </article>
 <article class="bug confirmed">
   <header>
@@ -114,7 +114,7 @@ def test_repro_from_dict():
   <p class="err"><code>AttributeError: &#39;dict&#39; object has no attribute &#39;to_dict&#39;</code></p></details>
   <details><summary>Why this is a bug</summary><p>Docstring: &#39;Complements TracebackInfo.to_dict&#39;. The source is `return cls(d[&#39;frames&#39;])` with a &#39;# TODO: check this.&#39; comment.</p><p><b>Independent review:</b> The docstring says from_dict &#39;Complements&#39; to_dict, which implies a round trip. But `cls(d[&#39;frames&#39;])` keeps the frames as raw dicts, so `to_dict()` and `str()` on the result fail with AttributeError. The author&#39;s own `# TODO: check this.` suggests the method was never finished, nothing else in the repo uses it, and no test covers it. The input is exactly what to_dict produces, and the repro is correct. The fix is small: build Callpoint objects from each frame dict.</p>
   
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-064016/bugs/PH-002-tracebackinfo-from-dict-leaves-frames-as-plain-d/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-064016/bugs/PH-002-tracebackinfo-from-dict-leaves-frames-as-plain-d/BUG.md</code></p></details>
 </article>
 <article class="bug confirmed">
   <header>
@@ -144,7 +144,7 @@ def test_repro_empty_hist():
   <p class="err"><code>ZeroDivisionError: float division by zero</code></p></details>
   <details><summary>Why this is a bug</summary><p>Stats has a `default` for empty data and get_quantile/describe handle empty data; get_histogram_counts explicitly handles empty data by returning [(0.0, 0)] (_get_bin_bounds returns [0.0]), but format_histogram_counts divides by the max count, which is 0.</p><p><b>Independent review:</b> Stats supports empty data, and get_histogram_counts deliberately returns [(0.0, 0)] for it (_get_bin_bounds returns [0.0]). format_histogram_counts then computes `float(bar_cols) / count_max` with count_max == 0 and crashes. Nothing documents or tests this as an intended error, and the guard is trivial (for example, treating a zero count_max as 1), so a maintainer would likely accept the fix. The impact is a narrow edge case, hence low severity.</p>
   
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-064016/bugs/PH-003-stats-format-histogram-raises-zerodivisionerror/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-064016/bugs/PH-003-stats-format-histogram-raises-zerodivisionerror/BUG.md</code></p></details>
 </article>
 <article class="bug confirmed">
   <header>
@@ -179,7 +179,7 @@ def test_repro_relative_time_ndigits():
     secs=1,
     nd=6,
 )</code></p>
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-064016/bugs/PH-004-relative-time-drops-requested-decimal-digits-bec/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-064016/bugs/PH-004-relative-time-drops-requested-decimal-digits-bec/BUG.md</code></p></details>
 </article>
 
 
@@ -191,7 +191,7 @@ def test_repro_relative_time_ndigits():
 <table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
 <tr><td><code>boltons/strutils.py</code></td><td>parse_int_list, format_int_list, strip_ansi, iter_splitlines, escape_shell_args, int_ranges_from_int_list</td><td>0</td><td>0</td><td>35s</td></tr><tr><td><code>boltons/tbutils.py</code></td><td>ParsedException.from_string, TracebackInfo.from_dict, TracebackInfo.from_frame, TracebackInfo.from_traceback, format_exception_only, Callpoint.from_tb</td><td>1</td><td>1</td><td>37s</td></tr><tr><td><code>boltons/urlutils.py</code></td><td>URL.to_text, QueryParamDict.to_text, QueryParamDict.from_text, unquote, parse_url, OrderedMultiDict.sorted</td><td>1</td><td>1</td><td>48s</td></tr><tr><td><code>boltons/iterutils.py</code></td><td>split_iter, chunked, chunked_iter, windowed_iter, partition, unique_iter</td><td>0</td><td>0</td><td>45s</td></tr><tr><td><code>boltons/statsutils.py</code></td><td>Stats.get_histogram_counts, Stats.format_histogram, format_histogram_counts, Stats.trim_relative, Stats.get_quantile, Stats.describe</td><td>1</td><td>1</td><td>38s</td></tr><tr><td><code>boltons/timeutils.py</code></td><td>dt_to_timestamp, isoparse, parse_timedelta, relative_time, strpdate, decimal_relative_time</td><td>1</td><td>1</td><td>42s</td></tr>
 </table>
-<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+<footer>Generated by counterhound. Raw data: <code>results.json</code> next to this file.</footer>
 </main>
 <script>
 document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));

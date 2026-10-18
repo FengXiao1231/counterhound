@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261018-041605",
   "diff": null,
   "fixRun": false,
@@ -57,7 +57,7 @@
       "evidence": "removeOne explicitly accepts negative indices (range check i < -size, then i += size), and peekAt documents negative indices as counting from the end. The shifting branch is chosen with the un-normalised `index` (index < size/2), so a negative index always takes the front branch with a zero-iteration loop.",
       "group": "g01-index-js",
       "file": "index.js",
-      "workdir": ".proofhound/runs/20261018-041605/g01-index-js",
+      "workdir": ".counterhound/runs/20261018-041605/g01-index-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_removeone_negative.test.mjs",
@@ -89,7 +89,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport Denque from '../../../../../index.js';\n\ntest('repro_removeone_negative', () => {\n  const d = new Denque([1, 2]);\n  assert.equal(d.removeOne(-1), 2);\n  assert.deepEqual(d.toArray(), [1]);\n});\n",
-      "bugDir": ".proofhound/runs/20261018-041605/bugs/PH-001-removeone-with-a-negative-index-corrupts-the-que"
+      "bugDir": ".counterhound/runs/20261018-041605/bugs/PH-001-removeone-with-a-negative-index-corrupts-the-que"
     },
     {
       "title": "remove() with a negative index and count > 1 removes the wrong items and corrupts the queue",
@@ -104,7 +104,7 @@
       "evidence": "remove() accepts negative indices (i < -size check, i += size) but the later branches use the raw `index` (index + count === size, index === 0, index < 0) instead of the normalised i.",
       "group": "g01-index-js",
       "file": "index.js",
-      "workdir": ".proofhound/runs/20261018-041605/g01-index-js",
+      "workdir": ".counterhound/runs/20261018-041605/g01-index-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_remove_negative.test.mjs",
@@ -136,7 +136,7 @@
       "status": "confirmed",
       "bugId": "PH-002",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport Denque from '../../../../../index.js';\n\ntest('repro_remove_negative', () => {\n  const d = new Denque([1, 2, 3, 4]);\n  assert.deepEqual(d.remove(-3, 2), [2, 3]);\n  assert.deepEqual(d.toArray(), [1, 4]);\n});\n",
-      "bugDir": ".proofhound/runs/20261018-041605/bugs/PH-002-remove-with-a-negative-index-and-count-1-corrupt"
+      "bugDir": ".counterhound/runs/20261018-041605/bugs/PH-002-remove-with-a-negative-index-and-count-1-corrupt"
     }
   ]
 }

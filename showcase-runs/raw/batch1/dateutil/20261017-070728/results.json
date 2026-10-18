@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-070728",
   "repo": "dateutil",
   "lang": "python",
@@ -93,7 +93,7 @@
       "evidence": "The parser consistently reports bad or unrepresentable input as ValueError (the docstring's own examples of failing strings, and every internal check). Callers doing `except ValueError` are bypassed only by the 24:00 path, which adds a timedelta after construction.",
       "group": "g01-src-dateutil-parser-isoparser-py",
       "file": "src/dateutil/parser/isoparser.py",
-      "workdir": ".proofhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py",
+      "workdir": ".counterhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py",
       "verification": {
         "verified": false,
         "reason": "test error: Failed means the test itself is broken",
@@ -242,7 +242,7 @@
               "code": "result = testfunction(**testargs)"
             },
             {
-              "file": "/tmp/claude-0/zoo/dateutil/.proofhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py/test_repro_24h_overflow.py",
+              "file": "/tmp/claude-0/zoo/dateutil/.counterhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py/test_repro_24h_overflow.py",
               "line": 13,
               "func": "test_repro_24h_overflow",
               "code": "pytest.fail('OverflowError escaped instead of ValueError')"

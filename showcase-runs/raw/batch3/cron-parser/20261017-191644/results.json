@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191644",
   "diff": null,
   "fixRun": true,
@@ -57,7 +57,7 @@
       "evidence": "Docstring: 'When not provided, the seed is randomly generated'; param type is `str?: string`, and '' is a provided string. Every other string seed is deterministic; the check should be `str === undefined`.",
       "group": "g01-src-utils-random-ts",
       "file": "src/utils/random.ts",
-      "workdir": ".proofhound/runs/20261017-191644/g01-src-utils-random-ts",
+      "workdir": ".counterhound/runs/20261017-191644/g01-src-utils-random-ts",
       "verification": {
         "verified": true,
         "reproFile": "repro_empty_seed.test.mjs",
@@ -98,7 +98,7 @@
         "suite": "passed (npm test --silent)"
       },
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { seededRandom } from '../../../../../src/utils/random.ts';\n\ntest('repro_empty_seed', () => {\n  const a = seededRandom('');\n  const b = seededRandom('');\n  assert.deepEqual([a(), a(), a()], [b(), b(), b()]);\n});\n",
-      "bugDir": ".proofhound/runs/20261017-191644/bugs/PH-001-seededrandom-treats-an-empty-string-seed-as-omit"
+      "bugDir": ".counterhound/runs/20261017-191644/bugs/PH-001-seededrandom-treats-an-empty-string-seed-as-omit"
     }
   ]
 }

@@ -1,5 +1,5 @@
-<!-- proofhound-report -->
-### proofhound found 1 provable bug (1 with a verified fix)
+<!-- counterhound-report -->
+### counterhound found 1 provable bug (1 with a verified fix)
 
 Checked 1 functions in 1 modules with property-based tests. 1 reported → 1 reproduced → 1 unique → 1 confirmed by an independent review.
 
@@ -47,4 +47,4 @@ index acde34e..8479605 100644
 ```
 </details>
 
-<sub>1m36s · $0.22 of model usage · [proofhound](https://github.com/FengXiao1231/proofhound) only reports failures that replay deterministically and survive review.</sub>
+<sub>1m36s · $0.22 of model usage · [counterhound](https://github.com/FengXiao1231/counterhound) only reports failures that replay deterministically and survive review.</sub>

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-071024",
   "repo": "rfc3986",
   "lang": "python",
@@ -94,7 +94,7 @@
       "evidence": "Docstring: 'Extend the existing query string with the new query items.' Existing items are parsed with parse_qsl(self.query) without keep_blank_values=True, so blank-valued params are discarded; extension should only add, never remove.",
       "group": "g01-src-rfc3986-builder-py",
       "file": "src/rfc3986/builder.py",
-      "workdir": ".proofhound/runs/20261017-071024/g01-src-rfc3986-builder-py",
+      "workdir": ".counterhound/runs/20261017-071024/g01-src-rfc3986-builder-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_extend_query_blank.py",
@@ -125,7 +125,7 @@
       "status": "confirmed",
       "bugId": "PH-002",
       "reproSource": "from rfc3986.builder import URIBuilder\n\n\ndef test_repro_extend_query_blank():\n    b = URIBuilder(query=\"a=\").extend_query_with([(\"b\", \"c\")])\n    assert b.query == \"a=&b=c\"\n",
-      "bugDir": ".proofhound/runs/20261017-071024/bugs/PH-002-uribuilder-extend-query-with-drops-existing-quer"
+      "bugDir": ".counterhound/runs/20261017-071024/bugs/PH-002-uribuilder-extend-query-with-drops-existing-quer"
     },
     {
       "title": "ParseResultBytes.unsplit() crashes for any URI without an authority",
@@ -140,7 +140,7 @@
       "evidence": "unsplit is documented as ':returns: The parsed URI reconstituted as a string / :rtype: bytes'; the str counterpart ParseResult.unsplit and geturl() work for the same input, and authority-less URIs such as '/a', 'a:b', '?q' and '' are valid RFC 3986 references that from_string accepts. ParseResultMixin declares authority as Optional.",
       "group": "g02-src-rfc3986-parseresult-py",
       "file": "src/rfc3986/parseresult.py",
-      "workdir": ".proofhound/runs/20261017-071024/g02-src-rfc3986-parseresult-py",
+      "workdir": ".counterhound/runs/20261017-071024/g02-src-rfc3986-parseresult-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_bytes_unsplit_no_authority.py",
@@ -176,7 +176,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "from rfc3986.parseresult import ParseResultBytes\n\n\ndef test_repro_bytes_unsplit_no_authority():\n    pr = ParseResultBytes.from_string(b\"/a\")\n    assert pr.unsplit() == b\"/a\"\n",
-      "bugDir": ".proofhound/runs/20261017-071024/bugs/PH-001-parseresultbytes-unsplit-raises-attributeerror-f"
+      "bugDir": ".counterhound/runs/20261017-071024/bugs/PH-001-parseresultbytes-unsplit-raises-attributeerror-f"
     },
     {
       "title": "normalize_uri drops an empty authority (file:///x -> file:/x)",
@@ -191,7 +191,7 @@
       "evidence": "RFC 3986 section 5.3 recomposition: if authority is defined (even empty), append '//' + authority. Docstring says normalize_uri equals uri_reference(uri).normalize().unsplit(); normalization (6.2.2) must not change the URI's meaning. unsplit() uses truthiness of authority, so '//' is lost (also '//' -> '').",
       "group": "g03-src-rfc3986-api-py",
       "file": "src/rfc3986/api.py",
-      "workdir": ".proofhound/runs/20261017-071024/g03-src-rfc3986-api-py",
+      "workdir": ".counterhound/runs/20261017-071024/g03-src-rfc3986-api-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_empty_authority_dropped.py",
@@ -216,13 +216,13 @@
         "severity": "low",
         "category": "wrong-result",
         "title": "normalize_uri drops an empty-but-present authority (file:///path becomes file:/path)",
-        "reason": "normalize() rebuilds the authority with normalize_authority(), which returns '' for an empty authority. unsplit() then tests `if self.authority:`, so the '//' is dropped, and `file:///etc/hosts` becomes `file:/etc/hosts`. RFC 3986 5.3 says '//' is emitted whenever the authority is defined, even if empty, and normalization shouldn't change a URI's structure. I read the source and found no test or documentation saying the drop is intended. I could not run the code (Bash was denied), so this rests on reading the source and the proofhound run, which failed 3/3. The fix is delicate because it has to tell None from '' for authority across parsing, normalization and unsplit, which is why I'm only moderately confident a maintainer would take it.",
+        "reason": "normalize() rebuilds the authority with normalize_authority(), which returns '' for an empty authority. unsplit() then tests `if self.authority:`, so the '//' is dropped, and `file:///etc/hosts` becomes `file:/etc/hosts`. RFC 3986 5.3 says '//' is emitted whenever the authority is defined, even if empty, and normalization shouldn't change a URI's structure. I read the source and found no test or documentation saying the drop is intended. I could not run the code (Bash was denied), so this rests on reading the source and the counterhound run, which failed 3/3. The fix is delicate because it has to tell None from '' for authority across parsing, normalization and unsplit, which is why I'm only moderately confident a maintainer would take it.",
         "maintainerWouldFix": true
       },
       "status": "confirmed",
       "bugId": "PH-004",
       "reproSource": "from rfc3986.api import normalize_uri\n\n\ndef test_repro_empty_authority_dropped():\n    # \"file:///etc/hosts\" has an empty (but present) authority; normalizing\n    # must not change the URI's structure.\n    assert normalize_uri(\"file:///etc/hosts\") == \"file:///etc/hosts\"\n",
-      "bugDir": ".proofhound/runs/20261017-071024/bugs/PH-004-normalize-uri-drops-an-empty-but-present-authori"
+      "bugDir": ".counterhound/runs/20261017-071024/bugs/PH-004-normalize-uri-drops-an-empty-but-present-authori"
     },
     {
       "title": "normalize_uri turns a '//'-leading path into an authority",
@@ -237,7 +237,7 @@
       "evidence": "RFC 3986 section 3.3: when no authority is present the path cannot begin with '//'; section 6.2.2 normalization must be semantics-preserving. remove_dot_segments produces '//b' and unsplit() concatenates it directly after 'a:'.",
       "group": "g03-src-rfc3986-api-py",
       "file": "src/rfc3986/api.py",
-      "workdir": ".proofhound/runs/20261017-071024/g03-src-rfc3986-api-py",
+      "workdir": ".counterhound/runs/20261017-071024/g03-src-rfc3986-api-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_path_becomes_authority.py",
@@ -268,7 +268,7 @@
       "status": "confirmed",
       "bugId": "PH-003",
       "reproSource": "from rfc3986.api import normalize_uri, uri_reference\n\n\ndef test_repro_path_becomes_authority():\n    # path \"/.//b\" normalizes to \"//b\"; with no authority the result\n    # \"a://b\" re-parses with host \"b\" instead of path \"//b\".\n    n = normalize_uri(\"a:/.//b\")\n    assert uri_reference(n).authority is None\n",
-      "bugDir": ".proofhound/runs/20261017-071024/bugs/PH-003-normalize-uri-turns-a-path-beginning-with-into-a"
+      "bugDir": ".counterhound/runs/20261017-071024/bugs/PH-003-normalize-uri-turns-a-path-beginning-with-into-a"
     }
   ]
 }

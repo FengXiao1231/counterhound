@@ -2,7 +2,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index 948e96a..60b509e 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -9,4 +9,3 @@ proofhound · JavaScript/TypeScript · claude (sonnet) · 1 module, 1 functions
+@@ -9,4 +9,3 @@ counterhound · JavaScript/TypeScript · claude (sonnet) · 1 module, 1 functions
    bug (0.60) seededRandom('') ignores the provided empty-string seed and is non-deterministic
  
    writing fixes for 1 bug…

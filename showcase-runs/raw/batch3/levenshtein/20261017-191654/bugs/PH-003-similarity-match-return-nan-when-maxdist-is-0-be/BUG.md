@@ -52,4 +52,4 @@ Property: *Similarity and Match always return a score in 0..1 for valid (non-neg
 rapid shrank the failure to: `Failing test case: a: []int32{}, b: []int32{97}, i: 0, s: 0, d: 0, m: false`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

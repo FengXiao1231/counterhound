@@ -4,4 +4,4 @@ I tested 2 properties and reported 1 bug. The repro `test_repro_huge_id.py` fail
 - **Unknown ids give 404:** this failed. A post id above 2**63-1 (for example `/9223372036854775808/update`) makes `get_post` raise `OverflowError` instead of returning 404.
 
 Permission denials:
-Bash: {"command":"D=.proofhound/runs/20261018-052325/g02-flaskr-blog-py\ncat > $D/test_ph_props.py <<'EOF'\nimport os, tempfile\nfrom hypothesis import given, settings, strategies as st\nfrom flaskr import create_app\nfrom flaskr.db import init_db, get_db\nimport re\n\ndef make_client():\n    fd, path = t
+Bash: {"command":"D=.counterhound/runs/20261018-052325/g02-flaskr-blog-py\ncat > $D/test_ph_props.py <<'EOF'\nimport os, tempfile\nfrom hypothesis import given, settings, strategies as st\nfrom flaskr import create_app\nfrom flaskr.db import init_db, get_db\nimport re\n\ndef make_client():\n    fd, path = t

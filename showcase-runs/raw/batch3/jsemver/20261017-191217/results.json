@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191217",
   "diff": null,
   "fixRun": true,
@@ -80,7 +80,7 @@
       "evidence": "Javadoc: 'the current pre-release version's last numeric identifier is incremented'. \"0\" is a valid numeric identifier per SemVer, but private isNumeric() returns false for any id starting with \"0\", including \"0\" itself.",
       "group": "g01-n-java-com-github-zafarkhaja-semver-Version-java",
       "file": "src/main/java/com/github/zafarkhaja/semver/Version.java",
-      "workdir": ".proofhound/runs/20261017-191217/g01-n-java-com-github-zafarkhaja-semver-Version-java",
+      "workdir": ".counterhound/runs/20261017-191217/g01-n-java-com-github-zafarkhaja-semver-Version-java",
       "verification": {
         "verified": true,
         "reproFile": "ReproZeroIdIncrementTest.java",
@@ -121,7 +121,7 @@
         "suite": "passed (mvn -q -B test)"
       },
       "reproSource": "package com.github.zafarkhaja.semver;\n\nimport org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.*;\n\nclass ReproZeroIdIncrementTest {\n    @Test\n    void incrementsNumericZeroIdentifier() {\n        assertEquals(\"1.0.0-alpha.1\", Version.parse(\"1.0.0-alpha.0\").nextPreReleaseVersion().toString());\n    }\n}\n",
-      "bugDir": ".proofhound/runs/20261017-191217/bugs/PH-001-nextprereleaseversion-appends-1-instead-of-incre"
+      "bugDir": ".counterhound/runs/20261017-191217/bugs/PH-001-nextprereleaseversion-appends-1-instead-of-incre"
     },
     {
       "title": "compareToIgnoreBuildMetadata orders numeric identifier above alphanumeric identifier starting with '-'",
@@ -136,7 +136,7 @@
       "evidence": "Javadoc says the method adheres to the Specification's comparison rules; SemVer 2.0.0 item 11: 'Numeric identifiers always have lower precedence than non-numeric identifiers.' Identifiers may contain '-' ([0-9A-Za-z-]), but compareIdentifiers falls back to String.compareTo when one side is non-numeric.",
       "group": "g01-n-java-com-github-zafarkhaja-semver-Version-java",
       "file": "src/main/java/com/github/zafarkhaja/semver/Version.java",
-      "workdir": ".proofhound/runs/20261017-191217/g01-n-java-com-github-zafarkhaja-semver-Version-java",
+      "workdir": ".counterhound/runs/20261017-191217/g01-n-java-com-github-zafarkhaja-semver-Version-java",
       "verification": {
         "verified": true,
         "reproFile": "ReproNumericVsHyphenIdTest.java",
@@ -177,7 +177,7 @@
         "suite": "passed (mvn -q -B test)"
       },
       "reproSource": "package com.github.zafarkhaja.semver;\n\nimport org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.*;\n\nclass ReproNumericVsHyphenIdTest {\n    @Test\n    void numericIdentifierHasLowerPrecedenceThanAlphanumeric() {\n        Version num = Version.parse(\"1.0.0-1\");\n        Version alpha = Version.parse(\"1.0.0--a\");\n        assertTrue(num.compareToIgnoreBuildMetadata(alpha) < 0);\n        assertTrue(alpha.compareToIgnoreBuildMetadata(num) > 0);\n    }\n}\n",
-      "bugDir": ".proofhound/runs/20261017-191217/bugs/PH-002-comparetoignorebuildmetadata-ranks-numeric-pre-r"
+      "bugDir": ".counterhound/runs/20261017-191217/bugs/PH-002-comparetoignorebuildmetadata-ranks-numeric-pre-r"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261018-052716",
   "diff": null,
   "fixRun": false,
@@ -80,7 +80,7 @@
       "evidence": "create_user already validates input and returns 400 for missing fields and duplicates; the endpoint is the public unauthenticated sign-up, and the API convention (errors.py bad_request) is that client mistakes yield 4xx, not 500.",
       "group": "g01-app-api-users-py",
       "file": "app/api/users.py",
-      "workdir": ".proofhound/runs/20261018-052716/g01-app-api-users-py",
+      "workdir": ".counterhound/runs/20261018-052716/g01-app-api-users-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_create_null_password.py",
@@ -116,7 +116,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "from config import Config\nfrom app import create_app, db\n\n\nclass Cfg(Config):\n    SQLALCHEMY_DATABASE_URI = 'sqlite://'\n    ELASTICSEARCH_URL = None\n\n\ndef test_create_user_null_password_is_4xx_not_crash():\n    app = create_app(Cfg)\n    app.config[\"TESTING\"] = True\n    with app.app_context():\n        db.create_all()\n        r = app.test_client().post(\"/api/users\", json={\n            \"username\": \"a\", \"email\": \"a@x.org\", \"password\": None})\n        assert 400 <= r.status_code < 500\n",
-      "bugDir": ".proofhound/runs/20261018-052716/bugs/PH-001-post-api-users-returns-500-when-password-or-user"
+      "bugDir": ".counterhound/runs/20261018-052716/bugs/PH-001-post-api-users-returns-500-when-password-or-user"
     },
     {
       "title": "PUT /users/<id> crashes (500) when the JSON body is not an object",
@@ -131,7 +131,7 @@
       "evidence": "Handler does `'username' in data` assuming a dict without checking; API returns JSON 4xx errors for bad requests via bad_request().",
       "group": "g01-app-api-users-py",
       "file": "app/api/users.py",
-      "workdir": ".proofhound/runs/20261018-052716/g01-app-api-users-py",
+      "workdir": ".counterhound/runs/20261018-052716/g01-app-api-users-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_update_non_object_body.py",
@@ -167,7 +167,7 @@
       "status": "confirmed",
       "bugId": "PH-002",
       "reproSource": "import base64\nfrom config import Config\nfrom app import create_app, db\n\n\nclass Cfg(Config):\n    SQLALCHEMY_DATABASE_URI = 'sqlite://'\n    ELASTICSEARCH_URL = None\n\n\ndef test_update_user_non_object_json_body_is_4xx_not_crash():\n    app = create_app(Cfg)\n    app.config[\"TESTING\"] = True\n    c = app.test_client()\n    with app.app_context():\n        db.create_all()\n        assert c.post(\"/api/users\", json={\n            \"username\": \"a\", \"email\": \"a@x.org\", \"password\": \"p\"}).status_code == 201\n        basic = {\"Authorization\": \"Basic \" + base64.b64encode(b\"a:p\").decode()}\n        tok = c.post(\"/api/tokens\", headers=basic).get_json()[\"token\"]\n        r = c.put(\"/api/users/1\", json=0, headers={\"Authorization\": \"Bearer \" + tok})\n        assert 400 <= r.status_code < 500\n",
-      "bugDir": ".proofhound/runs/20261018-052716/bugs/PH-002-post-users-and-put-users-id-return-500-when-the"
+      "bugDir": ".counterhound/runs/20261018-052716/bugs/PH-002-post-users-and-put-users-id-return-500-when-the"
     }
   ]
 }

@@ -34,7 +34,7 @@ Run it with `node --test repro_astral_capitalize.test.mjs` (fix the import path 
 
 ## Suggested fix
 
-The repro passes with this patch; the project's tests not run (no test command found; set "testCommand" in .proofhound/config.json). Apply it with `git apply fix.patch`.
+The repro passes with this patch; the project's tests not run (no test command found; set "testCommand" in .counterhound/config.json). Apply it with `git apply fix.patch`.
 
 ```diff
 diff --git a/packages/change-case/src/index.ts b/packages/change-case/src/index.ts
@@ -80,4 +80,4 @@ Property: *the first letter of each word in pascalSnakeCase output is uppercase 
 fast-check shrank the failure to: `Counterexample: ["𐐨a"]`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

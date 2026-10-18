@@ -1,4 +1,4 @@
 I tested 9 properties and reported 0 bugs. All 9 passed, and `findings.json` is an empty array.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-192150/g02-humanfriendly-usage-py"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-192150/g02-humanfriendly-usage-py"}

@@ -17,11 +17,11 @@ import { postComment } from './github.js';
 import { defaultBase, changedLines, touchedTargets } from './diff.js';
 import { c, log, readJSON, writeJSON, fmtUsd, setQuiet } from './util.js';
 
-const BIN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'proofhound.js');
+const BIN = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'bin', 'counterhound.js');
 const LANGS = { python, py: python, javascript, js: javascript, ts: javascript, typescript: javascript, go, golang: go, rust, rs: rust, java };
 const VERSION = JSON.parse(fs.readFileSync(path.join(path.dirname(BIN), '..', 'package.json'), 'utf8')).version;
 
-const HELP = `proofhound ${VERSION} — an AI bug hunter that only reports bugs it can prove.
+const HELP = `counterhound ${VERSION} — an AI bug hunter that only reports bugs it can prove.
 
 It reads your code, infers properties the functions should satisfy, writes
 property-based tests (Hypothesis for Python, fast-check for JS/TS, rapid for Go,
@@ -30,10 +30,10 @@ replays every failure as a deterministic repro, and has an independent reviewer
 try to refute it. You only see bugs that survive all of that.
 
 Usage
-  proofhound [paths...]            hunt for bugs (default: the current directory)
-  proofhound targets [paths...]    show which functions would be tested, no AI calls
-  proofhound report                rebuild the HTML report for the latest run
-  proofhound doctor                check that the toolchain is ready
+  counterhound [paths...]            hunt for bugs (default: the current directory)
+  counterhound targets [paths...]    show which functions would be tested, no AI calls
+  counterhound report                rebuild the HTML report for the latest run
+  counterhound doctor                check that the toolchain is ready
 
 Options
   --lang <python|js|go|rust|java>  language (auto-detected)
@@ -131,7 +131,7 @@ function loadConfig(repo, opts) {
   return cfg;
 }
 
-/** `proofhound _test <files>`: the test runner the hunter agent calls. Human-readable output. */
+/** `counterhound _test <files>`: the test runner the hunter agent calls. Human-readable output. */
 async function testCommand(argv) {
   // --repo <dir>: run against another copy of the project (the --fix sandbox)
   const ri = argv.indexOf('--repo');
@@ -168,16 +168,16 @@ async function testCommand(argv) {
   return failed ? 1 : 0;
 }
 
-/** `proofhound _comment <summary.md> [--only-if-bugs] [--has-bugs]`: post or update the PR comment (GitHub Action). */
+/** `counterhound _comment <summary.md> [--only-if-bugs] [--has-bugs]`: post or update the PR comment (GitHub Action). */
 async function commentCommand(args) {
   const file = args.find((a) => !a.startsWith('--'));
-  if (!file) { log('usage: proofhound _comment <summary.md> [--only-if-bugs] [--has-bugs]'); return 2; }
+  if (!file) { log('usage: counterhound _comment <summary.md> [--only-if-bugs] [--has-bugs]'); return 2; }
   try {
     const what = await postComment(fs.readFileSync(file, 'utf8'), { onlyIfBugs: args.includes('--only-if-bugs'), hasBugs: args.includes('--has-bugs') });
-    log(`proofhound: pull request comment ${what}`);
+    log(`counterhound: pull request comment ${what}`);
     return 0;
   } catch (e) {
-    log(c.red(`proofhound: could not comment on the pull request: ${e.message}`));
+    log(c.red(`counterhound: could not comment on the pull request: ${e.message}`));
     return 1;
   }
 }
@@ -255,7 +255,7 @@ export async function main(argv) {
 
     if (cmd === 'report') {
       const latest = readJSON(path.join(repo, HOME, 'latest.json'), null);
-      if (!latest) throw new Error('no runs yet: run `proofhound` first');
+      if (!latest) throw new Error('no runs yet: run `counterhound` first');
       const result = readJSON(path.join(repo, latest.results), null);
       const runRel = path.dirname(latest.results);
       const written = writeBugs(repo, runRel, result);
@@ -282,8 +282,8 @@ export async function main(argv) {
     printSummary(result, written, html);
     return result.counts.confirmed ? 1 : 0;
   } catch (e) {
-    log(c.red(`proofhound: ${e.message}`));
-    if (process.env.PROOFHOUND_DEBUG) log(e.stack);
+    log(c.red(`counterhound: ${e.message}`));
+    if (process.env.COUNTERHOUND_DEBUG) log(e.stack);
     return 2;
   }
 }

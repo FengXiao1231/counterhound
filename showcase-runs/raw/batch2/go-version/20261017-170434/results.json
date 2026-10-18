@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-170434",
   "repo": "go-version",
   "lang": "go",
@@ -77,7 +77,7 @@
       "evidence": "Compare's own jagged-segment logic treats missing trailing segments as zeros (1.0 == 1.0.0 including prerelease handling via equalSegments only when lengths match); the fallthrough path returns 0 without ever comparing prereleases, violating SemVer precedence and the total-order contract that sort/Equal rely on.",
       "group": "g01-version-go",
       "file": "version.go",
-      "workdir": ".proofhound/runs/20261017-170434/g01-version-go",
+      "workdir": ".counterhound/runs/20261017-170434/g01-version-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_prerelease_ignored_extra_segment_test.go",
@@ -106,7 +106,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "package version\n\nimport \"testing\"\n\nfunc TestReproPrereleaseIgnoredWithExtraSegment(t *testing.T) {\n\tpre := Must(NewVersion(\"1.0.0-alpha\"))\n\tpadded := Must(NewVersion(\"1.0.0.0-alpha\"))\n\trel := Must(NewVersion(\"1.0.0\"))\n\n\tif pre.Compare(rel) != -1 {\n\t\tt.Fatalf(\"precondition: 1.0.0-alpha should be < 1.0.0\")\n\t}\n\tif got := padded.Compare(rel); got != -1 {\n\t\tt.Fatalf(\"1.0.0.0-alpha.Compare(1.0.0) = %d, want -1\", got)\n\t}\n\tif got := rel.Compare(padded); got != 1 {\n\t\tt.Fatalf(\"1.0.0.Compare(1.0.0.0-alpha) = %d, want 1\", got)\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-170434/bugs/PH-001-compare-ignores-prerelease-when-segment-counts-d"
+      "bugDir": ".counterhound/runs/20261017-170434/bugs/PH-001-compare-ignores-prerelease-when-segment-counts-d"
     }
   ]
 }

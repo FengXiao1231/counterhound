@@ -3,4 +3,4 @@ I tested 6 properties and reported 1 bug, which is borderline: `activate()` igno
 The sandbox had no compiled `.mo` files and no generated `humanize._version`. So the tests stub both: empty catalogues in a temp directory and a fake `_version` module.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo/humanize/.proofhound/runs/20261017-070558/g03-src-humanize-i18n-py && cat > /tmp/claude-0/zoo/humanize/.proofhound/runs/20261017-070558/g03-src-humanize-i18n-py/test_ph_props.py <<'EOF'\nimport os, tempfile\nfrom hypothesis import given, settings, strategies as
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo/humanize/.counterhound/runs/20261017-070558/g03-src-humanize-i18n-py && cat > /tmp/claude-0/zoo/humanize/.counterhound/runs/20261017-070558/g03-src-humanize-i18n-py/test_ph_props.py <<'EOF'\nimport os, tempfile\nfrom hypothesis import given, settings, strategies as

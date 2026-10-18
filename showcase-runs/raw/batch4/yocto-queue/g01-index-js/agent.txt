@@ -1,4 +1,4 @@
 I tested 2 properties and reported 0 bugs. One was a model-based test over random sequences of all five methods plus `size` and iteration. The other checked that enqueuing after the queue has emptied still works. Both passed, and `findings.json` is `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-041520/g01-index-js && cat > .proofhound/runs/20261018-041520/g01-index-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport Queue from '../../../../index.js';\n\ncon
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-041520/g01-index-js && cat > .counterhound/runs/20261018-041520/g01-index-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport Queue from '../../../../index.js';\n\ncon

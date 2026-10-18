@@ -5,4 +5,4 @@ The only failure was `Wrap("あ", 1)` returning `"\nあ"`, an empty first line w
 `ph_probe_test.go` is a scratch probe file I left in the work directory. It fails on purpose and isn't a repro.
 
 Permission denials:
-Bash: {"command":"cat > /tmp/claude-0/zoo3/go-runewidth/.proofhound/runs/20261017-191543/g01-runewidth-go/ph_props_test.go <<'EOF'\npackage runewidth\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phStr() *rapid.Generator[string] {\n\treturn rapid.StringOf(rapid.SampledFr
+Bash: {"command":"cat > /tmp/claude-0/zoo3/go-runewidth/.counterhound/runs/20261017-191543/g01-runewidth-go/ph_props_test.go <<'EOF'\npackage runewidth\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phStr() *rapid.Generator[string] {\n\treturn rapid.StringOf(rapid.SampledFr

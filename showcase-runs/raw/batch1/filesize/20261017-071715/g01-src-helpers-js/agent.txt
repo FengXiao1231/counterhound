@@ -4,4 +4,4 @@ I tested 7 properties across the six target functions and reported 1 bug.
 - **Not reported:** `calculateExponent(999999999999999, -1, -1, true, 0)` returns 5 instead of 4, because of float error in the log division. The final `filesize()` output is correct anyway: `"1 PB"` with `round: 6`, and `"1000 TB"` with `exponent: 4, round: 6`. It has no visible effect, so I left it out. The repro `repro_log_boundary.test.mjs` is still in the folder.
 
 Permission denials:
-Bash: {"command":"cd /tmp/claude-0/zoo/filesize/.proofhound/runs/20261017-071715/g01-src-helpers-js && cat > repro_log_boundary.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { calculateExponent } from '../../../../src/helpers.js';\n\ntest('repro_log_boun
+Bash: {"command":"cd /tmp/claude-0/zoo/filesize/.counterhound/runs/20261017-071715/g01-src-helpers-js && cat > repro_log_boundary.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { calculateExponent } from '../../../../src/helpers.js';\n\ntest('repro_log_boun

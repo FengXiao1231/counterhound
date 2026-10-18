@@ -1,4 +1,4 @@
 I tested 15 properties across the six functions and reported 0 bugs. Two failures were my own test mistakes or unspecified behaviour: an idempotence check and a camel/pascal comparison.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170244/g01-convert-go && cat > .proofhound/runs/20261017-170244/g01-convert-go/ph_props_test.go <<'EOF'\npackage xstrings\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phAlnum() *rapid.Generator[string] {\n\treturn rap
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170244/g01-convert-go && cat > .counterhound/runs/20261017-170244/g01-convert-go/ph_props_test.go <<'EOF'\npackage xstrings\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phAlnum() *rapid.Generator[string] {\n\treturn rap

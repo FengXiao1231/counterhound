@@ -5,4 +5,4 @@ The other two failures were noise: my test compared a prototype-less empty objec
 I wrote the repro and `findings.json` in the work dir. The repro is `repro_filter_mutation.test.mjs`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-071404/g03-lib-stringify-js && cat > .proofhound/runs/20261017-071404/g03-lib-stringify-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport stringify from '../../../
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-071404/g03-lib-stringify-js && cat > .counterhound/runs/20261017-071404/g03-lib-stringify-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport stringify from '../../../

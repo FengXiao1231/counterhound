@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191448",
   "diff": null,
   "fixRun": true,
@@ -78,7 +78,7 @@
       "evidence": "Docstring: 'Normalizes the file path to use the POSIX path separator, and make the paths relative (remove leading \"/\")'. Windows-style '\\\\\\\\server' also becomes '//server' -> '/server' after one strip, and normalizing the result again changes it, so the function is not idempotent.",
       "group": "g01-pathspec-util-py",
       "file": "pathspec/util.py",
-      "workdir": ".proofhound/runs/20261017-191448/g01-pathspec-util-py",
+      "workdir": ".counterhound/runs/20261017-191448/g01-pathspec-util-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_double_slash.py",

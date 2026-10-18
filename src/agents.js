@@ -2,7 +2,7 @@ import path from 'node:path';
 import { run, sh, extractJSON, log, c } from './util.js';
 
 /**
- * Agent backends drive an existing coding-agent CLI in headless mode, so proofhound
+ * Agent backends drive an existing coding-agent CLI in headless mode, so counterhound
  * works with whatever subscription or API key the user already has.
  *
  * call({ prompt, cwd, writeDirs, runCommands, readOnly, model, timeoutMs, budgetUsd })
@@ -45,12 +45,12 @@ const codex = {
   id: 'codex',
   available() { return sh('codex', ['--version']).code === 0; },
   // Codex's sandbox is per directory tree, not per tool: in workspace-write mode the whole project
-  // is writable and any command can run, so the allowlist proofhound gives Claude Code (write only
-  // in .proofhound/runs/, run only ph-test) is not enforced here. The reviewer does run read-only.
+  // is writable and any command can run, so the allowlist counterhound gives Claude Code (write only
+  // in .counterhound/runs/, run only ph-test) is not enforced here. The reviewer does run read-only.
   async call({ prompt, cwd, model, timeoutMs = 900000, readOnly, env, budgetUsd, priceIn, priceOut }) {
-    if (budgetUsd && !(priceIn > 0 || priceOut > 0) && !codex.warnedBudget) { codex.warnedBudget = true; log(c.yellow('  note: codex does not report spend, so --budget cannot stop it by dollars; set codexPriceIn/codexPriceOut (USD per 1M tokens) in .proofhound.json to estimate, or cap work with --max-modules')); }
+    if (budgetUsd && !(priceIn > 0 || priceOut > 0) && !codex.warnedBudget) { codex.warnedBudget = true; log(c.yellow('  note: codex does not report spend, so --budget cannot stop it by dollars; set codexPriceIn/codexPriceOut (USD per 1M tokens) in .counterhound.json to estimate, or cap work with --max-modules')); }
     const args = ['exec', '--json', '--skip-git-repo-check', '--sandbox', readOnly ? 'read-only' : 'workspace-write', '-C', cwd];
-    if (!readOnly && !codex.warned) { codex.warned = true; log(c.yellow('  note: with codex the hunter can write anywhere in the project and run any command (codex has no per-tool allowlist); its edits outside .proofhound/ are not checked')); }
+    if (!readOnly && !codex.warned) { codex.warned = true; log(c.yellow('  note: with codex the hunter can write anywhere in the project and run any command (codex has no per-tool allowlist); its edits outside .counterhound/ are not checked')); }
     if (model) args.push('-m', model);
     args.push(prompt);
     const r = await run('codex', args, { cwd, timeoutMs, env: { ...process.env, ...(env || {}) } });
@@ -76,12 +76,12 @@ const codex = {
   },
 };
 
-/** Replays canned responses; used by proofhound's own tests (PROOFHOUND_FAKE_AGENT=module path). */
+/** Replays canned responses; used by counterhound's own tests (COUNTERHOUND_FAKE_AGENT=module path). */
 const fake = {
   id: 'fake',
-  available() { return Boolean(process.env.PROOFHOUND_FAKE_AGENT); },
+  available() { return Boolean(process.env.COUNTERHOUND_FAKE_AGENT); },
   async call(opts) {
-    const mod = await import(process.env.PROOFHOUND_FAKE_AGENT);
+    const mod = await import(process.env.COUNTERHOUND_FAKE_AGENT);
     const started = Date.now();
     const text = await mod.default(opts);
     return { ok: true, text, costUsd: 0, tokensIn: 0, tokensOut: 0, turns: 1, ms: Date.now() - started, error: null };

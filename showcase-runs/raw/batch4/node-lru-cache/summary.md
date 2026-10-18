@@ -1,5 +1,5 @@
-<!-- proofhound-report -->
-### proofhound found 1 provable bug
+<!-- counterhound-report -->
+### counterhound found 1 provable bug
 
 Checked 8 functions in 1 modules with property-based tests. 1 reported → 1 reproduced → 1 unique → 1 confirmed by an independent review.
 
@@ -37,4 +37,4 @@ test('repro_load_mutates_input: loading the same dump twice keeps entries alive'
 ```
 </details>
 
-<sub>56s · $0.24 of model usage · [proofhound](https://github.com/FengXiao1231/proofhound) only reports failures that replay deterministically and survive review.</sub>
+<sub>56s · $0.24 of model usage · [counterhound](https://github.com/FengXiao1231/counterhound) only reports failures that replay deterministically and survive review.</sub>

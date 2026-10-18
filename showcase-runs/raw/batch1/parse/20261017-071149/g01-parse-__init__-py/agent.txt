@@ -9,4 +9,4 @@ Two other tests failed, and neither is a separate bug:
 A Bash call was denied partway through, so I wrote `findings.json` with the Write tool instead of the shell.
 
 Permission denials:
-Bash: {"command":"cat > .proofhound/runs/20261017-071149/g01-parse-__init__-py/findings.json <<'EOF'\n[{\"title\":\"%z datetime regex adds uncounted capture groups, shifting later fields' values\",\"function\":\"parse.get_regex_for_datetime_format\",\"kind\":\"wrong-result\",\"property\":\"fields followin
+Bash: {"command":"cat > .counterhound/runs/20261017-071149/g01-parse-__init__-py/findings.json <<'EOF'\n[{\"title\":\"%z datetime regex adds uncounted capture groups, shifting later fields' values\",\"function\":\"parse.get_regex_for_datetime_format\",\"kind\":\"wrong-result\",\"property\":\"fields followin

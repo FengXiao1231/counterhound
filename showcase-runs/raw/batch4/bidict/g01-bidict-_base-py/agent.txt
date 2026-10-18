@@ -2,7 +2,7 @@ I tested 4 properties (views, copy, order-sensitive equality, and a model-based 
 
 My first state-machine run failed, but that was my own model assuming the wrong item order after overwrites. I fixed the model and the test now passes. `findings.json` is `[]`.
 
-The test file is `.proofhound/runs/20261018-041006/g01-bidict-_base-py/test_ph_props.py`.
+The test file is `.counterhound/runs/20261018-041006/g01-bidict-_base-py/test_ph_props.py`.
 
 Permission denials:
-Bash: {"command":"sed -i 's/, FrozenOrderedBidict, ON_DUP/, ON_DUP/; s/, FrozenOrderedBidict\\]/]/' .proofhound/runs/20261018-041006/g01-bidict-_base-py/test_ph_props.py && ./.proofhound/ph-test .proofhound/runs/20261018-041006/g01-bidict-_base-py/test_ph_props.py"}
+Bash: {"command":"sed -i 's/, FrozenOrderedBidict, ON_DUP/, ON_DUP/; s/, FrozenOrderedBidict\\]/]/' .counterhound/runs/20261018-041006/g01-bidict-_base-py/test_ph_props.py && ./.counterhound/ph-test .counterhound/runs/20261018-041006/g01-bidict-_base-py/test_ph_props.py"}

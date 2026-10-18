@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191839",
   "diff": null,
   "fixRun": true,
@@ -57,7 +57,7 @@
       "evidence": "README documents the cycles option (cycle detection returns '__cycle__', otherwise TypeError as in JSON.stringify). Code only records objects in `seen` after the Array.isArray branch returns, so arrays are never tracked.",
       "group": "g01-index-js",
       "file": "index.js",
-      "workdir": ".proofhound/runs/20261017-191839/g01-index-js",
+      "workdir": ".counterhound/runs/20261017-191839/g01-index-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_array_cycle.test.mjs",
@@ -98,7 +98,7 @@
         "suite": "passed (npm test --silent)"
       },
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport index from '../../../../../index.js';\n\ntest('repro_array_cycle', () => {\n  const a = []; a.push(a);\n  assert.throws(() => index(a), TypeError);\n  assert.equal(index(a, { cycles: true }), '[\"__cycle__\"]');\n});\n",
-      "bugDir": ".proofhound/runs/20261017-191839/bugs/PH-001-cycles-consisting-only-of-arrays-are-not-detecte"
+      "bugDir": ".counterhound/runs/20261017-191839/bugs/PH-001-cycles-consisting-only-of-arrays-are-not-detecte"
     }
   ]
 }

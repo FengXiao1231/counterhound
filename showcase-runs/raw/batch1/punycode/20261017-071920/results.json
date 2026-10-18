@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-071920",
   "repo": "punycode",
   "lang": "javascript",
@@ -57,7 +57,7 @@
       "evidence": "Docs say 'Only the non-ASCII parts of the domain name will be converted, i.e. it doesn't matter if you call it with a domain that's already in ASCII', and mapDomain says 'Leave the local part (i.e. everything up to `@`) intact'. mapDomain uses domain.split('@') and only keeps parts[0] and parts[1], so parts[2..] are lost. Quoted local parts may legally contain '@' (RFC 5321), so this is data loss rather than a rejected input.",
       "group": "g01-punycode-js",
       "file": "punycode.js",
-      "workdir": ".proofhound/runs/20261017-071920/g01-punycode-js",
+      "workdir": ".counterhound/runs/20261017-071920/g01-punycode-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_multi_at.test.mjs",
@@ -89,7 +89,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport mod from '../../../../../punycode.js';\n\ntest('repro_multi_at', () => {\n  assert.equal(mod.toASCII('a@b@c'), 'a@b@c');\n});\n",
-      "bugDir": ".proofhound/runs/20261017-071920/bugs/PH-001-punycode-toascii-tounicode-truncate-input-contai"
+      "bugDir": ".counterhound/runs/20261017-071920/bugs/PH-001-punycode-toascii-tounicode-truncate-input-contai"
     }
   ]
 }

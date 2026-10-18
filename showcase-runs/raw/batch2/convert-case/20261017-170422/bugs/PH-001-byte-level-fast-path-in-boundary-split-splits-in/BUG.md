@@ -49,4 +49,4 @@ Property: *adding a boundary that cannot match anywhere in the input does not ch
 proptest shrank the failure to: `Failing test case: s = " \u{301}", bs = [ Space, ], c = Snake`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

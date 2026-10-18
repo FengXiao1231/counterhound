@@ -7,4 +7,4 @@ Both failures in the latest `ph_props.test.mjs` run are the same bug. The "round
 `findings.json` holds the one entry. I did not modify any project file.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-190756/g01-base-js && grep -n \"parseFragmentIdentifier\\|skipNull\\|arrayFormat\" readme.md | head -50"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-190756/g01-base-js && grep -n \"parseFragmentIdentifier\\|skipNull\\|arrayFormat\" readme.md | head -50"}

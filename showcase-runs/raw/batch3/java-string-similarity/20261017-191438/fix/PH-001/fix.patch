@@ -2,7 +2,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index 7146f81..c10afdf 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -11,4 +11,3 @@ proofhound · Java · claude (sonnet) · 2 modules, 5 functions
+@@ -11,4 +11,3 @@ counterhound · Java · claude (sonnet) · 2 modules, 5 functions
    bug (0.85) Negative threshold applies the Winkler bonus instead of giving plain Jaro
  
    writing fixes for 1 bug…

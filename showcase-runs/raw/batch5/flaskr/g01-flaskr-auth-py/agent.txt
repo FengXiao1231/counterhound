@@ -6,4 +6,4 @@ I tested 3 properties and reported 0 bugs; all 3 passed, and `findings.json` is 
 - **Server errors:** login and register with arbitrary text never return a 5xx.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-052325/g01-flaskr-auth-py; cat > .proofhound/runs/20261018-052325/g01-flaskr-auth-py/test_ph_props.py <<'EOF'\nimport os, tempfile\nfrom hypothesis import given, settings, strategies as st\nfrom flaskr import create_app\nfrom flaskr.db import init_db\n\
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-052325/g01-flaskr-auth-py; cat > .counterhound/runs/20261018-052325/g01-flaskr-auth-py/test_ph_props.py <<'EOF'\nimport os, tempfile\nfrom hypothesis import given, settings, strategies as st\nfrom flaskr import create_app\nfrom flaskr.db import init_db\n\

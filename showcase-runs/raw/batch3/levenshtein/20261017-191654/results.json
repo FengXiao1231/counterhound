@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191654",
   "diff": null,
   "fixRun": true,
@@ -78,7 +78,7 @@
       "evidence": "Doc: 'To guarantee that the similarity score remains in the interval 0..1, this scaling factor is not allowed to exceed 1 / BonusPrefix.' The clamp is only applied inside BonusScale, so a later BonusPrefix(v) (which does not re-clamp) breaks the invariant; Similarity range 0..1 is promised for Match.",
       "group": "g01-params-go",
       "file": "params.go",
-      "workdir": ".proofhound/runs/20261017-191654/g01-params-go",
+      "workdir": ".counterhound/runs/20261017-191654/g01-params-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_prefix_after_scale_test.go",
@@ -114,7 +114,7 @@
         "reason": "not attempted: --budget was used up"
       },
       "reproSource": "package levenshtein\n\nimport \"testing\"\n\nfunc TestReproPrefixAfterScale(t *testing.T) {\n\tp := NewParams().BonusScale(0.25).BonusPrefix(10)\n\ts := Match(\"aaaaaaaaaaaaaaaaaaab\", \"aaaaaaaaaaaaaaaaaaac\", p)\n\tif s > 1 {\n\t\tt.Fatalf(\"Match = %v, want <= 1\", s)\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-191654/bugs/PH-002-match-can-return-a-score-above-1-when-bonusprefi"
+      "bugDir": ".counterhound/runs/20261017-191654/bugs/PH-002-match-can-return-a-score-above-1-when-bonusprefi"
     },
     {
       "title": "Calculate with maxCost returns a within-budget distance that is far below the true distance",
@@ -129,7 +129,7 @@
       "evidence": "Docstring: 'If maxCost is non-zero, the calculation stops as soon as the distance is determined to be greater than maxCost. Therefore, any return value higher than maxCost is a lower bound for the actual distance.' Implied: a value <= maxCost is exact. Similarity/Match docs: scores lower than MinScore are returned as 0; here a 0.25 score is reported as 0.75.",
       "group": "g02-levenshtein-go",
       "file": "levenshtein.go",
-      "workdir": ".proofhound/runs/20261017-191654/g02-levenshtein-go",
+      "workdir": ".counterhound/runs/20261017-191654/g02-levenshtein-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_maxcost_test.go",
@@ -165,7 +165,7 @@
         "reason": "not attempted: --budget was used up"
       },
       "reproSource": "package levenshtein\n\nimport \"testing\"\n\n// Exact distance \"aaa\"->\"bbbab\" with ins=1, sub=2, del=2 is 6.\n// With maxCost=2, Calculate must return a value > 2 (a lower bound), not 2.\nfunc TestReproMaxCostFalseWithinBudget(t *testing.T) {\n\td, _, _ := Calculate([]rune(\"aaa\"), []rune(\"bbbab\"), 2, 1, 2, 2)\n\tif d <= 2 {\n\t\tt.Fatalf(\"Calculate with maxCost=2 returned %d, but actual distance is 6 (> maxCost)\", d)\n\t}\n\tif got := Similarity(\"aaa\", \"bbbab\", NewParams().InsCost(1).SubCost(2).DelCost(2).MinScore(0.75)); got != 0 {\n\t\tt.Fatalf(\"Similarity with MinScore=0.75 = %v, want 0 (true score 0.25)\", got)\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-191654/bugs/PH-001-calculate-with-maxcost-0-returns-an-in-budget-di"
+      "bugDir": ".counterhound/runs/20261017-191654/bugs/PH-001-calculate-with-maxcost-0-returns-an-in-budget-di"
     },
     {
       "title": "Similarity/Match return NaN when the maximum possible distance is 0 due to zero costs",
@@ -180,7 +180,7 @@
       "evidence": "Docs: 'The score is in the range of 0..1'; costs 'must be zero or positive' so 0 is explicitly allowed; the code comment shows the author intends to avoid divByZero issues but only guards the both-empty case.",
       "group": "g02-levenshtein-go",
       "file": "levenshtein.go",
-      "workdir": ".proofhound/runs/20261017-191654/g02-levenshtein-go",
+      "workdir": ".counterhound/runs/20261017-191654/g02-levenshtein-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_nan_test.go",
@@ -216,7 +216,7 @@
         "reason": "not attempted: --budget was used up"
       },
       "reproSource": "package levenshtein\n\nimport (\n\t\"math\"\n\t\"testing\"\n)\n\nfunc TestReproZeroCostNaN(t *testing.T) {\n\tp := NewParams().InsCost(0)\n\tfor _, v := range []float64{Similarity(\"\", \"a\", p), Match(\"\", \"a\", p)} {\n\t\tif math.IsNaN(v) || v < 0 || v > 1 {\n\t\t\tt.Fatalf(\"score for \\\"\\\" vs \\\"a\\\" with InsCost(0) = %v, want within 0..1\", v)\n\t\t}\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-191654/bugs/PH-003-similarity-match-return-nan-when-maxdist-is-0-be"
+      "bugDir": ".counterhound/runs/20261017-191654/bugs/PH-003-similarity-match-return-nan-when-maxdist-is-0-be"
     }
   ]
 }

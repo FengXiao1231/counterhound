@@ -4,7 +4,7 @@ The repro `test_repro_remove_list_of_states.py` fails as expected. The same Stat
 
 The third property, `dispatch` plus `is_state`, passed.
 
-Everything is in `.proofhound/runs/20261018-041332/g02-transitions-core-py/`, with the finding in `findings.json`.
+Everything is in `.counterhound/runs/20261018-041332/g02-transitions-core-py/`, with the finding in `findings.json`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-041332/g02-transitions-core-py; cat > .proofhound/runs/20261018-041332/g02-transitions-core-py/test_repro_remove_list_of_states.py <<'EOF'\nfrom transitions import Machine\n\n\ndef test_repro_remove_transition_list_of_state_objects():\n    m = Machine(s
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-041332/g02-transitions-core-py; cat > .counterhound/runs/20261018-041332/g02-transitions-core-py/test_repro_remove_list_of_states.py <<'EOF'\nfrom transitions import Machine\n\n\ndef test_repro_remove_transition_list_of_state_objects():\n    m = Machine(s

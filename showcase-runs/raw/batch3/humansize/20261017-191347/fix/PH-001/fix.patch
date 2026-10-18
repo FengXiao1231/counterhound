@@ -2,7 +2,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index b8b3a88..264f65b 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -11,4 +11,3 @@ proofhound · Rust · claude (sonnet) · 2 modules, 8 functions
+@@ -11,4 +11,3 @@ counterhound · Rust · claude (sonnet) · 2 modules, 8 functions
    bug (0.72) Negative one is pluralised: -1 formats as "-1 Bytes" while 1 formats as "1 Byte"
  
    writing fixes for 1 bug…

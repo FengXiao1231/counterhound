@@ -1,4 +1,4 @@
-// node:test reporter used by proofhound: writes structured results to $PROOFHOUND_REPORT.
+// node:test reporter used by counterhound: writes structured results to $COUNTERHOUND_REPORT.
 import { writeFileSync } from 'node:fs';
 
 function describe(err, depth = 0) {
@@ -29,6 +29,6 @@ export default async function* reporter(source) {
     if (event.type === 'test:fail') entry.error = describe(d.details?.error);
     tests.push(entry);
   }
-  if (process.env.PROOFHOUND_REPORT) writeFileSync(process.env.PROOFHOUND_REPORT, JSON.stringify({ tests }));
+  if (process.env.COUNTERHOUND_REPORT) writeFileSync(process.env.COUNTERHOUND_REPORT, JSON.stringify({ tests }));
   yield '';
 }

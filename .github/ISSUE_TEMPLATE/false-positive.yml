@@ -1,16 +1,16 @@
 name: False positive
-description: proofhound confirmed a "bug" that is not one
+description: counterhound confirmed a "bug" that is not one
 labels: [false-positive]
 body:
   - type: markdown
     attributes:
       value: |
-        A false positive is the most useful report proofhound can get: every confirmed finding is supposed to be real. Please paste the BUG.md, it already contains the repro, the evidence and the reviewer's reasoning.
+        A false positive is the most useful report counterhound can get: every confirmed finding is supposed to be real. Please paste the BUG.md, it already contains the repro, the evidence and the reviewer's reasoning.
   - type: textarea
     id: bug-md
     attributes:
       label: BUG.md
-      description: The file from .proofhound/runs/<id>/bugs/PH-xxx-…/BUG.md
+      description: The file from .counterhound/runs/<id>/bugs/PH-xxx-…/BUG.md
       render: markdown
     validations:
       required: true

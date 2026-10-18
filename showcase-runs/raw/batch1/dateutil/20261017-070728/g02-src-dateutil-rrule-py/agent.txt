@@ -9,4 +9,4 @@ The properties cover all six target functions:
 I left out `tzinfo`-aware datetimes, mixed-timezone sets, and complex rrule parameters such as `bysetpos`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-070728/g02-src-dateutil-rrule-py"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-070728/g02-src-dateutil-rrule-py"}

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-192150",
   "diff": null,
   "fixRun": true,
@@ -80,7 +80,7 @@
       "evidence": "Docstring: format_timespan(0) -> '0 seconds'; returns 'The formatted timespan as a string'. detailed only changes how milliseconds are represented, so zero should still render as a quantity.",
       "group": "g01-humanfriendly-__init__-py",
       "file": "humanfriendly/__init__.py",
-      "workdir": ".proofhound/runs/20261017-192150/g01-humanfriendly-__init__-py",
+      "workdir": ".counterhound/runs/20261017-192150/g01-humanfriendly-__init__-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_timespan_zero_detailed.py",
@@ -120,7 +120,7 @@
         "suite": "not compared (the suite already fails without the fix: python3 -m pytest -q -x -p no:cacheprovider --no-header)"
       },
       "reproSource": "from humanfriendly import format_timespan\n\n\ndef test_repro_timespan_zero_detailed():\n    assert format_timespan(0) == '0 seconds'\n    assert format_timespan(0, detailed=True) != ''\n",
-      "bugDir": ".proofhound/runs/20261017-192150/bugs/PH-001-format-timespan-0-detailed-true-returns-an-empty"
+      "bugDir": ".counterhound/runs/20261017-192150/bugs/PH-001-format-timespan-0-detailed-true-returns-an-empty"
     }
   ]
 }

@@ -18,7 +18,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index 9b936b2..e4b3e1b 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -11,4 +11,3 @@ proofhound · Python · claude (sonnet) · 2 modules, 12 functions
+@@ -11,4 +11,3 @@ counterhound · Python · claude (sonnet) · 2 modules, 12 functions
    bug (0.85) format_timespan(0, detailed=True) returns an empty string
  
    writing fixes for 1 bug…

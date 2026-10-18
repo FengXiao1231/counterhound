@@ -7,4 +7,4 @@ Two failures turned out to be my tests being wrong, so I tightened them:
 The one command I ran first was blocked because it chained several shell commands, which the rules forbid. I re-ran everything as single commands.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo/semver/.proofhound/runs/20261017-071314/g03-functions-inc-js && cat > /tmp/claude-0/zoo/semver/.proofhound/runs/20261017-071314/g03-functions-inc-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc fr
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo/semver/.counterhound/runs/20261017-071314/g03-functions-inc-js && cat > /tmp/claude-0/zoo/semver/.counterhound/runs/20261017-071314/g03-functions-inc-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc fr

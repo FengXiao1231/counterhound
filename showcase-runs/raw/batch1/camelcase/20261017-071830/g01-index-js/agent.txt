@@ -19,4 +19,4 @@ The other 11 properties passed:
 I wrote the two property files, `ph_props.test.mjs` and `ph_props2.test.mjs`, in the run directory. Since I found no bugs, there are no repro files.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo/camelcase/.proofhound/runs/20261017-071830/g01-index-js && cat > /tmp/claude-0/zoo/camelcase/.proofhound/runs/20261017-071830/g01-index-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-c
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo/camelcase/.counterhound/runs/20261017-071830/g01-index-js && cat > /tmp/claude-0/zoo/camelcase/.counterhound/runs/20261017-071830/g01-index-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-c

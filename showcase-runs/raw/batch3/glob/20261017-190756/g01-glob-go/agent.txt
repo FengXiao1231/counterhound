@@ -14,4 +14,4 @@ The other properties passed:
 `findings.json` is `[]`. The tests are in `ph_props_test.go` and `ph_more_test.go` in the run directory.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/glob/.proofhound/runs/20261017-190756/g01-glob-go && cat > /tmp/claude-0/zoo3/glob/.proofhound/runs/20261017-190756/g01-glob-go/ph_props_test.go <<'EOF'\npackage glob\n\nimport (\n\t\"slices\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phSeps() *rap
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/glob/.counterhound/runs/20261017-190756/g01-glob-go && cat > /tmp/claude-0/zoo3/glob/.counterhound/runs/20261017-190756/g01-glob-go/ph_props_test.go <<'EOF'\npackage glob\n\nimport (\n\t\"slices\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phSeps() *rap

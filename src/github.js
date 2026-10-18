@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { MARKER } from './report/summary.js';
 
 function prNumber(env) {
-  if (env.PROOFHOUND_PR) return Number(env.PROOFHOUND_PR);
+  if (env.COUNTERHOUND_PR) return Number(env.COUNTERHOUND_PR);
   try {
     const ev = JSON.parse(fs.readFileSync(env.GITHUB_EVENT_PATH, 'utf8'));
     return ev.pull_request?.number || ev.number || null;
@@ -16,7 +16,7 @@ async function api(env, method, url, body) {
     method,
     headers: {
       authorization: `Bearer ${env.GITHUB_TOKEN}`, accept: 'application/vnd.github+json',
-      'x-github-api-version': '2022-11-28', 'content-type': 'application/json', 'user-agent': 'proofhound',
+      'x-github-api-version': '2022-11-28', 'content-type': 'application/json', 'user-agent': 'counterhound',
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -25,7 +25,7 @@ async function api(env, method, url, body) {
 }
 
 /**
- * Create or update proofhound's comment on the pull request. With `onlyIfBugs`, a clean run
+ * Create or update counterhound's comment on the pull request. With `onlyIfBugs`, a clean run
  * does not add a new comment, but still updates an earlier one so it does not go stale.
  * Returns 'created' | 'updated' | 'skipped'.
  */

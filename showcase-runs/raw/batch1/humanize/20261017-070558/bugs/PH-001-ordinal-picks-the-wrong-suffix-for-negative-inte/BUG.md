@@ -48,4 +48,4 @@ Property: *the ordinal suffix of -n depends on the digits of n, same as for n (1
 Hypothesis shrank the failure to: `Failing test case: test_ordinal_matches_reference( n=-1, )`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

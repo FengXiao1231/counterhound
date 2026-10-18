@@ -16,4 +16,4 @@ The properties covered:
 I also read through the options (such as `hideSeconds` with `colonNotation` and `subSecondsAsDecimals`) by hand. I found nothing I could defend as a bug. `findings.json` is `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo/pretty-ms/.proofhound/runs/20261017-071740/g01-index-js; cd /tmp/claude-0/zoo/pretty-ms/.proofhound/runs/20261017-071740/g01-index-js; cat > probe.mjs <<'EOF'\nimport p from '../../../../index.js';\nconst c=[[0,{}],[1,{subSecondsAsDecimals:true}],[50,{subSecond
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo/pretty-ms/.counterhound/runs/20261017-071740/g01-index-js; cd /tmp/claude-0/zoo/pretty-ms/.counterhound/runs/20261017-071740/g01-index-js; cat > probe.mjs <<'EOF'\nimport p from '../../../../index.js';\nconst c=[[0,{}],[1,{subSecondsAsDecimals:true}],[50,{subSecond

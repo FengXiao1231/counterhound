@@ -10,4 +10,4 @@ Inputs had no unpaired surrogates and mixed ASCII with special characters and ra
 I only checked these properties, not other contracts such as idempotence or a reference implementation.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/commons-text/.proofhound/runs/20261017-190605/g01-a-org-apache-commons-text-StringEscapeUtils-java/ && cat > /tmp/claude-0/zoo3/commons-text/.proofhound/runs/20261017-190605/g01-a-org-apache-commons-text-StringEscapeUtils-java/PhPropsTest.java <<'EOF'\npackage
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/commons-text/.counterhound/runs/20261017-190605/g01-a-org-apache-commons-text-StringEscapeUtils-java/ && cat > /tmp/claude-0/zoo3/commons-text/.counterhound/runs/20261017-190605/g01-a-org-apache-commons-text-StringEscapeUtils-java/PhPropsTest.java <<'EOF'\npackage

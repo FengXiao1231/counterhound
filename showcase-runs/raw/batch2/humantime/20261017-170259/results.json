@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-170259",
   "repo": "humantime",
   "lang": "rust",
@@ -73,7 +73,7 @@
       "evidence": "Docs say parse_rfc3339 is for strictly programmatically generated strings; only 'Z' or '+00:00' suffix is supported. 'ZZ' and 'Zabc+00:00' are not valid RFC3339 (the crate's own tests reject '+00:00abcd' and similar trailing junk).",
       "group": "g01-src-date-rs",
       "file": "src/date.rs",
-      "workdir": ".proofhound/runs/20261017-170259/g01-src-date-rs",
+      "workdir": ".counterhound/runs/20261017-170259/g01-src-date-rs",
       "verification": {
         "verified": true,
         "reproFile": "repro_trailing_garbage.rs",
@@ -105,7 +105,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "use humantime::parse_rfc3339;\n\n#[test]\nfn repro_trailing_garbage() {\n    assert!(parse_rfc3339(\"1970-01-01T00:00:00ZZ\").is_err());\n    assert!(parse_rfc3339(\"1970-01-01T00:00:00Zabc+00:00\").is_err());\n}\n",
-      "bugDir": ".proofhound/runs/20261017-170259/bugs/PH-001-parse-rfc3339-accepts-trailing-garbage-after-z-e"
+      "bugDir": ".counterhound/runs/20261017-170259/bugs/PH-001-parse-rfc3339-accepts-trailing-garbage-after-z-e"
     },
     {
       "title": "parse_duration silently merges digits separated by whitespace into one number",
@@ -120,7 +120,7 @@
       "evidence": "Docs: a duration is a concatenation of time spans, each 'an integer number and a suffix'; a number omitted/unit missing is meant to be an error (UnknownUnit with empty unit, test_nice_error_message). The digit loop in Parser::parse treats whitespace as ignorable inside the number, so '1 30m' mis-parses as 130m instead of reporting a missing unit.",
       "group": "g02-src-duration-rs",
       "file": "src/duration.rs",
-      "workdir": ".proofhound/runs/20261017-170259/g02-src-duration-rs",
+      "workdir": ".counterhound/runs/20261017-170259/g02-src-duration-rs",
       "verification": {
         "verified": false,
         "reason": "test error: panic was raised outside the project's code",
@@ -143,13 +143,13 @@
               "code": ""
             },
             {
-              "file": "/tmp/claude-0/zoo2/humantime/.proofhound/runs/20261017-170259/g02-src-duration-rs/repro_ws_merges_numbers.rs",
+              "file": "/tmp/claude-0/zoo2/humantime/.counterhound/runs/20261017-170259/g02-src-duration-rs/repro_ws_merges_numbers.rs",
               "line": 4,
               "func": "ph_repro_ws_merges_numbers::repro_ws_merges_numbers::{closure#0}",
               "code": "fn repro_ws_merges_numbers() {"
             },
             {
-              "file": "/tmp/claude-0/zoo2/humantime/.proofhound/runs/20261017-170259/g02-src-duration-rs/repro_ws_merges_numbers.rs",
+              "file": "/tmp/claude-0/zoo2/humantime/.counterhound/runs/20261017-170259/g02-src-duration-rs/repro_ws_merges_numbers.rs",
               "line": 6,
               "func": "ph_repro_ws_merges_numbers::repro_ws_merges_numbers",
               "code": "assert!(parse_duration(\"1 30m\").is_err(), \"{:?}\", parse_duration(\"1 30m\"));"

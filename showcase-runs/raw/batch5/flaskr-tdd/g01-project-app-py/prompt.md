@@ -1,4 +1,4 @@
-You are proofhound's bug hunter. Find REAL bugs in the HTTP API below by writing property-based tests with Hypothesis that drive the app in-process, running them, and reporting only failures that are genuine bugs in the project's code.
+You are counterhound's bug hunter. Find REAL bugs in the HTTP API below by writing property-based tests with Hypothesis that drive the app in-process, running them, and reporting only failures that are genuine bugs in the project's code.
 
 ## Target
 HTTP API (flask, app `project.app:app`), routes defined in project/app.py:
@@ -19,8 +19,8 @@ Properties worth checking for an HTTP API (pick the ones the routes above make p
 - unknown ids and malformed ids give 404 or 422, never a crash
 
 ## Hard rules
-- Do not modify any project file. Create files only inside `.proofhound/runs/20261018-052601/g01-project-app-py/`.
-- Run tests only with: `./.proofhound/ph-test <file>`, for example `./.proofhound/ph-test .proofhound/runs/20261018-052601/g01-project-app-py/test_ph_props.py`. It prints each test's result, the shrunk counterexample, and where the error was raised. Use it exactly like that, as a single command from the project root: no `cd`, pipes, redirections, `&&` or other commands, which are blocked. To try out an idea, write a small test file and run it.
+- Do not modify any project file. Create files only inside `.counterhound/runs/20261018-052601/g01-project-app-py/`.
+- Run tests only with: `./.counterhound/ph-test <file>`, for example `./.counterhound/ph-test .counterhound/runs/20261018-052601/g01-project-app-py/test_ph_props.py`. It prints each test's result, the shrunk counterexample, and where the error was raised. Use it exactly like that, as a single command from the project root: no `cd`, pipes, redirections, `&&` or other commands, which are blocked. To try out an idea, write a small test file and run it.
 - Do not use the network. Do not start a server: use the in-process client described below.
 
 ## How to work
@@ -28,8 +28,8 @@ Properties worth checking for an HTTP API (pick the ones the routes above make p
 2. Write properties the contract really implies (see the list above). Generate only valid requests; a documented 4xx on invalid input is correct behaviour, not a bug.
    Be thorough: cover every route, push on edges the contract allows (empty names, zero and maximum values, unicode, duplicates, paging boundaries, repeated calls), and combine routes (create → update → read → delete).
 3. Run the tests. For every failure decide: is my test wrong (fix it), is the request invalid (tighten the strategy), or is it a genuine bug? Re-run after each change.
-4. For each genuine bug, write a deterministic repro file `.proofhound/runs/20261018-052601/g01-project-app-py/test_repro_<name>.py` (one file per bug, standalone) with the fixed requests from the shrunk counterexample. It must FAIL now and pass once the bug is fixed. Run it to confirm it fails for the right reason.
-5. Write `.proofhound/runs/20261018-052601/g01-project-app-py/findings.json`: a JSON array (`[]` if you found nothing) of objects shaped like
+4. For each genuine bug, write a deterministic repro file `.counterhound/runs/20261018-052601/g01-project-app-py/test_repro_<name>.py` (one file per bug, standalone) with the fixed requests from the shrunk counterexample. It must FAIL now and pass once the bug is fixed. Run it to confirm it fails for the right reason.
+5. Write `.counterhound/runs/20261018-052601/g01-project-app-py/findings.json`: a JSON array (`[]` if you found nothing) of objects shaped like
 {
   "title": "short issue title, e.g. 'chunk() drops the final partial chunk'",
   "function": "fully qualified function name",

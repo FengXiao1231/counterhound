@@ -27,7 +27,7 @@ function pythonPath(repo) {
   return parts.join(path.delimiter);
 }
 
-// Project conftest.py files that pytest would not load for tests under .proofhound/ (only the
+// Project conftest.py files that pytest would not load for tests under .counterhound/ (only the
 // root one is on their path), registered as plugins so the project's own fixtures are usable.
 // Cached per project; a conftest that does not import (test-only dependencies missing) is skipped.
 const conftestCache = new Map();
@@ -162,8 +162,8 @@ export const python = {
     for (const p of conftestPlugins(repo, cfg)) if (!p.error) args.push('-p', p.module);
     const env = {
       ...process.env, ...(cfg.env || {}),
-      PYTHONPATH: pythonPath(repo), PROOFHOUND_REPORT: reportFile, PYTHONDONTWRITEBYTECODE: '1',
-      PYTHONHASHSEED: '0', PROOFHOUND_MAX_EXAMPLES: String(maxExamples || cfg.maxExamples || 300),
+      PYTHONPATH: pythonPath(repo), COUNTERHOUND_REPORT: reportFile, PYTHONDONTWRITEBYTECODE: '1',
+      PYTHONHASHSEED: '0', COUNTERHOUND_MAX_EXAMPLES: String(maxExamples || cfg.maxExamples || 300),
     };
     const r = await run(py, args, { cwd, env, timeoutMs });
     const data = readJSON(reportFile, null);

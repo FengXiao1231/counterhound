@@ -1,4 +1,4 @@
 I tested 4 properties and reported 1 bug. `load()` rewrites the `start` field of the entries in the array you pass it, so loading the same dump a second time makes those entries expire immediately. The repro `repro_load_mutates_input.test.mjs` fails now for that reason. The other three properties passed: two model-based sequences (with and without a TTL) and a dump/load round trip with sizes. I did not test `fetch`, `memo`, or the `dispose` and `onInsert` hooks. The findings are in `findings.json`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-042240/g01-src-index-ts && cat > .proofhound/runs/20261018-042240/g01-src-index-ts/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport { LRUCache } from '../../../../sr
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-042240/g01-src-index-ts && cat > .counterhound/runs/20261018-042240/g01-src-index-ts/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport { LRUCache } from '../../../../sr

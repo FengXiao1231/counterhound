@@ -3,7 +3,7 @@ I tested 3 properties and reported 2 bugs; the 3rd property (no crashes for inte
 - **`to_currency`:** `to_currency('0.01')` returns "শূন্য টাকা দশ পয়সা" (ten paisa) instead of one paisa. `parse_paisa` drops the leading zero, so 0.01–0.09 come out as 10–90 paisa.
 - **`to_cardinal`:** `to_cardinal('1.05')` returns "এক দশমিক পাঁচ", the same as `1.5`. `parse_number` turns the fraction into an integer and loses the leading zeros.
 
-Both repro files fail for these reasons when run with `./.proofhound/ph-test`. I didn't test `to_year`, `to_ordinal_num` or negative numbers beyond that crash check, and I found no bugs in them. The findings are in `.proofhound/runs/20261017-191242/g01-num2words-lang_BN-py/findings.json`.
+Both repro files fail for these reasons when run with `./.counterhound/ph-test`. I didn't test `to_year`, `to_ordinal_num` or negative numbers beyond that crash check, and I found no bugs in them. The findings are in `.counterhound/runs/20261017-191242/g01-num2words-lang_BN-py/findings.json`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-191242/g01-num2words-lang_BN-py/"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-191242/g01-num2words-lang_BN-py/"}

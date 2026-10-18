@@ -64,7 +64,7 @@ const JSAPI = (toSrc) => {
 };
 
 export default async function fakeAgent({ prompt, cwd }) {
-  if (prompt.includes("proofhound's bug hunter") && prompt.includes('HTTP API (express')) {
+  if (prompt.includes("counterhound's bug hunter") && prompt.includes('HTTP API (express')) {
     const dir = path.join(cwd, prompt.match(/Create files only inside `([^`]+)\/`/)[1]);
     const toSrc = path.relative(dir, path.join(cwd, 'src')).split(path.sep).join('/');
     for (const need of ['app `src/app.js:app`', '`GET /items/:id` → `inline handler`', `import app from '${toSrc}/app.js'`, 'test/helpers.mjs: `startApp`']) {
@@ -79,7 +79,7 @@ export default async function fakeAgent({ prompt, cwd }) {
     ]));
     return 'reported 4 bugs';
   }
-  if (prompt.includes("proofhound's bug hunter")) {
+  if (prompt.includes("counterhound's bug hunter")) {
     const dir = path.join(cwd, prompt.match(/Create files only inside `([^`]+)\/`/)[1]);
     const isGo = prompt.includes('Go + rapid');
     const isJava = prompt.includes('Java + JUnit 5');

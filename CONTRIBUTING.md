@@ -1,8 +1,8 @@
 # Contributing
 
 ```bash
-git clone https://github.com/FengXiao1231/proofhound
-cd proofhound
+git clone https://github.com/FengXiao1231/counterhound
+cd counterhound
 npm test        # unit + e2e against the planted-bug fixtures, no AI calls
 ```
 

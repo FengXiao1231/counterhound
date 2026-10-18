@@ -3,4 +3,4 @@ I tested 4 properties and reported 1 bug: `QueryParamDict.to_text` leaves `;` un
 The other failure, an empty query value turning into a bare key (`k=` becomes `k`), I left out because the docs don't promise it.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-064016/g01-boltons-urlutils-py; cat > .proofhound/runs/20261017-064016/g01-boltons-urlutils-py/test_ph_props.py <<'EOF'\nimport urllib.parse\nfrom hypothesis import given, assume, strategies as st\nfrom boltons.urlutils import URL, QueryParamDict, unquo
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-064016/g01-boltons-urlutils-py; cat > .counterhound/runs/20261017-064016/g01-boltons-urlutils-py/test_ph_props.py <<'EOF'\nimport urllib.parse\nfrom hypothesis import given, assume, strategies as st\nfrom boltons.urlutils import URL, QueryParamDict, unquo

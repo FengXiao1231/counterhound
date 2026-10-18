@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191042",
   "diff": null,
   "fixRun": true,
@@ -74,7 +74,7 @@
       "evidence": "Module-level SUBPHRASE uses [:.;?!\\-\u2013\u2012\u2014\u2015][ ] but set_small_word_list rebuilds it with only [:.;?!][ ], while its default argument is SMALL, the same list used at import; resetting to the default should be a no-op.",
       "group": "g01-titlecase-__init__-py",
       "file": "titlecase/__init__.py",
-      "workdir": ".proofhound/runs/20261017-191042/g01-titlecase-__init__-py",
+      "workdir": ".counterhound/runs/20261017-191042/g01-titlecase-__init__-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_set_small_default.py",
@@ -111,10 +111,10 @@
         "files": [
           "titlecase/__init__.py"
         ],
-        "suite": "not run (no test command found; set \"testCommand\" in .proofhound/config.json)"
+        "suite": "not run (no test command found; set \"testCommand\" in .counterhound/config.json)"
       },
       "reproSource": "from titlecase import titlecase, set_small_word_list\n\n\ndef test_repro_set_small_default():\n    text = \"foo - the end\"\n    before = titlecase(text)\n    try:\n        set_small_word_list()  # default arg == built-in SMALL list\n        after = titlecase(text)\n    finally:\n        set_small_word_list()\n    assert before == after\n",
-      "bugDir": ".proofhound/runs/20261017-191042/bugs/PH-001-set-small-word-list-rebuilds-subphrase-without-t"
+      "bugDir": ".counterhound/runs/20261017-191042/bugs/PH-001-set-small-word-list-rebuilds-subphrase-without-t"
     }
   ]
 }

@@ -169,7 +169,7 @@ export function hunterPrompt({ lang, group, workdir, testCmd, imports, notes, fi
     const doc = f.doc ? ` — ${f.doc.trim().split(/\n\s*\n/)[0].replace(/\s+/g, ' ')}`.slice(0, 220) : '';
     return `- \`${f.qualname}${f.signature}\` (line ${f.line})${doc}`;
   }).join('\n');
-  return `You are proofhound's bug hunter. Find REAL bugs in the functions below by writing property-based tests with ${lang.framework}, running them, and reporting only failures that are genuine bugs in the project's code.
+  return `You are counterhound's bug hunter. Find REAL bugs in the functions below by writing property-based tests with ${lang.framework}, running them, and reporting only failures that are genuine bugs in the project's code.
 
 ## Target
 File: ${group.file}
@@ -199,7 +199,7 @@ When you are done, reply with one line: how many properties you tested and how m
 }
 
 function hunterApiPrompt({ lang, group, workdir, testCmd, notes, fixtures, api, files }) {
-  return `You are proofhound's bug hunter. Find REAL bugs in the HTTP API below by writing property-based tests with ${lang.framework} that drive the app in-process, running them, and reporting only failures that are genuine bugs in the project's code.
+  return `You are counterhound's bug hunter. Find REAL bugs in the HTTP API below by writing property-based tests with ${lang.framework} that drive the app in-process, running them, and reporting only failures that are genuine bugs in the project's code.
 
 ${apiSection(group, api)}
 ${fixtureSection(fixtures)}
@@ -239,7 +239,7 @@ Expected: ${finding.expected}
 Actual: ${finding.actual}
 Reporter's evidence: ${finding.evidence}
 
-## What proofhound verified by executing it
+## What counterhound verified by executing it
 The repro below failed ${verification.runs}/${verification.runs} times in fresh processes with the same result:
 ${err.type}: ${String(err.message || '').slice(0, 600)}
 Raised at: ${site}${verification.explicitRaise ? '\nNote: the error is raised deliberately by the project code (an explicit raise/throw). Decide whether that is documented, intended behaviour.' : ''}
@@ -266,7 +266,7 @@ export function fixerPrompt({ bug, lang, reproRel, testCmd, notes }) {
   const v = bug.verification;
   const r = bug.review || {};
   const where = v.site ? `${v.site.file}:${v.site.line}` : bug.file;
-  return `You are fixing a confirmed bug. The current directory is a disposable copy of the project: edit its source files directly. Nothing you change here touches the real project; proofhound turns your edits into a patch.
+  return `You are fixing a confirmed bug. The current directory is a disposable copy of the project: edit its source files directly. Nothing you change here touches the real project; counterhound turns your edits into a patch.
 
 ## The bug
 ${r.title || bug.title}
@@ -284,5 +284,5 @@ A failing test reproduces it: \`${reproRel}\`. Run it with \`${testCmd} ${reproR
 3. Do not edit or delete the repro, and do not change or skip the project's existing tests to make anything pass. You may add a regression test next to the project's existing tests if that is how the project is tested.
 4. Run the repro until it passes. If you can, also run nearby existing tests the same way (\`${testCmd} <test file>\`).
 ${notes ? `\nProject notes from the user:\n${notes}\n` : ''}
-proofhound will re-run the repro and the project's test suite on your change and drop it if either fails. When you are done, reply with one or two sentences describing the fix.`;
+counterhound will re-run the repro and the project's test suite on your change and drop it if either fails. When you are done, reply with one or two sentences describing the fix.`;
 }

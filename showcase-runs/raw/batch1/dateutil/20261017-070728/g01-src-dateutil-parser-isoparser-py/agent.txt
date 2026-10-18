@@ -4,10 +4,10 @@ The bug is that `isoparse('9999-12-31T24:00')` raises `OverflowError` instead of
 
 I left out a second failure: `parse_isodate('0001-W53-1')` quietly returns a date in a different ISO year. The docstring says the parser's strictness isn't a stable contract, so I didn't count it as a bug.
 
-Files are in `.proofhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py/`:
+Files are in `.counterhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py/`:
 - test_ph_props.py
 - test_repro_24h_overflow.py
 - findings.json
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py/"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py/"}

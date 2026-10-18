@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-064638",
   "repo": "ms",
   "lang": "javascript",
@@ -56,7 +56,7 @@
       "evidence": "Math.round(-1.5) === -1 whereas Math.round(1.5) === 2; the plural() helper uses msAbs for pluralization, so it intends symmetric handling of negatives, yet yields ungrammatical '-1 seconds' vs '2 seconds' for the positive.",
       "group": "g01-src-index-ts",
       "file": "src/index.ts",
-      "workdir": ".proofhound/runs/20261017-064638/g01-src-index-ts",
+      "workdir": ".counterhound/runs/20261017-064638/g01-src-index-ts",
       "verification": {
         "verified": true,
         "reproFile": "repro_negative_half_rounding.test.mjs",
@@ -85,7 +85,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { format } from '../../../../../src/index.ts';\n\ntest('repro_negative_half_rounding', () => {\n  assert.equal(format(1500), '2s');\n  assert.equal(format(-1500), '-2s');\n  assert.equal(format(-1500, { long: true }), '-2 seconds');\n});\n",
-      "bugDir": ".proofhound/runs/20261017-064638/bugs/PH-001-format-rounds-negative-half-unit-values-toward-i"
+      "bugDir": ".counterhound/runs/20261017-064638/bugs/PH-001-format-rounds-negative-half-unit-values-toward-i"
     }
   ]
 }

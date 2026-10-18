@@ -1,4 +1,4 @@
 I tested 9 properties and reported 1 bug, which is weak. `filenamify('a/b', {replacement: 'e\u0301'})` returns a decomposed string, so running `filenamify` on its own output gives a different string. I didn't run the repro as a separate property test beyond that one case. It fails now for that reason, but the intent that output be NFC is only implied by a source comment, so it's the least certain finding.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-192205/g02-filenamify-js"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-192205/g02-filenamify-js"}

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const VENDOR = /[/\\](site-packages|dist-packages|node_modules|\.venv|venv|lib[/\\]python\d|\.cache[/\\]proofhound|vendor|\.cargo|pkg[/\\]mod|\.proofhound)[/\\]/;
+const VENDOR = /[/\\](site-packages|dist-packages|node_modules|\.venv|venv|lib[/\\]python\d|\.cache[/\\]counterhound|vendor|\.cargo|pkg[/\\]mod|\.counterhound)[/\\]/;
 
 // A repro must be a fixed input. Randomness, clocks or property-test machinery disqualify it.
 const NONDETERMINISM = [

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-072005",
   "repo": "ini",
   "lang": "javascript",
@@ -55,7 +55,7 @@
       "evidence": "stringify escapes ';' and '#' with a backslash but does not escape a preceding backslash, so the output 'a=\\\\;' is read by parse as an escaped backslash followed by an unescaped comment marker. encode/decode are a documented inverse pair, and safe() exists to make values round-trippable.",
       "group": "g01-lib-ini-js",
       "file": "lib/ini.js",
-      "workdir": ".proofhound/runs/20261017-072005/g01-lib-ini-js",
+      "workdir": ".counterhound/runs/20261017-072005/g01-lib-ini-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_backslash_semicolon.test.mjs",
@@ -87,7 +87,7 @@
       "status": "confirmed",
       "bugId": "PH-002",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport mod from '../../../../../lib/ini.js';\n\ntest('repro_backslash_semicolon', () => {\n  assert.deepEqual({ ...mod.parse(mod.stringify({ a: '\\\\;' })) }, { a: '\\\\;' });\n});\n",
-      "bugDir": ".proofhound/runs/20261017-072005/bugs/PH-002-stringify-parse-does-not-round-trip-string-value"
+      "bugDir": ".counterhound/runs/20261017-072005/bugs/PH-002-stringify-parse-does-not-round-trip-string-value"
     },
     {
       "title": "Single-quote character value parses as empty string",
@@ -102,7 +102,7 @@
       "evidence": "safe() guards its quote check with val.length > 1, so a lone \"'\" is emitted unquoted, but unsafe()'s isQuoted has no length check: a single quote both starts and ends with \"'\", so slice(1,-1) yields ''. The two halves are inconsistent.",
       "group": "g01-lib-ini-js",
       "file": "lib/ini.js",
-      "workdir": ".proofhound/runs/20261017-072005/g01-lib-ini-js",
+      "workdir": ".counterhound/runs/20261017-072005/g01-lib-ini-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_single_quote_char.test.mjs",
@@ -134,7 +134,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport mod from '../../../../../lib/ini.js';\n\ntest('repro_single_quote_char', () => {\n  assert.deepEqual({ ...mod.parse(mod.stringify({ a: \"'\" })) }, { a: \"'\" });\n});\n",
-      "bugDir": ".proofhound/runs/20261017-072005/bugs/PH-001-a-lone-single-quote-value-is-parsed-as-an-empty"
+      "bugDir": ".counterhound/runs/20261017-072005/bugs/PH-001-a-lone-single-quote-value-is-parsed-as-an-empty"
     }
   ]
 }

@@ -72,7 +72,7 @@ export function bugMarkdown(b, result) {
     b.propertyCheck?.example ? `\n${FRAMEWORK[result.lang] || 'The property-based test'} shrank the failure to: \`${b.propertyCheck.example.replace(/\s+/g, ' ').slice(0, 300)}\`` : '',
     '',
     '---',
-    `Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed ${v.runs}/${v.runs} times → independent review.`,
+    `Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed ${v.runs}/${v.runs} times → independent review.`,
     '',
   ];
   return lines.filter((l) => l !== null).join('\n');

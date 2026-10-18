@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-070849",
   "repo": "python-semver",
   "lang": "python",
@@ -59,7 +59,7 @@
       "evidence": "Docstring: 'Determines next version, preserving natural order.' The 'next' version must not sort before the current one; the branch at version.py:561-565 replaces the prerelease by '<token>.1' without checking order.",
       "group": "g01-src-semver-version-py",
       "file": "src/semver/version.py",
-      "workdir": ".proofhound/runs/20261017-070849/g01-src-semver-version-py",
+      "workdir": ".counterhound/runs/20261017-070849/g01-src-semver-version-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_next_version_lower.py",

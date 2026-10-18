@@ -11,4 +11,4 @@ The other failures were not reported:
 - With `preserve_blank_lines=True`, a `\r\n` line break comes out as two newlines. I skipped this because the docs don't say how CRLF should be treated.
 
 Permission denials:
-Bash: {"command":"cat > .proofhound/runs/20261017-191042/g01-titlecase-__init__-py/findings.json <<'E'\n[{\"title\":\"set_small_word_list() with default list changes SUBPHRASE behaviour (drops dash separators)\",\"function\":\"titlecase.set_small_word_list\",\"kind\":\"inconsistency\",\"property\":\"Calli
+Bash: {"command":"cat > .counterhound/runs/20261017-191042/g01-titlecase-__init__-py/findings.json <<'E'\n[{\"title\":\"set_small_word_list() with default list changes SUBPHRASE behaviour (drops dash separators)\",\"function\":\"titlecase.set_small_word_list\",\"kind\":\"inconsistency\",\"property\":\"Calli

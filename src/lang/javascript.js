@@ -6,10 +6,10 @@ import { run, sh, readJSON, hash } from '../util.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPORTER = path.join(HERE, 'js', 'reporter.mjs');
-const CACHE = process.env.PROOFHOUND_CACHE || path.join(os.homedir(), '.cache', 'proofhound', 'js');
+const CACHE = process.env.COUNTERHOUND_CACHE || path.join(os.homedir(), '.cache', 'counterhound', 'js');
 
 const SKIP_DIRS = new Set(['node_modules', '.git', 'dist', 'build', 'out', 'coverage', 'test', 'tests', '__tests__',
-  'spec', 'docs', 'examples', 'example', 'bench', 'benchmarks', 'fixtures', 'scripts', '.proofhound', 'vendor', 'types']);
+  'spec', 'docs', 'examples', 'example', 'bench', 'benchmarks', 'fixtures', 'scripts', '.counterhound', 'vendor', 'types']);
 const SRC_EXT = /\.(m?[jt]s|cjs|cts|mts|jsx|tsx)$/;
 const SKIP_FILE = /(\.d\.ts|\.(test|spec|bench)\.[cm]?[jt]sx?|\.min\.js|\.config\.[cm]?[jt]s|rollup|webpack|vite|eslint|prettier|jest\.|babel)/;
 
@@ -309,13 +309,13 @@ export const javascript = {
 
   detect(repo) { return fs.existsSync(path.join(repo, 'package.json')); },
 
-  /** Make fast-check importable from proofhound's work directory. */
+  /** Make fast-check importable from counterhound's work directory. */
   prepare(repo, workRoot) {
     const localTsx = fs.existsSync(path.join(repo, 'node_modules', 'tsx', 'package.json'));
     if (hasFastCheck(repo) && localTsx) return;
     if (!cacheReady()) {
       fs.mkdirSync(CACHE, { recursive: true });
-      if (!fs.existsSync(path.join(CACHE, 'package.json'))) fs.writeFileSync(path.join(CACHE, 'package.json'), '{"name":"proofhound-cache","private":true}\n');
+      if (!fs.existsSync(path.join(CACHE, 'package.json'))) fs.writeFileSync(path.join(CACHE, 'package.json'), '{"name":"counterhound-cache","private":true}\n');
       const r = sh('npm', ['install', '--no-audit', '--no-fund', '--silent', 'fast-check@4', 'tsx@4'], { cwd: CACHE });
       if (r.code !== 0) throw new Error(`could not install fast-check into ${CACHE}: ${r.stderr.trim().slice(-300)}`);
     }
@@ -328,8 +328,8 @@ export const javascript = {
 
   check(repo) {
     const v = process.versions.node.split('.').map(Number);
-    if (v[0] < 20) return { ok: false, problem: `Node ${process.versions.node} is too old; proofhound needs Node 20+` };
-    return { ok: true, info: `Node ${process.versions.node}, fast-check ${hasFastCheck(repo) ? '(project)' : '(proofhound cache)'}` };
+    if (v[0] < 20) return { ok: false, problem: `Node ${process.versions.node} is too old; counterhound needs Node 20+` };
+    return { ok: true, info: `Node ${process.versions.node}, fast-check ${hasFastCheck(repo) ? '(project)' : '(counterhound cache)'}` };
   },
 
   listTargets(repo, cfg, only = []) {
@@ -459,9 +459,9 @@ export const javascript = {
     args.push('--test', `--test-reporter=${pathToFileURL(REPORTER).href}`, '--test-reporter-destination=stdout');
     if (name) args.push(`--test-name-pattern=^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
     args.push(...selectors);
-    const env = { ...process.env, ...(cfg.env || {}), PROOFHOUND_REPORT: reportFile, FORCE_COLOR: '0', NO_COLOR: '1' };
+    const env = { ...process.env, ...(cfg.env || {}), COUNTERHOUND_REPORT: reportFile, FORCE_COLOR: '0', NO_COLOR: '1' };
     delete env.NODE_TEST_CONTEXT; // otherwise a parent node:test run swallows the results
-    if (seed != null) env.PROOFHOUND_SEED = String(seed);
+    if (seed != null) env.COUNTERHOUND_SEED = String(seed);
     const r = await run(process.execPath, args, { cwd, env, timeoutMs });
     const data = readJSON(reportFile, null);
     fs.rmSync(reportFile, { force: true });

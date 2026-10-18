@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-071149",
   "repo": "parse",
   "lang": "python",
@@ -59,7 +59,7 @@
       "evidence": "Every other multi-group type increments _group_index for its internal groups; the datetime branch does not, so positional fixed-field indices become wrong. The %z pattern should use non-capturing groups (?:...).",
       "group": "g01-parse-__init__-py",
       "file": "parse/__init__.py",
-      "workdir": ".proofhound/runs/20261017-071149/g01-parse-__init__-py",
+      "workdir": ".counterhound/runs/20261017-071149/g01-parse-__init__-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_tz_groups.py",
@@ -90,7 +90,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "from parse import parse\n\n\ndef test_repro_tz_groups():\n    r = parse(\"{:%Y-%m-%d %H:%M:%S%z}|{}\", \"2020-03-04 05:06:07+0200|abc\")\n    assert r is not None\n    assert r[1] == \"abc\"\n",
-      "bugDir": ".proofhound/runs/20261017-071149/bugs/PH-001-positional-fields-after-a-z-datetime-field-are-s"
+      "bugDir": ".counterhound/runs/20261017-071149/bugs/PH-001-positional-fields-after-a-z-datetime-field-are-s"
     }
   ]
 }

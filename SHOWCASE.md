@@ -1,7 +1,7 @@
-# Bugs found by proofhound
+# Bugs found by counterhound
 
-Real bugs proofhound found in popular open-source libraries. Every entry was reproduced by
-proofhound (the repro failed 3/3 in fresh processes), confirmed by its independent reviewer,
+Real bugs counterhound found in popular open-source libraries. Every entry was reproduced by
+counterhound (the repro failed 3/3 in fresh processes), confirmed by its independent reviewer,
 and then **re-run by hand** against the library's latest `main` on 2026-10-17.
 None of these have been reported upstream yet.
 
@@ -151,7 +151,7 @@ was driven through a loopback port.
 
 No bugs reported in: flaskr-tdd (one finding withdrawn by the reviewer).
 
-## proofhound on itself
+## counterhound on itself
 
 Run on its own source (`--max-modules 6 --fix`, 22 functions, 5 minutes, $1.55): 7 reported → 7 reproduced → 6 confirmed, 1 the reviewer was unsure about.
 All 7 were real and are fixed, with regression tests in `test/unit.test.js`. Three of the fixes are the patches `--fix` wrote, unchanged.

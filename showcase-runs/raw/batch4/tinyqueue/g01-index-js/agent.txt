@@ -3,4 +3,4 @@ I tested 3 properties and reported 0 bugs: a model-based push/pop/peek test, hea
 One Bash call was denied, so I created the files with the Write tool. The test file and findings file are in the work dir.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-041542/g01-index-js && echo '[]' > .proofhound/runs/20261018-041542/g01-index-js/findings.json && cat > .proofhound/runs/20261018-041542/g01-index-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimp
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-041542/g01-index-js && echo '[]' > .counterhound/runs/20261018-041542/g01-index-js/findings.json && cat > .counterhound/runs/20261018-041542/g01-index-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimp

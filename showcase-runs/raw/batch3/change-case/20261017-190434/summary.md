@@ -1,5 +1,5 @@
-<!-- proofhound-report -->
-### proofhound found 1 provable bug (1 with a verified fix)
+<!-- counterhound-report -->
+### counterhound found 1 provable bug (1 with a verified fix)
 
 Checked 7 functions in 2 modules with property-based tests. 1 reported → 1 reproduced → 1 unique → 1 confirmed by an independent review.
 
@@ -28,7 +28,7 @@ test('repro_astral_capitalize', () => {
 });
 ```
 
-Suggested fix (the repro passes with it; project tests not run (no test command found; set "testCommand" in .proofhound/config.json)):
+Suggested fix (the repro passes with it; project tests not run (no test command found; set "testCommand" in .counterhound/config.json)):
 
 ```diff
 diff --git a/packages/change-case/src/index.ts b/packages/change-case/src/index.ts
@@ -62,4 +62,4 @@ index a84701f..3d6fd5d 100644
 ```
 </details>
 
-<sub>1m08s · $0.38 of model usage · [proofhound](https://github.com/FengXiao1231/proofhound) only reports failures that replay deterministically and survive review.</sub>
+<sub>1m08s · $0.38 of model usage · [counterhound](https://github.com/FengXiao1231/counterhound) only reports failures that replay deterministically and survive review.</sub>

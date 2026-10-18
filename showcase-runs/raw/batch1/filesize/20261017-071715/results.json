@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-071715",
   "repo": "filesize",
   "lang": "javascript",
@@ -59,7 +59,7 @@
       "evidence": "STANDARD_CONFIGS is a plain object, so `STANDARD_CONFIGS[standard]` finds inherited keys (constructor, toString, __proto__, hasOwnProperty). The function's code path explicitly falls back to base/default for unrecognised standards (e.g. 'foo' works), so a string like 'constructor' should behave the same instead of crashing; AGENTS.md also lists prototype-related access as a forbidden pattern.",
       "group": "g01-src-helpers-js",
       "file": "src/helpers.js",
-      "workdir": ".proofhound/runs/20261017-071715/g01-src-helpers-js",
+      "workdir": ".counterhound/runs/20261017-071715/g01-src-helpers-js",
       "verification": {
         "verified": true,
         "reproFile": "repro_proto_standard.test.mjs",
@@ -91,7 +91,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { getBaseConfiguration } from '../../../../../src/helpers.js';\n\ntest('repro_proto_standard', () => {\n  assert.deepEqual(getBaseConfiguration('constructor', -1), { isDecimal: true, ceil: 1000, actualStandard: 'jedec' });\n});\n",
-      "bugDir": ".proofhound/runs/20261017-071715/bugs/PH-001-getbaseconfiguration-treats-inherited-object-pro"
+      "bugDir": ".counterhound/runs/20261017-071715/bugs/PH-001-getbaseconfiguration-treats-inherited-object-pro"
     }
   ]
 }

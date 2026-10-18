@@ -14,4 +14,4 @@ I created only files in the work dir:
 - `findings.json`
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-190756/g02-syntax-lexer-go && cat > .proofhound/runs/20261017-190756/g02-syntax-lexer-go/ph_props_test.go <<'EOF'\npackage syntax\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\t\"unicode/utf8\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phQuote(s string) stri
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-190756/g02-syntax-lexer-go && cat > .counterhound/runs/20261017-190756/g02-syntax-lexer-go/ph_props_test.go <<'EOF'\npackage syntax\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\t\"unicode/utf8\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phQuote(s string) stri

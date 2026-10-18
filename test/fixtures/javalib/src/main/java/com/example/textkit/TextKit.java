@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Small text and list helpers.
  *
- * <p>This is a proofhound test fixture: several methods contain planted bugs.
+ * <p>This is a counterhound test fixture: several methods contain planted bugs.
  */
 public final class TextKit {
     private TextKit() {}

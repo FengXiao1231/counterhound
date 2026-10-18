@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261018-042240",
   "diff": null,
   "fixRun": false,
@@ -64,7 +64,7 @@
       "evidence": "dump() docs say its output 'can be passed to load'; load's doc says start fields 'are assumed to be calculated relative to a portable Date.now() timestamp'. After load the array violates that assumption. Mutating an input argument is also unexpected for a load/restore API.",
       "group": "g01-src-index-ts",
       "file": "src/index.ts",
-      "workdir": ".proofhound/runs/20261018-042240/g01-src-index-ts",
+      "workdir": ".counterhound/runs/20261018-042240/g01-src-index-ts",
       "verification": {
         "verified": true,
         "reproFile": "repro_load_mutates_input.test.mjs",
@@ -96,7 +96,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { LRUCache } from '../../../../../src/index.ts';\n\ntest('repro_load_mutates_input: loading the same dump twice keeps entries alive', () => {\n  const a = new LRUCache({ max: 5, ttl: 100000 });\n  a.set(1, 'x');\n  const d = a.dump();\n  const startBefore = d[0][1].start;\n  const b = new LRUCache({ max: 5, ttl: 100000 });\n  b.load(d);\n  assert.equal(d[0][1].start, startBefore, 'load() must not mutate its argument');\n  const c = new LRUCache({ max: 5, ttl: 100000 });\n  c.load(d);\n  assert.equal(c.get(1), 'x');\n});\n",
-      "bugDir": ".proofhound/runs/20261018-042240/bugs/PH-001-lrucache-load-overwrites-start-on-the-caller-s-e"
+      "bugDir": ".counterhound/runs/20261018-042240/bugs/PH-001-lrucache-load-overwrites-start-on-the-caller-s-e"
     }
   ]
 }

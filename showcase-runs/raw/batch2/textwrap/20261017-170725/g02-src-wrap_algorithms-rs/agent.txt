@@ -11,4 +11,4 @@ The last property I added, `ph_optimal_fit_huge_widths`, passed on its first run
 My first attempt to append that test with a heredoc was refused by the shell rules, so I added it with Edit instead.
 
 Permission denials:
-Bash: {"command":"cat >> .proofhound/runs/20261017-170725/g02-src-wrap_algorithms-rs/ph_props.rs <<'EOF'\n\nproptest! {\n    #[test]\n    fn ph_optimal_fit_huge_widths(ws in proptest::collection::vec(\"[a-z]{1,60}\", 0..12),\n                                  lw in proptest::collection::vec(prop_oneof![Ju
+Bash: {"command":"cat >> .counterhound/runs/20261017-170725/g02-src-wrap_algorithms-rs/ph_props.rs <<'EOF'\n\nproptest! {\n    #[test]\n    fn ph_optimal_fit_huge_widths(ws in proptest::collection::vec(\"[a-z]{1,60}\", 0..12),\n                                  lw in proptest::collection::vec(prop_oneof![Ju

@@ -5,4 +5,4 @@ The only real failure was `to_cardinal` raising `OverflowError` in `float2tuple`
 I did not write any `test_repro_` files. The `pluralize` stub (it only raises `NotImplementedError`) has no test of its own.
 
 Permission denials:
-Bash: {"command":"cd .proofhound/runs/20261017-191242/g02-num2words-base-py/ && sed -i 's/    assume(Decimal(str(v)) == Decimal(s))/    assume(Decimal(str(v)) == Decimal(s) and v != int(v))/; s/^    n.to_cardinal(f)$/    assume(f == 0 or abs(f) > 1e-5)\\n    n.to_cardinal(f)/' test_ph_props.py && cd - >/d
+Bash: {"command":"cd .counterhound/runs/20261017-191242/g02-num2words-base-py/ && sed -i 's/    assume(Decimal(str(v)) == Decimal(s))/    assume(Decimal(str(v)) == Decimal(s) and v != int(v))/; s/^    n.to_cardinal(f)$/    assume(f == 0 or abs(f) > 1e-5)\\n    n.to_cardinal(f)/' test_ph_props.py && cd - >/d

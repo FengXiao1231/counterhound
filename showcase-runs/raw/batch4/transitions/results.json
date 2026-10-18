@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261018-041332",
   "diff": null,
   "fixRun": false,
@@ -80,7 +80,7 @@
       "evidence": "Docstring: source/dest are 'str, Enum or State'; the code listify()s the argument and converts each element, but the comprehension tests hasattr(source, 'name') (the whole list/original arg) instead of hasattr(s, 'name'), so list elements that are State/Enum are never converted to names and never match t.source/t.dest (stored as names). The same State passed alone (not in a list) works.",
       "group": "g02-transitions-core-py",
       "file": "transitions/core.py",
-      "workdir": ".proofhound/runs/20261018-041332/g02-transitions-core-py",
+      "workdir": ".counterhound/runs/20261018-041332/g02-transitions-core-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_remove_list_of_states.py",
@@ -111,7 +111,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "from transitions import Machine\n\n\ndef test_repro_remove_transition_list_of_state_objects():\n    m = Machine(states=['A', 'B', 'C'], initial='A', auto_transitions=False)\n    m.add_transition('go', 'A', 'B')\n    m.add_transition('go', 'B', 'C')\n    m.remove_transition('go', source=[m.get_state('A')])\n    assert [(t.source, t.dest) for t in m.get_transitions('go')] == [('B', 'C')]\n",
-      "bugDir": ".proofhound/runs/20261018-041332/bugs/PH-001-remove-transition-does-not-convert-state-enum-el"
+      "bugDir": ".counterhound/runs/20261018-041332/bugs/PH-001-remove-transition-does-not-convert-state-enum-el"
     }
   ]
 }

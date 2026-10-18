@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-192924",
   "diff": null,
   "fixRun": true,
@@ -80,7 +80,7 @@
       "evidence": "Docs: 'The calculated byte will be rounded up.' from_f64 documents 'The fractional part will be rounded up' and returns 1 for 1e-29. The Decimal conversion (Decimal::from_f64) silently flattens values below 1e-28 to zero before the ceil.",
       "group": "g02-src-byte-mod-rs",
       "file": "src/byte/mod.rs",
-      "workdir": ".proofhound/runs/20261017-192924/g02-src-byte-mod-rs",
+      "workdir": ".counterhound/runs/20261017-192924/g02-src-byte-mod-rs",
       "verification": {
         "verified": true,
         "reproFile": "repro_tiny_positive_rounds_to_zero.rs",
@@ -113,7 +113,7 @@
         "reason": "not attempted: --budget was used up"
       },
       "reproSource": "use byte_unit::{Byte, Unit};\n\n#[test]\nfn repro_tiny_positive_rounds_to_zero() {\n    // documented: \"The calculated byte will be rounded up\", so a positive size must give >= 1 byte\n    assert_eq!(Byte::from_f64(1e-29).unwrap().as_u64(), 1);\n    assert_eq!(Byte::from_f64_with_unit(1e-29, Unit::B).unwrap().as_u64(), 1);\n}\n\n#[test]\nfn repro_tiny_positive_rounds_to_zero_f32() {\n    assert_eq!(Byte::from_f32(1e-29).unwrap().as_u64(), 1);\n    assert_eq!(Byte::from_f32_with_unit(1e-29, Unit::B).unwrap().as_u64(), 1);\n}\n",
-      "bugDir": ".proofhound/runs/20261017-192924/bugs/PH-001-from-f64-with-unit-from-f32-with-unit-return-byt"
+      "bugDir": ".counterhound/runs/20261017-192924/bugs/PH-001-from-f64-with-unit-from-f32-with-unit-return-byt"
     }
   ]
 }

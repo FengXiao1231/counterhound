@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-170830",
   "repo": "slug",
   "lang": "go",
@@ -58,7 +58,7 @@
       "evidence": "Doc on MaxLength: 'By default slugs aren't shortened.' The non-smart branch `len(slug) >= MaxLength` does not guard MaxLength > 0 (unlike the smart branch).",
       "group": "g01-slug-go",
       "file": "slug.go",
-      "workdir": ".proofhound/runs/20261017-170830/g01-slug-go",
+      "workdir": ".counterhound/runs/20261017-170830/g01-slug-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_nonsmart_zero_maxlength_test.go",
@@ -90,7 +90,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "package slug\n\nimport \"testing\"\n\nfunc TestReproNonSmartZeroMaxLength(t *testing.T) {\n\tEnableSmartTruncate = false\n\tdefer func() { EnableSmartTruncate = true }()\n\tif got := Make(\"a\"); got != \"a\" {\n\t\tt.Fatalf(\"Make(\\\"a\\\") with MaxLength=0 and smart truncate off = %q, want \\\"a\\\"\", got)\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-170830/bugs/PH-001-makelang-returns-an-empty-slug-when-enablesmartt"
+      "bugDir": ".counterhound/runs/20261017-170830/bugs/PH-001-makelang-returns-an-empty-slug-when-enablesmartt"
     },
     {
       "title": "Make() with MaxLength can return slug ending in underscore, failing IsSlug",
@@ -105,7 +105,7 @@
       "evidence": "IsSlug doc: 'All output from slug.Make(text) should pass this test' and slugs may not end with '-' or '_'. smartTruncate cuts text[:MaxLength] without re-trimming '_' / '-'.",
       "group": "g01-slug-go",
       "file": "slug.go",
-      "workdir": ".proofhound/runs/20261017-170830/g01-slug-go",
+      "workdir": ".counterhound/runs/20261017-170830/g01-slug-go",
       "verification": {
         "verified": true,
         "reproFile": "repro_truncate_trailing_underscore_test.go",
@@ -137,7 +137,7 @@
       "status": "confirmed",
       "bugId": "PH-002",
       "reproSource": "package slug\n\nimport \"testing\"\n\nfunc TestReproTruncateTrailingUnderscore(t *testing.T) {\n\tMaxLength = 2\n\tdefer func() { MaxLength = 0 }()\n\tgot := Make(\"0_0\")\n\tif got != \"\" && !IsSlug(got) {\n\t\tt.Fatalf(\"Make(\\\"0_0\\\") with MaxLength=2 = %q, not a valid slug\", got)\n\t}\n}\n",
-      "bugDir": ".proofhound/runs/20261017-170830/bugs/PH-002-make-with-maxlength-can-return-a-slug-ending-in"
+      "bugDir": ".counterhound/runs/20261017-170830/bugs/PH-002-make-with-maxlength-can-return-a-slug-ending-in"
     }
   ]
 }

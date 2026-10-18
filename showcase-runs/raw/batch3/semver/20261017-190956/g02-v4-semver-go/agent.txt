@@ -5,4 +5,4 @@ An earlier run failed on numeric prerelease identifiers longer than 20 digits, w
 `findings.json` is `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-190956/g02-v4-semver-go"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-190956/g02-v4-semver-go"}

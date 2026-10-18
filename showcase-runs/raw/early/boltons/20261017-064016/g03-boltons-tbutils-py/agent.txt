@@ -3,4 +3,4 @@ I tested 4 properties and reported 1 bug. `TracebackInfo.from_dict` keeps the fr
 I did not report the `SyntaxError` case. `format_exception_only` prints "line None" when `lineno` is `None`, but the code was probably meant to print "?", and I judged it too weak to defend.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-064016/g03-boltons-tbutils-py"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-064016/g03-boltons-tbutils-py"}

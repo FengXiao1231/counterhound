@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-170610",
   "repo": "heck",
   "lang": "rust",
@@ -69,7 +69,7 @@
       "evidence": "lib.rs: 'Word boundaries are defined by non-alphanumeric characters' and the library is 'intended to be unicode aware, internally consistent'. The uppercase() helper uses char::to_uppercase (full mapping) per word, producing non-alphanumeric combining characters inside a word, so the output of the conversion is itself re-segmented differently. Shouty-snake output of already-shouty input is expected to be a fixed point (cf. test6 SHOUTY_SNAKE_CASE => SHOUTY_SNAKE_CASE).",
       "group": "g01-src-shouty_snake-rs",
       "file": "src/shouty_snake.rs",
-      "workdir": ".proofhound/runs/20261017-170610/g01-src-shouty_snake-rs",
+      "workdir": ".counterhound/runs/20261017-170610/g01-src-shouty_snake-rs",
       "verification": {
         "verified": true,
         "reproFile": "repro_idempotent_combining.rs",
@@ -113,7 +113,7 @@
       "evidence": "transform() splits words on !c.is_alphanumeric(); combining marks (category Mn) are not alphanumeric, so they are silently deleted or split words (e.g. NFD \"cafe\\u{301}\" loses its accent). lowercase() itself emits such a mark for İ, so the library produces output that its own algorithm then treats as a separator. Snake case of an already-snake string is expected to be stable, as for all ASCII inputs (which passed).",
       "group": "g02-src-snake-rs",
       "file": "src/snake.rs",
-      "workdir": ".proofhound/runs/20261017-170610/g02-src-snake-rs",
+      "workdir": ".counterhound/runs/20261017-170610/g02-src-snake-rs",
       "verification": {
         "verified": true,
         "reproFile": "repro_idempotent_dotted_i.rs",

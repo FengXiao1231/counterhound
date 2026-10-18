@@ -3,4 +3,4 @@ I tested 6 properties and reported 0 bugs.
 One test failed at first, but the test was wrong: a width-2 character can't fit in 1 column left after a 2-space indent. I raised the minimum width and all 6 pass.
 
 Permission denials:
-Bash: {"command":"cat > /tmp/claude-0/zoo2/textwrap/.proofhound/runs/20261017-170725/g01-src-options-rs/ph_props.rs <<'EOF'\nuse proptest::prelude::*;\nuse textwrap::{fill, refill, wrap, LineEnding, Options, WordSeparator, WordSplitter, WrapAlgorithm};\nuse textwrap::core::display_width;\n\nfn text() -> i
+Bash: {"command":"cat > /tmp/claude-0/zoo2/textwrap/.counterhound/runs/20261017-170725/g01-src-options-rs/ph_props.rs <<'EOF'\nuse proptest::prelude::*;\nuse textwrap::{fill, refill, wrap, LineEnding, Options, WordSeparator, WordSplitter, WrapAlgorithm};\nuse textwrap::core::display_width;\n\nfn text() -> i

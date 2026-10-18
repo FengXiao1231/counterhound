@@ -43,4 +43,4 @@ Property: *the number printed by relative_time equals the value returned by deci
 Hypothesis shrank the failure to: `Failing test case: test_relative_time_ndigits( d=datetime.datetime(2000, 1, 1, 0, 0), # or any other generated value secs=1, nd=6, )`
 
 ---
-Found by [proofhound](https://github.com/FengXiao1231/proofhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.
+Found by [counterhound](https://github.com/FengXiao1231/counterhound): property-based test → shrunk counterexample → deterministic repro replayed 3/3 times → independent review.

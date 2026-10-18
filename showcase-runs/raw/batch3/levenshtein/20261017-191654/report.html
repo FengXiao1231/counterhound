@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>proofhound · levenshtein</title>
+<title>counterhound · levenshtein</title>
 <style>
 :root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
 @media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
@@ -85,7 +85,7 @@ func TestReproMaxCostFalseWithinBudget(t *testing.T) {
   <p class="dim">No fix: not attempted: --budget was used up</p>
   <details><summary>Why this is a bug</summary><p>Docstring: &#39;If maxCost is non-zero, the calculation stops as soon as the distance is determined to be greater than maxCost. Therefore, any return value higher than maxCost is a lower bound for the actual distance.&#39; Implied: a value &lt;= maxCost is exact. Similarity/Match docs: scores lower than MinScore are returned as 0; here a 0.25 score is reported as 0.75.</p><p><b>Independent review:</b> The input is valid (non-negative costs, maxCost=2). By my hand calculation the true distance for &quot;aaa&quot;→&quot;bbbab&quot; with ins=1, sub=2, del=2 is 6: two substitutions, one match and two insertions. The docs promise that only values above maxCost may be lower bounds, so a value ≤ maxCost should be exact. The repro failed when I ran it, and Calculate returned 2, which looks like an exact in-budget distance. That makes Similarity with MinScore=0.75 return 0.75 instead of 0 (the true score is 0.25). The cause is probably the banded pruning in the maxCost path, which runs after the string swap, so the cost asymmetry (ins≠del) is involved. I did not trace the exact line. A maintainer would fix this because it silently gives wrong results.</p>
   
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191654/bugs/PH-001-calculate-with-maxcost-0-returns-an-in-budget-di/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-191654/bugs/PH-001-calculate-with-maxcost-0-returns-an-in-budget-di/BUG.md</code></p></details>
 </article>
 <article class="bug confirmed">
   <header>
@@ -122,7 +122,7 @@ func TestReproPrefixAfterScale(t *testing.T) {
   <p class="dim">No fix: not attempted: --budget was used up</p>
   <details><summary>Why this is a bug</summary><p>Doc: &#39;To guarantee that the similarity score remains in the interval 0..1, this scaling factor is not allowed to exceed 1 / BonusPrefix.&#39; The clamp is only applied inside BonusScale, so a later BonusPrefix(v) (which does not re-clamp) breaks the invariant; Similarity range 0..1 is promised for Match.</p><p><b>Independent review:</b> The BonusScale doc says the scale is &quot;not allowed to exceed 1 / BonusPrefix&quot; so that the score stays within 0..1. The clamp runs only inside BonusScale (params.go:136), and BonusPrefix (params.go:118) sets the value without re-checking. So `BonusScale(0.25).BonusPrefix(10)` gives prefix*scale = 2.5. Match then computes sim + pl*scale*(1-sim) = 0.95 + 10*0.25*0.05 = 1.075, which is real arithmetic and not a float artefact. The same state can also make the `1 - bonusPrefix*bonusScale` divisor in the minScore pre-computation (levenshtein.go:268) zero or negative. A maintainer would likely fix this by re-clamping in BonusPrefix or clamping at use time in Match.</p>
   <p><b>rapid shrank it to:</b> <code>Failing test case: sc: 1, pr: 50, s1: &quot;aaaaa&quot;, s2: &quot;aaaaaa&quot;</code></p>
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191654/bugs/PH-002-match-can-return-a-score-above-1-when-bonusprefi/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-191654/bugs/PH-002-match-can-return-a-score-above-1-when-bonusprefi/BUG.md</code></p></details>
 </article>
 <article class="bug confirmed">
   <header>
@@ -163,7 +163,7 @@ func TestReproZeroCostNaN(t *testing.T) {
   <p class="dim">No fix: not attempted: --budget was used up</p>
   <details><summary>Why this is a bug</summary><p>Docs: &#39;The score is in the range of 0..1&#39;; costs &#39;must be zero or positive&#39; so 0 is explicitly allowed; the code comment shows the author intends to avoid divByZero issues but only guards the both-empty case.</p><p><b>Independent review:</b> InsCost(0) is documented as valid (&quot;must be zero or positive&quot;), and Match is documented to return a score in 0..1. For (&quot;&quot;, &quot;a&quot;) with InsCost(0), l1=0 and l2=1, so maxDist = 0*delCost + 1*0 = 0 and dist = 0. Line 276 then computes 1 - 0/0, which is NaN. The only guard is the both-empty shortcut at line 230, and its comment says it exists to avoid divide-by-zero. The same case can arise with other zero-cost configurations. A maintainer would likely accept a small fix that returns 1, or a defined value, when maxDist == 0.</p>
   <p><b>rapid shrank it to:</b> <code>Failing test case: a: []int32{}, b: []int32{97}, i: 0, s: 0, d: 0, m: false</code></p>
-  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191654/bugs/PH-003-similarity-match-return-nan-when-maxdist-is-0-be/BUG.md</code></p></details>
+  <p class="dim">Issue write-up: <code>.counterhound/runs/20261017-191654/bugs/PH-003-similarity-match-return-nan-when-maxdist-is-0-be/BUG.md</code></p></details>
 </article>
 
 
@@ -175,7 +175,7 @@ func TestReproZeroCostNaN(t *testing.T) {
 <table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
 <tr><td><code>params.go</code></td><td>Params.BonusScale, Params.MinScore, Params.MaxCost, Params.BonusThreshold, Params.BonusPrefix, Params.SubCost</td><td>1</td><td>1</td><td>31s</td></tr><tr><td><code>levenshtein.go</code></td><td>Match, Similarity, Distance, Calculate</td><td>2</td><td>2</td><td>1m19s</td></tr>
 </table>
-<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+<footer>Generated by counterhound. Raw data: <code>results.json</code> next to this file.</footer>
 </main>
 <script>
 document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));

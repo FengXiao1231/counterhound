@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-191032",
   "diff": null,
   "fixRun": true,
@@ -80,7 +80,7 @@
       "evidence": "strict mode 'implements the full ruleset' of RFC 1521, whose rule #5 limits encoded lines to 76 characters; the code defines SAFE_LENGTH=73 to guarantee this but the third-from-last octet handling (pos += 3 then soft break when pos > SAFE_LENGTH-2) overshoots it",
       "group": "g02-ache-commons-codec-net-QuotedPrintableCodec-java",
       "file": "src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java",
-      "workdir": ".proofhound/runs/20261017-191032/g02-ache-commons-codec-net-QuotedPrintableCodec-java",
+      "workdir": ".counterhound/runs/20261017-191032/g02-ache-commons-codec-net-QuotedPrintableCodec-java",
       "verification": {
         "verified": true,
         "reproFile": "ReproStrictLineLengthTest.java",
@@ -116,7 +116,7 @@
         "reason": "not attempted: --budget was used up"
       },
       "reproSource": "package org.apache.commons.codec.net;\n\nimport java.nio.charset.StandardCharsets;\nimport java.util.Arrays;\nimport org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.*;\n\nclass ReproStrictLineLengthTest {\n    @Test\n    void lineWithSoftBreakMustNotExceed76() {\n        byte[] in = new byte[74];\n        Arrays.fill(in, (byte) 'a');\n        in[70] = 0;\n        in[71] = 0;\n        String out = new String(new QuotedPrintableCodec(true).encode(in), StandardCharsets.US_ASCII);\n        for (String line : out.split(\"\\r\\n\", -1)) {\n            assertTrue(line.length() <= 76, \"line length \" + line.length() + \": \" + line);\n        }\n    }\n}\n",
-      "bugDir": ".proofhound/runs/20261017-191032/bugs/PH-001-strict-mode-quotedprintablecodec-can-emit-encode"
+      "bugDir": ".counterhound/runs/20261017-191032/bugs/PH-001-strict-mode-quotedprintablecodec-can-emit-encode"
     }
   ]
 }

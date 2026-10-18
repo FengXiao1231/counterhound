@@ -7,5 +7,5 @@ Everything else passed: the strict and non-strict round trips, custom printable 
 `mkdir` and `sed` were denied in this session. The work directory already accepted my file writes, so nothing was lost.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-191032/g02-ache-commons-codec-net-QuotedPrintableCodec-java/"}
-Bash: {"command":"sed -i 's/ofSizeBetween(0, max)/ofSizeBetween(3, max)/' .proofhound/runs/20261017-191032/g02-ache-commons-codec-net-QuotedPrintableCodec-java/PhPropsTest.java"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-191032/g02-ache-commons-codec-net-QuotedPrintableCodec-java/"}
+Bash: {"command":"sed -i 's/ofSizeBetween(0, max)/ofSizeBetween(3, max)/' .counterhound/runs/20261017-191032/g02-ache-commons-codec-net-QuotedPrintableCodec-java/PhPropsTest.java"}

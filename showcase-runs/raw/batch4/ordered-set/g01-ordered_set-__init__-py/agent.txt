@@ -10,4 +10,4 @@ One note: my first `mkdir` for the run directory was denied, but the file writes
 The findings are in `findings.json` in the run directory. The property tests are in `test_ph_props.py` there, and the repros are `test_repro_pop_stale_index.py` and `test_repro_symdiff_update_dups.py`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-041233/g01-ordered_set-__init__-py"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-041233/g01-ordered_set-__init__-py"}

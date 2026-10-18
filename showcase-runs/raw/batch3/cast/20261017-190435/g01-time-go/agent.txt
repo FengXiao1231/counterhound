@@ -4,7 +4,7 @@ I probed edge cases but wrote no property tests for them, and none looked like a
 - `ToTimeE` has no cases for `int8`, `int16`, `uint8` or float inputs.
 - `ToTimeE` wraps a `uint64` above the `int64` maximum to a negative timestamp.
 
-The tests are in `.proofhound/runs/20261017-190435/g01-time-go/ph_props_test.go`.
+The tests are in `.counterhound/runs/20261017-190435/g01-time-go/ph_props_test.go`.
 
 Permission denials:
-Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/cast/.proofhound/runs/20261017-190435/g01-time-go; cat > /tmp/claude-0/zoo3/cast/.proofhound/runs/20261017-190435/g01-time-go/ph_props_test.go <<'EOF'\npackage cast\n\nimport (\n\t\"testing\"\n\t\"time\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc TestPhDurationStr
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/cast/.counterhound/runs/20261017-190435/g01-time-go; cat > /tmp/claude-0/zoo3/cast/.counterhound/runs/20261017-190435/g01-time-go/ph_props_test.go <<'EOF'\npackage cast\n\nimport (\n\t\"testing\"\n\t\"time\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc TestPhDurationStr

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-070558",
   "repo": "humanize",
   "lang": "python",
@@ -92,7 +92,7 @@
       "evidence": "Docstring: 'Works for any integer'; 1 is '1st', 2 is '2nd', 3 is '3rd'. The code uses Python's modulo (value % 10, value % 100) on a negative value, which yields 9/8/7 etc., so the suffix is chosen from the wrong digit.",
       "group": "g01-src-humanize-number-py",
       "file": "src/humanize/number.py",
-      "workdir": ".proofhound/runs/20261017-070558/g01-src-humanize-number-py",
+      "workdir": ".counterhound/runs/20261017-070558/g01-src-humanize-number-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_ordinal_negative.py",
@@ -123,7 +123,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "import sys, types\nif \"humanize._version\" not in sys.modules:\n    _m = types.ModuleType(\"humanize._version\")\n    _m.__version__ = \"0\"\n    sys.modules[\"humanize._version\"] = _m\nfrom humanize.number import ordinal\n\n\ndef test_repro_ordinal_negative():\n    assert ordinal(-1) == \"-1st\"\n    assert ordinal(-2) == \"-2nd\"\n    assert ordinal(-3) == \"-3rd\"\n    assert ordinal(-21) == \"-21st\"\n",
-      "bugDir": ".proofhound/runs/20261017-070558/bugs/PH-001-ordinal-picks-the-wrong-suffix-for-negative-inte"
+      "bugDir": ".counterhound/runs/20261017-070558/bugs/PH-001-ordinal-picks-the-wrong-suffix-for-negative-inte"
     },
     {
       "title": "activate() ignores `path` when the locale was activated before from another path",
@@ -138,7 +138,7 @@
       "evidence": "Docstring: 'Search for locale in directory `path`' and 'Raises: FileNotFoundError: If humanize cannot find the locale folder'. Cache key at i18n.py:88 omits path.",
       "group": "g03-src-humanize-i18n-py",
       "file": "src/humanize/i18n.py",
-      "workdir": ".proofhound/runs/20261017-070558/g03-src-humanize-i18n-py",
+      "workdir": ".counterhound/runs/20261017-070558/g03-src-humanize-i18n-py",
       "verification": {
         "verified": false,
         "reason": "test error: Failed means the test itself is broken",
@@ -287,7 +287,7 @@
               "code": "result = testfunction(**testargs)"
             },
             {
-              "file": "/tmp/claude-0/zoo/humanize/.proofhound/runs/20261017-070558/g03-src-humanize-i18n-py/test_repro_path_ignored_after_cache.py",
+              "file": "/tmp/claude-0/zoo/humanize/.counterhound/runs/20261017-070558/g03-src-humanize-i18n-py/test_repro_path_ignored_after_cache.py",
               "line": 18,
               "func": "test_repro_path_ignored_after_cache",
               "code": "with pytest.raises(FileNotFoundError):"

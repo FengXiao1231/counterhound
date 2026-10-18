@@ -3,4 +3,4 @@ I tested 9 properties and reported 0 bugs, so `findings.json` is an empty array.
 One property failed at first: `~>2.0.0.0` rejects the version `2`, even though `=2.0.0.0` accepts it. The code comment says that rejection is deliberate ("less specificity"), so I treated it as designed behaviour, not a bug. I then limited the pessimistic-operator test to versions at least as specific as the constraint, and all 9 passed.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170434/g02-constraint-go && cat > .proofhound/runs/20261017-170434/g02-constraint-go/ph_props_test.go <<'EOF'\npackage version\n\nimport (\n\t\"fmt\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nvar phOps = []string{\"\", \"=\", \"!=\", \">\", \"<\"
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170434/g02-constraint-go && cat > .counterhound/runs/20261017-170434/g02-constraint-go/ph_props_test.go <<'EOF'\npackage version\n\nimport (\n\t\"fmt\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nvar phOps = []string{\"\", \"=\", \"!=\", \">\", \"<\"

@@ -1,4 +1,4 @@
 I tested 13 properties across the six functions and reported 0 bugs; all 13 pass, and `findings.json` is `[]`. Two properties first failed because of mistakes in my tests, which I fixed and re-ran.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-071404/g01-lib-utils-js && cat > .proofhound/runs/20261017-071404/g01-lib-utils-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport mod from '../../../../lib/utils.j
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-071404/g01-lib-utils-js && cat > .counterhound/runs/20261017-071404/g01-lib-utils-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport mod from '../../../../lib/utils.j

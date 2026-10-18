@@ -13,4 +13,4 @@ The seventh was `ToScreamingKebab` upper-casing its output, which sat inside the
 My first Bash call was denied. The retry with just the `ph-test` command ran fine.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-170334/g01-snake-go && cat > .proofhound/runs/20261017-170334/g01-snake-go/ph_props_test.go <<'EOF'\npackage strcase\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phIn() *rapid.Generator[string] {\n\treturn rapid.Strin
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-170334/g01-snake-go && cat > .counterhound/runs/20261017-170334/g01-snake-go/ph_props_test.go <<'EOF'\npackage strcase\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phIn() *rapid.Generator[string] {\n\treturn rapid.Strin

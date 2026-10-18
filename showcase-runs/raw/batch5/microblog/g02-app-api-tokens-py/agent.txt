@@ -1,4 +1,4 @@
 I tested 2 properties and reported 0 bugs. The first covered the full token lifecycle: create, reuse, revoke, a second revoke giving 401, and a new token afterwards. The second covered bad or missing credentials, which return 401. Both passed, and `findings.json` is `[]`.
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261018-052716/g02-app-api-tokens-py && cat > .proofhound/runs/20261018-052716/g02-app-api-tokens-py/test_ph_props.py <<'EOF'\nimport base64\nfrom hypothesis import given, settings, strategies as st\nfrom app import create_app, db\nfrom app.models import User\n
+Bash: {"command":"mkdir -p .counterhound/runs/20261018-052716/g02-app-api-tokens-py && cat > .counterhound/runs/20261018-052716/g02-app-api-tokens-py/test_ph_props.py <<'EOF'\nimport base64\nfrom hypothesis import given, settings, strategies as st\nfrom app import create_app, db\nfrom app.models import User\n

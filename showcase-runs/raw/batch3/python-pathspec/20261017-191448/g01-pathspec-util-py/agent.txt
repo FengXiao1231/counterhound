@@ -11,10 +11,10 @@ The other properties all passed:
 
 I didn't test `TreeEntry.is_file`.
 
-Files are in `.proofhound/runs/20261017-191448/g01-pathspec-util-py/`:
+Files are in `.counterhound/runs/20261017-191448/g01-pathspec-util-py/`:
 - `test_ph_props.py`
 - `test_repro_double_slash.py`
 - `findings.json`
 
 Permission denials:
-Bash: {"command":"mkdir -p .proofhound/runs/20261017-191448/g01-pathspec-util-py; grep -n \"NORMALIZE_PATH_SEPS\" -A8 pathspec/util.py | head -30"}
+Bash: {"command":"mkdir -p .counterhound/runs/20261017-191448/g01-pathspec-util-py; grep -n \"NORMALIZE_PATH_SEPS\" -A8 pathspec/util.py | head -30"}

@@ -22,7 +22,7 @@ diff --git a/ph-err.txt b/ph-err.txt
 index bec3aa1..177303a 100644
 --- a/ph-err.txt
 +++ b/ph-err.txt
-@@ -14,5 +14,3 @@ proofhound · Python · claude (sonnet) · 2 modules, 12 functions
+@@ -14,5 +14,3 @@ counterhound · Python · claude (sonnet) · 2 modules, 12 functions
  
    writing fixes for 2 bugs…
    ▸ fixing PH-001 Bengali to_currency treats paisa values 0.01–0.09 as 10–90 paisa (leading zero dropped)

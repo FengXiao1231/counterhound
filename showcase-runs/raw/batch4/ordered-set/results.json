@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261018-041233",
   "diff": null,
   "fixRun": false,
@@ -62,7 +62,7 @@
       "evidence": "index() docstring: 'Get the index of a given entry'; add() returns the item's index. discard() renumbers map after removal, but pop() only deletes the entry and never adjusts later indices. Popping a non-last element is allowed by the documented 'Remove and return item at index'.",
       "group": "g01-ordered_set-__init__-py",
       "file": "ordered_set/__init__.py",
-      "workdir": ".proofhound/runs/20261018-041233/g01-ordered_set-__init__-py",
+      "workdir": ".counterhound/runs/20261018-041233/g01-ordered_set-__init__-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_pop_stale_index.py",
@@ -90,7 +90,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "from ordered_set import OrderedSet\n\n\ndef test_repro_pop_stale_index():\n    s = OrderedSet([0, 1])\n    assert s.pop(0) == 0\n    assert list(s) == [1]\n    assert s.index(1) == 0\n",
-      "bugDir": ".proofhound/runs/20261018-041233/bugs/PH-001-orderedset-pop-index-does-not-renumber-map-so-in"
+      "bugDir": ".counterhound/runs/20261018-041233/bugs/PH-001-orderedset-pop-index-does-not-renumber-map-so-in"
     },
     {
       "title": "symmetric_difference_update adds duplicates when other contains repeated items",
@@ -105,7 +105,7 @@
       "evidence": "other is typed SetLike[T], which accepts lists; symmetric_difference handles it correctly and an OrderedSet must contain unique items. items_to_add is built without de-duplicating.",
       "group": "g01-ordered_set-__init__-py",
       "file": "ordered_set/__init__.py",
-      "workdir": ".proofhound/runs/20261018-041233/g01-ordered_set-__init__-py",
+      "workdir": ".counterhound/runs/20261018-041233/g01-ordered_set-__init__-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_symdiff_update_dups.py",
@@ -136,7 +136,7 @@
       "status": "confirmed",
       "bugId": "PH-002",
       "reproSource": "from ordered_set import OrderedSet\n\n\ndef test_repro_symdiff_update_dups():\n    s = OrderedSet()\n    s.symmetric_difference_update([0, 0])\n    assert list(s) == [0]\n    assert list(OrderedSet().symmetric_difference([0, 0])) == [0]\n",
-      "bugDir": ".proofhound/runs/20261018-041233/bugs/PH-002-symmetric-difference-update-leaves-duplicate-ite"
+      "bugDir": ".counterhound/runs/20261018-041233/bugs/PH-002-symmetric-difference-update-leaves-duplicate-ite"
     }
   ]
 }

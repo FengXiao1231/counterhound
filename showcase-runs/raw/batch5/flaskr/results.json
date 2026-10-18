@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261018-052325",
   "diff": null,
   "fixRun": false,
@@ -83,7 +83,7 @@
       "evidence": "get_post docstring: ':raise 404: if a post with the given id doesn't exist'; <int:id> accepts arbitrarily large integers, so any non-existent id should be 404.",
       "group": "g02-flaskr-blog-py",
       "file": "flaskr/blog.py",
-      "workdir": ".proofhound/runs/20261018-052325/g02-flaskr-blog-py",
+      "workdir": ".counterhound/runs/20261018-052325/g02-flaskr-blog-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_huge_id.py",
@@ -119,7 +119,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "def test_huge_id_is_404(client, auth):\n    auth.login()\n    big = 2**63\n    assert client.get(f\"/{big}/update\").status_code == 404\n    assert client.post(f\"/{big}/update\", data={\"title\": \"x\", \"body\": \"\"}).status_code == 404\n    assert client.post(f\"/{big}/delete\").status_code == 404\n",
-      "bugDir": ".proofhound/runs/20261018-052325/bugs/PH-001-post-ids-above-2-63-1-raise-overflowerror-500-in"
+      "bugDir": ".counterhound/runs/20261018-052325/bugs/PH-001-post-ids-above-2-63-1-raise-overflowerror-500-in"
     }
   ]
 }

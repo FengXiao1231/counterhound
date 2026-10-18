@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "tool": "proofhound",
+  "tool": "counterhound",
   "runId": "20261017-070558",
   "repo": "inflection",
   "lang": "python",
@@ -59,7 +59,7 @@
       "evidence": "Signature is camelize(string: str, ...) with no documented restriction on empty strings; camelize('') returns '' for the default flag, so the False branch is inconsistent.",
       "group": "g01-inflection-__init__-py",
       "file": "inflection/__init__.py",
-      "workdir": ".proofhound/runs/20261017-070558/g01-inflection-__init__-py",
+      "workdir": ".counterhound/runs/20261017-070558/g01-inflection-__init__-py",
       "verification": {
         "verified": true,
         "reproFile": "test_repro_camelize_empty.py",
@@ -92,7 +92,7 @@
       "status": "confirmed",
       "bugId": "PH-001",
       "reproSource": "from inflection import camelize\n\n\ndef test_repro_camelize_empty():\n    assert camelize(\"\", True) == \"\"\n    assert camelize(\"\", False) == \"\"\n",
-      "bugDir": ".proofhound/runs/20261017-070558/bugs/PH-001-camelize-uppercase-first-letter-false-raises-ind"
+      "bugDir": ".counterhound/runs/20261017-070558/bugs/PH-001-camelize-uppercase-first-letter-false-raises-ind"
     }
   ]
 }

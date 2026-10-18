@@ -1,6 +1,6 @@
 //! Small text and slice helpers.
 //!
-//! This is a proofhound test fixture: several functions contain planted bugs.
+//! This is a counterhound test fixture: several functions contain planted bugs.
 
 pub mod stats;
 
