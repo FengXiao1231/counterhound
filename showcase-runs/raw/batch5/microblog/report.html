@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofhound · microblog</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}h1 span{color:var(--accent)}h2{font-size:18px;margin:40px 0 12px}
+.meta{color:var(--dim);font-size:13px}.meta code{font-size:12px}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+.funnel{margin:20px 0 8px;display:grid;gap:6px}.step{position:relative;height:30px}
+.bar{position:absolute;inset:0 auto 0 0;background:var(--bar1);border-radius:6px}.bar[data-i="3"]{background:var(--bar3)}
+.lab{position:relative;padding:5px 10px;font-size:13px;white-space:nowrap}.bar[data-i="3"]+.lab{color:#fff}
+.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:14px 0}
+.bug.needs-look{border-left-color:var(--warn)}
+.bug header{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.bug h3{margin:0;font-size:17px;flex:1 1 300px}
+.id{font:600 12px ui-monospace,monospace;color:var(--accent)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--dim)}
+.badge.ok{color:var(--ok);border-color:currentColor}.sev-high{color:var(--accent);border-color:currentColor}.sev-medium{color:var(--warn);border-color:currentColor}
+.where{margin:6px 0 10px;color:var(--dim);font-size:13px;word-break:break-all}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0 0 8px}dt{color:var(--dim);font-size:13px}dd{margin:0;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.copy{margin-left:8px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer}
+.err{color:var(--accent);margin:4px 0}.dim{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:500}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center}
+.tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+footer{margin-top:48px;color:var(--dim);font-size:12.5px}
+@media (max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style></head><body><main>
+<h1>proof<span>hound</span> report</h1>
+<div class="meta">microblog · python · claude (sonnet) · 2 modules, 8 functions · 5m02s · $0.55 · 10/18/2026, 5:27:16 AM</div>
+<div class="funnel">
+    <div class="step"><div class="bar" style="width:100%" data-i="0"></div>
+    <div class="lab"><b>2</b> reported by the hunter</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="1"></div>
+    <div class="lab"><b>2</b> reproduced deterministically</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="2"></div>
+    <div class="lab"><b>2</b> unique</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="3"></div>
+    <div class="lab"><b>2</b> confirmed by review</div></div></div>
+<p class="meta">Every bug below failed the same way in 3 fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
+
+<h2>2 confirmed bugs</h2>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-001</span>
+    <h3>POST /api/users returns 500 when password (or username/email) is null or has a non-string type</h3>
+    <span class="badges">
+      <span class="badge kind">crash</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.80</span>
+      <span class="badge ok">failed 3/3</span>
+      
+    </span>
+  </header>
+  <p class="where"><code>POST /users</code> · <code>app/models.py:135</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>POST /api/users {&quot;username&quot;: &quot;a&quot;, &quot;email&quot;: &quot;a@x.org&quot;, &quot;password&quot;: null}</code></dd>
+    <dt>Expected</dt><dd>400 Bad Request via bad_request(...), like the other validation failures in create_user</dd>
+    <dt>Actual</dt><dd><code>AttributeError: &#39;NoneType&#39; object has no attribute &#39;encode&#39;</code></dd>
+    <dt>Property</dt><dd>invalid input (wrong-typed username/email/password) gets a 4xx, never an unhandled exception</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from config import Config
+from app import create_app, db
+
+
+class Cfg(Config):
+    SQLALCHEMY_DATABASE_URI = &#39;sqlite://&#39;
+    ELASTICSEARCH_URL = None
+
+
+def test_create_user_null_password_is_4xx_not_crash():
+    app = create_app(Cfg)
+    app.config[&quot;TESTING&quot;] = True
+    with app.app_context():
+        db.create_all()
+        r = app.test_client().post(&quot;/api/users&quot;, json={
+            &quot;username&quot;: &quot;a&quot;, &quot;email&quot;: &quot;a@x.org&quot;, &quot;password&quot;: None})
+        assert 400 &lt;= r.status_code &lt; 500</code></pre>
+  <p class="err"><code>AttributeError: &#39;NoneType&#39; object has no attribute &#39;encode&#39;</code></p></details>
+  
+  
+  <details><summary>Why this is a bug</summary><p>create_user already validates input and returns 400 for missing fields and duplicates; the endpoint is the public unauthenticated sign-up, and the API convention (errors.py bad_request) is that client mistakes yield 4xx, not 500.</p><p><b>Independent review:</b> create_user is an unauthenticated public sign-up endpoint that already returns 400 via bad_request for missing fields and duplicates. A JSON null password is well-formed input from the client&#39;s side, but it gets through to generate_password_hash(None) and raises AttributeError, which gives a 500. The repro failed in a fresh run with exactly this traceback. A type check next to the existing field-presence check would fix it, so a maintainer would likely accept that. This is a tutorial app, so the severity is low.</p>
+  
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261018-052716/bugs/PH-001-post-api-users-returns-500-when-password-or-user/BUG.md</code></p></details>
+</article>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-002</span>
+    <h3>POST /users and PUT /users/&lt;id&gt; return 500 when the JSON body is not an object</h3>
+    <span class="badges">
+      <span class="badge kind">crash</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.72</span>
+      <span class="badge ok">failed 3/3</span>
+      
+    </span>
+  </header>
+  <p class="where"><code>PUT /users/{id}</code> · <code>app/api/users.py:71</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>authenticated PUT /api/users/1 with JSON body 0 (also null)</code></dd>
+    <dt>Expected</dt><dd>400 Bad Request</dd>
+    <dt>Actual</dt><dd><code>TypeError: argument of type &#39;int&#39; is not iterable</code></dd>
+    <dt>Property</dt><dd>a malformed request body gets a 4xx, never an unhandled exception</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>import base64
+from config import Config
+from app import create_app, db
+
+
+class Cfg(Config):
+    SQLALCHEMY_DATABASE_URI = &#39;sqlite://&#39;
+    ELASTICSEARCH_URL = None
+
+
+def test_update_user_non_object_json_body_is_4xx_not_crash():
+    app = create_app(Cfg)
+    app.config[&quot;TESTING&quot;] = True
+    c = app.test_client()
+    with app.app_context():
+        db.create_all()
+        assert c.post(&quot;/api/users&quot;, json={
+            &quot;username&quot;: &quot;a&quot;, &quot;email&quot;: &quot;a@x.org&quot;, &quot;password&quot;: &quot;p&quot;}).status_code == 201
+        basic = {&quot;Authorization&quot;: &quot;Basic &quot; + base64.b64encode(b&quot;a:p&quot;).decode()}
+        tok = c.post(&quot;/api/tokens&quot;, headers=basic).get_json()[&quot;token&quot;]
+        r = c.put(&quot;/api/users/1&quot;, json=0, headers={&quot;Authorization&quot;: &quot;Bearer &quot; + tok})
+        assert 400 &lt;= r.status_code &lt; 500</code></pre>
+  <p class="err"><code>TypeError: argument of type &#39;int&#39; is not iterable</code></p></details>
+  
+  
+  <details><summary>Why this is a bug</summary><p>Handler does `&#39;username&#39; in data` assuming a dict without checking; API returns JSON 4xx errors for bad requests via bad_request().</p><p><b>Independent review:</b> Both handlers (app/api/users.py:47-48 and 70-71) call request.get_json() and then run `&#39;username&#39; in data` without checking that data is a dict. A valid JSON body such as 0, null or a list raises TypeError, which becomes an unhandled 500. The API already answers bad input with bad_request() (400), and the repro uses the API correctly with a valid token and a valid JSON body. The impact is small: it is a tutorial-style app, only an authenticated user can hit the PUT crash, and it leaks no data. A one-line `isinstance(data, dict)` guard returning 400 would be an easy fix for a maintainer to accept.</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_update_invalid_body_not_5xx(
+    body=0,
+)</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261018-052716/bugs/PH-002-post-users-and-put-users-id-return-500-when-the/BUG.md</code></p></details>
+</article>
+
+
+
+<h2>Filtered out (0)</h2>
+<p class="dim">Nothing was filtered out.</p>
+
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
+<tr><td><code>app/api/tokens.py</code></td><td>DELETE /tokens, POST /tokens</td><td>0</td><td>0</td><td>58s</td></tr><tr><td><code>app/api/users.py</code></td><td>POST /users, GET /users/&lt;int:id&gt;, GET /users, PUT /users/&lt;int:id&gt;, GET /users/&lt;int:id&gt;/followers, GET /users/&lt;int:id&gt;/following</td><td>2</td><td>2</td><td>4m06s</td></tr>
+</table>
+<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));
+</script>
+</body></html>

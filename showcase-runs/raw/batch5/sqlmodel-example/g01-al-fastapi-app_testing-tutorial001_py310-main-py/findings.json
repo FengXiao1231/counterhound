@@ -1,0 +1,14 @@
+[
+  {
+    "title": "PATCH /heroes/{hero_id} with {\"name\": null} returns 500 (NOT NULL violation)",
+    "function": "PATCH /heroes/{hero_id}",
+    "kind": "crash",
+    "property": "a well-formed PATCH request never causes a 5xx; invalid input yields a 4xx",
+    "property_test": "test_patch_only_given_fields",
+    "repro_file": "test_repro_patch_null_name.py",
+    "input": "POST /heroes/ {\"name\":\"a\",\"secret_name\":\"b\",\"age\":null}, then PATCH /heroes/1 {\"name\": null}",
+    "expected": "422 (or other 4xx), since name is a required non-null str on HeroBase; the hero is unchanged",
+    "actual": "500 Internal Server Error: HeroUpdate accepts name=null, update_hero applies it with sqlmodel_update, and the commit raises IntegrityError (NOT NULL constraint failed: hero.name). The same applies to secret_name.",
+    "evidence": "HeroBase declares name: str and secret_name: str (non-optional), and the DB column is NOT NULL, but HeroUpdate declares them as `str | None = None`, so the request validates and then fails in the handler at session.commit() in update_hero (main.py line 91). Invalid input should be a 4xx, not a 5xx."
+  }
+]

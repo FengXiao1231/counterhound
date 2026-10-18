@@ -1,0 +1,10 @@
+I tested 4 properties and reported 1 bug. The repro fails on its first assertion (`GET /constructor`), and I did not separately confirm the `PUT /toString` half of it.
+
+- **Properties that passed:** the create → read → PUT twice → PATCH → DELETE lifecycle, paging through every page once, no 5xx on odd resource names, and `_dependent` deletes touching only the deleted parent's children.
+- **The bug:** `GET /constructor` returns 200 with an empty body instead of 404, because `Service.#get` looks names up without an own-property check. The same lookup lets `PUT /toString` write a new `toString` key into the database instead of returning 404. The repro is `repro_prototype_names.test.mjs`.
+
+I also left a scratch file, `probe.test.mjs`, in the work directory.
+
+Permission denials:
+Write: {"file_path":"<project>/.proofhound/runs/20261018-054730/g01-src-app-ts/ph_props.test.mjs","content":"import { createApp } from '../../../../src/app.ts';\nimport { Low, Memory } from 'lowdb';\nimport { t
+Bash: {"command":"sed -i 's/console.log(m, p, r.status, (await r.text()).slice(0, 100));/out.push([m, p, r.status, (await r.text()).slice(0, 100)].join(\" \"));/; s/const h = /const out = []; const h = /; s/  server.close();/  server.close(); throw new Error(out.join(\"\\\\n\"));/' .proofhound/runs/202610

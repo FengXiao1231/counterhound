@@ -1,0 +1,173 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-052716",
+  "diff": null,
+  "fixRun": false,
+  "api": {
+    "framework": "flask",
+    "app": "app:create_app"
+  },
+  "repo": "microblog",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T05:27:16.937Z",
+  "ms": 301665,
+  "spend": {
+    "usd": 0.5481198,
+    "tokensIn": 1133649,
+    "tokensOut": 14851,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g02-app-api-tokens-py",
+      "file": "app/api/tokens.py",
+      "functions": [
+        "DELETE /tokens",
+        "POST /tokens"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 57771,
+      "costUsd": 0.1428907,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-app-api-users-py",
+      "file": "app/api/users.py",
+      "functions": [
+        "POST /users",
+        "GET /users/<int:id>",
+        "GET /users",
+        "PUT /users/<int:id>",
+        "GET /users/<int:id>/followers",
+        "GET /users/<int:id>/following"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 245526,
+      "costUsd": 0.2767799,
+      "reported": 2,
+      "verified": 2
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 8,
+    "reported": 2,
+    "verified": 2,
+    "duplicates": 0,
+    "confirmed": 2,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "POST /users crashes (500) when a required field has a non-string value",
+      "function": "POST /users",
+      "kind": "crash",
+      "property": "invalid input (wrong-typed username/email/password) gets a 4xx, never an unhandled exception",
+      "property_test": "test_create_wrong_types_not_5xx",
+      "repro_file": "test_repro_create_null_password.py",
+      "input": "POST /api/users {\"username\": \"a\", \"email\": \"a@x.org\", \"password\": null}",
+      "expected": "400 Bad Request via bad_request(...), like the other validation failures in create_user",
+      "actual": "AttributeError: 'NoneType' object has no attribute 'encode' at app/models.py:135 set_password (500). Likewise username/email null -> IntegrityError, username/email list -> sqlite ProgrammingError at users.py:50/53.",
+      "evidence": "create_user already validates input and returns 400 for missing fields and duplicates; the endpoint is the public unauthenticated sign-up, and the API convention (errors.py bad_request) is that client mistakes yield 4xx, not 500.",
+      "group": "g01-app-api-users-py",
+      "file": "app/api/users.py",
+      "workdir": ".proofhound/runs/20261018-052716/g01-app-api-users-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_create_null_password.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:AttributeError:app/models.py:135",
+        "site": {
+          "file": "app/models.py",
+          "line": 135,
+          "func": "set_password",
+          "code": "self.password_hash = generate_password_hash(password)"
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "AttributeError",
+          "message": "'NoneType' object has no attribute 'encode'"
+        },
+        "testName": "test_create_user_null_password_is_4xx_not_crash"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "crash",
+        "title": "POST /api/users returns 500 when password (or username/email) is null or has a non-string type",
+        "reason": "create_user is an unauthenticated public sign-up endpoint that already returns 400 via bad_request for missing fields and duplicates. A JSON null password is well-formed input from the client's side, but it gets through to generate_password_hash(None) and raises AttributeError, which gives a 500. The repro failed in a fresh run with exactly this traceback. A type check next to the existing field-presence check would fix it, so a maintainer would likely accept that. This is a tutorial app, so the severity is low.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "from config import Config\nfrom app import create_app, db\n\n\nclass Cfg(Config):\n    SQLALCHEMY_DATABASE_URI = 'sqlite://'\n    ELASTICSEARCH_URL = None\n\n\ndef test_create_user_null_password_is_4xx_not_crash():\n    app = create_app(Cfg)\n    app.config[\"TESTING\"] = True\n    with app.app_context():\n        db.create_all()\n        r = app.test_client().post(\"/api/users\", json={\n            \"username\": \"a\", \"email\": \"a@x.org\", \"password\": None})\n        assert 400 <= r.status_code < 500\n",
+      "bugDir": ".proofhound/runs/20261018-052716/bugs/PH-001-post-api-users-returns-500-when-password-or-user"
+    },
+    {
+      "title": "PUT /users/<id> crashes (500) when the JSON body is not an object",
+      "function": "PUT /users/{id}",
+      "kind": "crash",
+      "property": "a malformed request body gets a 4xx, never an unhandled exception",
+      "property_test": "test_update_invalid_body_not_5xx",
+      "repro_file": "test_repro_update_non_object_body.py",
+      "input": "authenticated PUT /api/users/1 with JSON body 0 (also null)",
+      "expected": "400 Bad Request",
+      "actual": "TypeError: argument of type 'int' is not iterable at app/api/users.py:71 (500); same for POST /users at line 48",
+      "evidence": "Handler does `'username' in data` assuming a dict without checking; API returns JSON 4xx errors for bad requests via bad_request().",
+      "group": "g01-app-api-users-py",
+      "file": "app/api/users.py",
+      "workdir": ".proofhound/runs/20261018-052716/g01-app-api-users-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_update_non_object_body.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:TypeError:app/api/users.py:71",
+        "site": {
+          "file": "app/api/users.py",
+          "line": 71,
+          "func": "update_user",
+          "code": "if 'username' in data and data['username'] != user.username and \\"
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "TypeError",
+          "message": "argument of type 'int' is not iterable"
+        },
+        "testName": "test_update_user_non_object_json_body_is_4xx_not_crash"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_update_invalid_body_not_5xx(\n    body=0,\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.72,
+        "severity": "low",
+        "category": "crash",
+        "title": "POST /users and PUT /users/<id> return 500 when the JSON body is not an object",
+        "reason": "Both handlers (app/api/users.py:47-48 and 70-71) call request.get_json() and then run `'username' in data` without checking that data is a dict. A valid JSON body such as 0, null or a list raises TypeError, which becomes an unhandled 500. The API already answers bad input with bad_request() (400), and the repro uses the API correctly with a valid token and a valid JSON body. The impact is small: it is a tutorial-style app, only an authenticated user can hit the PUT crash, and it leaks no data. A one-line `isinstance(data, dict)` guard returning 400 would be an easy fix for a maintainer to accept.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "reproSource": "import base64\nfrom config import Config\nfrom app import create_app, db\n\n\nclass Cfg(Config):\n    SQLALCHEMY_DATABASE_URI = 'sqlite://'\n    ELASTICSEARCH_URL = None\n\n\ndef test_update_user_non_object_json_body_is_4xx_not_crash():\n    app = create_app(Cfg)\n    app.config[\"TESTING\"] = True\n    c = app.test_client()\n    with app.app_context():\n        db.create_all()\n        assert c.post(\"/api/users\", json={\n            \"username\": \"a\", \"email\": \"a@x.org\", \"password\": \"p\"}).status_code == 201\n        basic = {\"Authorization\": \"Basic \" + base64.b64encode(b\"a:p\").decode()}\n        tok = c.post(\"/api/tokens\", headers=basic).get_json()[\"token\"]\n        r = c.put(\"/api/users/1\", json=0, headers={\"Authorization\": \"Bearer \" + tok})\n        assert 400 <= r.status_code < 500\n",
+      "bugDir": ".proofhound/runs/20261018-052716/bugs/PH-002-post-users-and-put-users-id-return-500-when-the"
+    }
+  ]
+}

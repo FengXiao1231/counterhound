@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-054730",
+  "diff": null,
+  "fixRun": false,
+  "api": {
+    "framework": "express",
+    "app": null
+  },
+  "repo": "json-server",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T05:47:30.515Z",
+  "ms": 90306,
+  "spend": {
+    "usd": 0.35332340000000007,
+    "tokensIn": 904837,
+    "tokensOut": 9697,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-src-app-ts",
+      "file": "src/app.ts",
+      "functions": [
+        "PUT /:name",
+        "PUT /:name/:id",
+        "PATCH /:name",
+        "PATCH /:name/:id",
+        "DELETE /:name/:id",
+        "GET /",
+        "GET /:name",
+        "GET /:name/:id"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 71934,
+      "costUsd": 0.27004890000000004,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 8,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Resource lookup resolves inherited Object.prototype keys (GET /constructor returns 200 with empty body, PUT /toString creates a resource)",
+      "function": "GET /:name",
+      "kind": "contract-violation",
+      "property": "unknown resource names give 404, never a 200 or a mutation",
+      "property_test": "unknown / odd names never 5xx",
+      "repro_file": "repro_prototype_names.test.mjs",
+      "input": "db.data = {posts:[{id:'1'}]}; GET /constructor; PUT /toString with {\"a\":1}",
+      "expected": "404 Not Found for both; db.data gains no 'toString' key",
+      "actual": "GET /constructor returns 200 with an empty body (the Object function is serialized); PUT /toString returns 200 and writes an own 'toString' key into db.data",
+      "evidence": "Service.#get does this.#db.data[name] without an own-property check, although Service.has() exists and uses hasOwnProperty; the final handler returns 404 whenever the lookup yields undefined, which shows unknown names are meant to be 404.",
+      "group": "g01-src-app-ts",
+      "file": "src/app.ts",
+      "workdir": ".proofhound/runs/20261018-054730/g01-src-app-ts",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_prototype_names.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_prototype_names",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "GET /constructor (no such resource) should be 404",
+          "example": null
+        },
+        "testName": "repro_prototype_names"
+      },
+      "propertyCheck": {
+        "failed": false,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.9,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "Resource lookup resolves inherited Object.prototype keys (GET /constructor returns 200, PUT /toString creates a resource)",
+        "reason": "`Service.#get` (src/service.ts:88) returns `this.#db.data[name]` with no own-property check, so a name like `constructor` or `toString` yields an inherited function instead of `undefined`. The 404 handler in app.ts only triggers when the lookup is `undefined`, so GET returns 200 with a serialized function. `#updateOrPatch` then runs `this.#db.data[name] = body`, which writes an own key into the db for a resource that never existed. The repro is valid, and `Service.has()` already shows the intended own-property semantics. The fix is a one-line `hasOwnProperty` guard in `#get`, which a maintainer would likely accept, though the impact is small for a local mock server.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "import { createApp } from '../../../../../src/app.ts';\nimport { Low, Memory } from 'lowdb';\nimport { test } from 'node:test';\nimport assert from 'node:assert';\n\ntest('repro_prototype_names', async () => {\n  const db = new Low(new Memory(), {});\n  db.data = { posts: [{ id: '1' }] };\n  const server = createApp(db).listen(0);\n  const base = `http://127.0.0.1:${server.address().port}`;\n  try {\n    const g = await fetch(`${base}/constructor`);\n    assert.equal(g.status, 404, 'GET /constructor (no such resource) should be 404');\n    const p = await fetch(`${base}/toString`, {\n      method: 'PUT',\n      headers: { 'content-type': 'application/json' },\n      body: JSON.stringify({ a: 1 }),\n    });\n    assert.equal(p.status, 404, 'PUT /toString (no such resource) should be 404');\n    assert.equal(Object.prototype.hasOwnProperty.call(db.data, 'toString'), false);\n  } finally {\n    server.close();\n  }\n});\n",
+      "bugDir": ".proofhound/runs/20261018-054730/bugs/PH-001-resource-lookup-resolves-inherited-object-protot"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "title": "GET /delete/<id> reports success for a post that does not exist",
+    "function": "GET /delete/{post_id}",
+    "kind": "wrong-result",
+    "property": "deleting a nonexistent (or already deleted) post does not report 'Post Deleted' with status 1; it is a 404 or status 0",
+    "property_test": "test_delete_missing",
+    "repro_file": "test_repro_delete_missing.py",
+    "input": "logged in, no posts, GET /delete/1 (or a second GET /delete/1 after deleting post 1)",
+    "expected": "404 or JSON status 0 (error), since nothing was deleted",
+    "actual": "200 {\"message\": \"Post Deleted\", \"status\": 1} and flash 'The entry was deleted.'",
+    "evidence": "The handler's own result dict defaults to {status: 0, message: 'Error'} and sets status 1 'Post Deleted' unconditionally after query.delete(), ignoring the returned row count. REST convention: deleting an unknown id gives 404, and a repeat delete is 404."
+  }
+]

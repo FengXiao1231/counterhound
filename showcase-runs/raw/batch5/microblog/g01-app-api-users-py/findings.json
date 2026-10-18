@@ -1,0 +1,26 @@
+[
+  {
+    "title": "POST /users crashes (500) when a required field has a non-string value",
+    "function": "POST /users",
+    "kind": "crash",
+    "property": "invalid input (wrong-typed username/email/password) gets a 4xx, never an unhandled exception",
+    "property_test": "test_create_wrong_types_not_5xx",
+    "repro_file": "test_repro_create_null_password.py",
+    "input": "POST /api/users {\"username\": \"a\", \"email\": \"a@x.org\", \"password\": null}",
+    "expected": "400 Bad Request via bad_request(...), like the other validation failures in create_user",
+    "actual": "AttributeError: 'NoneType' object has no attribute 'encode' at app/models.py:135 set_password (500). Likewise username/email null -> IntegrityError, username/email list -> sqlite ProgrammingError at users.py:50/53.",
+    "evidence": "create_user already validates input and returns 400 for missing fields and duplicates; the endpoint is the public unauthenticated sign-up, and the API convention (errors.py bad_request) is that client mistakes yield 4xx, not 500."
+  },
+  {
+    "title": "PUT /users/<id> crashes (500) when the JSON body is not an object",
+    "function": "PUT /users/{id}",
+    "kind": "crash",
+    "property": "a malformed request body gets a 4xx, never an unhandled exception",
+    "property_test": "test_update_invalid_body_not_5xx",
+    "repro_file": "test_repro_update_non_object_body.py",
+    "input": "authenticated PUT /api/users/1 with JSON body 0 (also null)",
+    "expected": "400 Bad Request",
+    "actual": "TypeError: argument of type 'int' is not iterable at app/api/users.py:71 (500); same for POST /users at line 48",
+    "evidence": "Handler does `'username' in data` assuming a dict without checking; API returns JSON 4xx errors for bad requests via bad_request()."
+  }
+]

@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-052601",
+  "diff": null,
+  "fixRun": false,
+  "api": {
+    "framework": "flask",
+    "app": "project.app:app"
+  },
+  "repo": "flaskr-tdd",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T05:26:01.734Z",
+  "ms": 74513,
+  "spend": {
+    "usd": 0.2217739,
+    "tokensIn": 419135,
+    "tokensOut": 5588,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-project-app-py",
+      "file": "project/app.py",
+      "functions": [
+        "GET /",
+        "POST /add",
+        "GET /login",
+        "POST /login",
+        "GET /logout",
+        "GET /delete/<int:post_id>",
+        "GET /search/"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 54649,
+      "costUsd": 0.1695141,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 7,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 1,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "GET /delete/<id> reports success for a post that does not exist",
+      "function": "GET /delete/{post_id}",
+      "kind": "wrong-result",
+      "property": "deleting a nonexistent (or already deleted) post does not report 'Post Deleted' with status 1; it is a 404 or status 0",
+      "property_test": "test_delete_missing",
+      "repro_file": "test_repro_delete_missing.py",
+      "input": "logged in, no posts, GET /delete/1 (or a second GET /delete/1 after deleting post 1)",
+      "expected": "404 or JSON status 0 (error), since nothing was deleted",
+      "actual": "200 {\"message\": \"Post Deleted\", \"status\": 1} and flash 'The entry was deleted.'",
+      "evidence": "The handler's own result dict defaults to {status: 0, message: 'Error'} and sets status 1 'Post Deleted' unconditionally after query.delete(), ignoring the returned row count. REST convention: deleting an unknown id gives 404, and a repeat delete is 404.",
+      "group": "g01-project-app-py",
+      "file": "project/app.py",
+      "workdir": ".proofhound/runs/20261018-052601/g01-project-app-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_delete_missing.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_second_delete_reports_failure",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert (200 == 404 or 1 == 0)\n +  where 200 = <WrapperTestResponse 38 bytes [200 OK]>.status_code"
+        },
+        "testName": "test_second_delete_reports_failure"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_delete_missing(\n    pid=1,  # or any other generated value\n)"
+      },
+      "review": {
+        "verdict": "not_a_bug",
+        "confidence": 0.85,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "GET /delete/<id> returns status 1 when no row matches",
+        "reason": "The existing test `test_delete_message` in tests/app_test.py logs in and calls `/delete/1` and expects `status == 1`. The `client` fixture is not shown adding any post first, so the test appears to cover this exact case of deleting a post that was never created. This suggests the project treats delete as idempotent and the 'Post Deleted' result is intended. The 404-on-missing-id behaviour is the reporter's REST assumption, since the project does not document it, and a maintainer would likely reject a change that breaks the existing test.",
+        "maintainerWouldFix": false
+      },
+      "status": "rejected"
+    }
+  ]
+}

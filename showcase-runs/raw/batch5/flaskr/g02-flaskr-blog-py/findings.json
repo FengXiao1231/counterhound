@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Post id above 2**63-1 crashes update/delete with OverflowError (500) instead of 404",
+    "function": "GET/POST /<int:id>/update, POST /<int:id>/delete",
+    "kind": "crash",
+    "property": "unknown ids give 404, never a crash",
+    "property_test": "test_unknown_ids_404",
+    "repro_file": "test_repro_huge_id.py",
+    "input": "logged-in user, GET /9223372036854775808/update (also POST update and POST delete)",
+    "expected": "404 'Post id ... doesn't exist.' as get_post documents (:raise 404: if a post with the given id doesn't exist)",
+    "actual": "OverflowError: Python int too large to convert to SQLite INTEGER raised in get_post (flaskr/blog.py:42); 500 in production",
+    "evidence": "get_post docstring: ':raise 404: if a post with the given id doesn't exist'; <int:id> accepts arbitrarily large integers, so any non-existent id should be 404."
+  }
+]

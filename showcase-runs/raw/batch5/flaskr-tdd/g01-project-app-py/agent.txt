@@ -1,0 +1,8 @@
+I tested 7 properties across all routes and reported 1 bug: `GET /delete/<id>` returns `{"status": 1, "message": "Post Deleted"}` for a post that doesn't exist, or one that was already deleted. The repro fails for that reason.
+
+The other failure in the run, `test_index_shows_entry`, was a flaw in my test. Jinja escapes `'` as `&#39;` while `html.escape` writes `&#x27;`, so I discarded it.
+
+Everything is in `.proofhound/runs/20261018-052601/g01-project-app-py/`: the properties in `test_ph_props.py`, the repro in `test_repro_delete_missing.py`, and the report in `findings.json`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261018-052601/g01-project-app-py; cd .proofhound/runs/20261018-052601/g01-project-app-py; cat > test_ph_props.py <<'EOF'\nimport os, re, html\nfrom pathlib import Path\n_d = Path(__file__).resolve().parent\nos.environ[\"DATABASE_URL\"] = f\"sqlite:///{_d / 'ph

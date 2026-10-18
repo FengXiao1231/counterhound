@@ -33,3 +33,13 @@ renumbering, discard() renumbers), ordered-set symmetric_difference_update (`ite
 lru-cache src/index.ts:2124 (`entry.start = this.#perf.now() - age` on the caller's object). 0 wrong, 0 debatable.
 lru-cache first produced no targets: the scanner stopped at the `{}` inside `class LRUCache<K extends {}, …>` and did not see state changes made
 through private `#methods`; both fixed, then re-run alone (--max-modules 1 --budget 0.7). Total about $3.30 for the batch.
+
+## Batch 5: 5 HTTP APIs with --api (2026-10-18)
+
+5 confirmed, 5 real on hand check (ran each repro by hand in the project, read the handler): flaskr blog.py:42 (`(id,)` bound into sqlite3,
+OverflowError for 2**63), microblog app/api/users.py:47 and :71 (`'username' in data` on a non-dict body; `set_password(None)` in models.py:135),
+sqlmodel tutorial001_py310/main.py:82-91 (`HeroUpdate.name: str | None`, NOT NULL at commit), json-server src/service.ts:88-89 (`this.#db.data[name]`
+with no hasOwnProperty, while `has()` on line 92 does it right; app.ts:161 only 404s on `undefined`). 0 wrong, 0 debatable.
+1 rejected by the reviewer (flaskr-tdd `/delete/<id>` returning status 1 for a missing post): checked tests/app_test.py:80-88, the project's
+own test expects exactly that, so the rejection is right. All 5 are low severity and 4 of the 5 apps are tutorials. Total about $1.90.
+The json-server app is tinyhttp (`new App()`), detected as Express; the loopback-server client worked unchanged.

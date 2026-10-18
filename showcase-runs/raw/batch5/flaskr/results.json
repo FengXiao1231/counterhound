@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-052325",
+  "diff": null,
+  "fixRun": false,
+  "api": {
+    "framework": "flask",
+    "app": "flaskr:create_app"
+  },
+  "repo": "tutorial",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T05:23:25.644Z",
+  "ms": 155487,
+  "spend": {
+    "usd": 0.3289541,
+    "tokensIn": 753570,
+    "tokensOut": 7151,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-flaskr-auth-py",
+      "file": "flaskr/auth.py",
+      "functions": [
+        "GET /auth/register",
+        "POST /auth/register",
+        "GET /auth/login",
+        "POST /auth/login",
+        "GET /auth/logout"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 67235,
+      "costUsd": 0.129198,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-flaskr-blog-py",
+      "file": "flaskr/blog.py",
+      "functions": [
+        "POST /<int:id>/delete",
+        "GET /",
+        "GET /create",
+        "POST /create",
+        "GET /<int:id>/update",
+        "POST /<int:id>/update"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 91887,
+      "costUsd": 0.1472825,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 11,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Post id above 2**63-1 crashes update/delete with OverflowError (500) instead of 404",
+      "function": "GET/POST /<int:id>/update, POST /<int:id>/delete",
+      "kind": "crash",
+      "property": "unknown ids give 404, never a crash",
+      "property_test": "test_unknown_ids_404",
+      "repro_file": "test_repro_huge_id.py",
+      "input": "logged-in user, GET /9223372036854775808/update (also POST update and POST delete)",
+      "expected": "404 'Post id ... doesn't exist.' as get_post documents (:raise 404: if a post with the given id doesn't exist)",
+      "actual": "OverflowError: Python int too large to convert to SQLite INTEGER raised in get_post (flaskr/blog.py:42); 500 in production",
+      "evidence": "get_post docstring: ':raise 404: if a post with the given id doesn't exist'; <int:id> accepts arbitrarily large integers, so any non-existent id should be 404.",
+      "group": "g02-flaskr-blog-py",
+      "file": "flaskr/blog.py",
+      "workdir": ".proofhound/runs/20261018-052325/g02-flaskr-blog-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_huge_id.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:OverflowError:flaskr/blog.py:42",
+        "site": {
+          "file": "flaskr/blog.py",
+          "line": 42,
+          "func": "get_post",
+          "code": ".execute("
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "OverflowError",
+          "message": "Python int too large to convert to SQLite INTEGER"
+        },
+        "testName": "test_huge_id_is_404"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_unknown_ids_404(\n    i=9_223_372_036_854_775_808,\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.7,
+        "severity": "low",
+        "category": "crash",
+        "title": "Post ids above 2**63-1 raise OverflowError (500) in get_post instead of returning 404",
+        "reason": "The `<int:id>` converter accepts arbitrarily large integers, and `get_post` documents `:raise 404: if a post with the given id doesn't exist`. An id of 2**63 passes straight to sqlite3 as a bound parameter, which raises OverflowError, so the route returns a 500 instead of the documented 404. The input is valid for the route and the docstring promises the behaviour, so this is a real contract violation. It is a minor edge case in a tutorial example, so a maintainer might decline to complicate the code, for example by using `<int(max=...):id>` or catching OverflowError.",
+        "maintainerWouldFix": false
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "def test_huge_id_is_404(client, auth):\n    auth.login()\n    big = 2**63\n    assert client.get(f\"/{big}/update\").status_code == 404\n    assert client.post(f\"/{big}/update\", data={\"title\": \"x\", \"body\": \"\"}).status_code == 404\n    assert client.post(f\"/{big}/delete\").status_code == 404\n",
+      "bugDir": ".proofhound/runs/20261018-052325/bugs/PH-001-post-ids-above-2-63-1-raise-overflowerror-500-in"
+    }
+  ]
+}

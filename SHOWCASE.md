@@ -128,6 +128,29 @@ Hand-checking the 6 against the source: all 6 are clear bugs, none debatable, no
 
 No bugs reported in: cachetools, bidict, sortedcontainers, pqdict, quick-lru, yocto-queue, tinyqueue, mnemonist.
 
+## HTTP APIs
+
+Run with `--api` on 5 small open-source web applications, with the route scanning added on 2026-10-18: four Flask/FastAPI apps in Python
+(the [Flask tutorial](https://github.com/pallets/flask/tree/main/examples/tutorial) `flaskr`, [flaskr-tdd](https://github.com/mjhea0/flaskr-tdd),
+Miguel Grinberg's [microblog](https://github.com/miguelgrinberg/microblog) REST API, the [SQLModel](https://github.com/fastapi/sqlmodel) FastAPI
+testing tutorial app) and one in TypeScript ([json-server](https://github.com/typicode/json-server)). 39 routes, Claude Sonnet,
+`--max-modules 2 --budget 0.8`, about $1.90 and 26 minutes in total (6 reported → 6 reproduced → 5 confirmed, 1 rejected by the reviewer).
+Hand-checking the 5 against the source: all 5 are real, all are "a client error turns into a 500" or "an unknown name is not a 404", so
+they are small, and 4 of the 5 apps are tutorials. The rejection was right too: flaskr-tdd's `/delete/<id>` answering "deleted" for a post
+that does not exist is covered by the project's own test, so the reviewer read `tests/app_test.py` and withdrew the finding.
+The hunter used the projects' own fixtures (`client`, `auth`, `clear_sqlmodel`) and an in-process client for every app; the Express app
+was driven through a loopback port.
+
+| Project | Bug | Repro |
+|---|---|---|
+| [Flask tutorial](https://github.com/pallets/flask/tree/main/examples/tutorial) (Python) | `<int:id>` accepts any integer, but `get_post` binds it straight into SQLite, so an id above 2⁶³−1 is an `OverflowError` (500) instead of the documented 404 | `client.get("/9223372036854775808/update")` → 500 |
+| [microblog](https://github.com/miguelgrinberg/microblog) (Python) | `POST /api/users` checks that `password` is present but not that it is a string, so `null` reaches `generate_password_hash` and crashes | `POST /api/users {"username":"a","email":"a@x.org","password":null}` → 500 |
+| [microblog](https://github.com/miguelgrinberg/microblog) (Python) | `POST /api/users` and `PUT /api/users/<id>` run `'username' in data` without checking that the JSON body is an object | `PUT /api/users/1` with body `0` → `TypeError` (500) |
+| [SQLModel](https://github.com/fastapi/sqlmodel) FastAPI tutorial (Python) | `HeroUpdate` declares `name: str \| None`, so `{"name": null}` validates, is applied with `exclude_unset=True`, and fails the NOT NULL constraint at commit | `PATCH /heroes/1 {"name": null}` → 500 instead of 422 |
+| [json-server](https://github.com/typicode/json-server) (TypeScript) | `Service.#get` returns `db.data[name]` without an own-property check, so `constructor`, `toString`… resolve to `Object.prototype` and `PUT /toString` writes a new key into the database | `GET /constructor` → 200 with an empty body; `PUT /toString {"a":1}` → 200 and `db.data.toString` exists |
+
+No bugs reported in: flaskr-tdd (one finding withdrawn by the reviewer).
+
 ## proofhound on itself
 
 Run on its own source (`--max-modules 6 --fix`, 22 functions, 5 minutes, $1.55): 7 reported → 7 reproduced → 6 confirmed, 1 the reviewer was unsure about.

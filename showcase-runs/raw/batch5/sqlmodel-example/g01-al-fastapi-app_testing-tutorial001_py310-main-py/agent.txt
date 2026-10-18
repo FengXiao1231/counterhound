@@ -1,0 +1,2 @@
+I tested 3 properties (create/read/delete round trip, PATCH touches only the given fields, paging returns each hero once) and reported 1 bug. The create/read/delete and paging tests passed. `test_patch_only_given_fields` failed on `PATCH {"name": null}`, which hits a NOT NULL IntegrityError, a 500 in the live app. The finding is in `findings.json` and the repro is `test_repro_patch_null_name.py`.
+

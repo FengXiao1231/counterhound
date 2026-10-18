@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-053219",
+  "diff": null,
+  "fixRun": false,
+  "api": {
+    "framework": "fastapi",
+    "app": "docs_src.tutorial.fastapi.app_testing.tutorial001_py310.main:app"
+  },
+  "repo": "sqlmodel",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T05:32:19.210Z",
+  "ms": 911091,
+  "spend": {
+    "usd": 0.4150519000000001,
+    "tokensIn": 252456,
+    "tokensOut": 1591,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-al-fastapi-app_testing-tutorial001_py310-main-py",
+      "file": "docs_src/tutorial/fastapi/app_testing/tutorial001_py310/main.py",
+      "functions": [
+        "PATCH /heroes/{hero_id}",
+        "POST /heroes/",
+        "GET /heroes/",
+        "GET /heroes/{hero_id}",
+        "DELETE /heroes/{hero_id}"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 772885,
+      "costUsd": 0.35655860000000006,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 5,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "PATCH /heroes/{hero_id} with {\"name\": null} returns 500 (NOT NULL violation)",
+      "function": "PATCH /heroes/{hero_id}",
+      "kind": "crash",
+      "property": "a well-formed PATCH request never causes a 5xx; invalid input yields a 4xx",
+      "property_test": "test_patch_only_given_fields",
+      "repro_file": "test_repro_patch_null_name.py",
+      "input": "POST /heroes/ {\"name\":\"a\",\"secret_name\":\"b\",\"age\":null}, then PATCH /heroes/1 {\"name\": null}",
+      "expected": "422 (or other 4xx), since name is a required non-null str on HeroBase; the hero is unchanged",
+      "actual": "500 Internal Server Error: HeroUpdate accepts name=null, update_hero applies it with sqlmodel_update, and the commit raises IntegrityError (NOT NULL constraint failed: hero.name). The same applies to secret_name.",
+      "evidence": "HeroBase declares name: str and secret_name: str (non-optional), and the DB column is NOT NULL, but HeroUpdate declares them as `str | None = None`, so the request validates and then fails in the handler at session.commit() in update_hero (main.py line 91). Invalid input should be a 4xx, not a 5xx.",
+      "group": "g01-al-fastapi-app_testing-tutorial001_py310-main-py",
+      "file": "docs_src/tutorial/fastapi/app_testing/tutorial001_py310/main.py",
+      "workdir": ".proofhound/runs/20261018-053219/g01-al-fastapi-app_testing-tutorial001_py310-main-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_patch_null_name.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_patch_null_name_is_not_a_server_error",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "(500, 'Internal Server Error')\nassert 500 < 500\n +  where 500 = <Response [500 Internal Server Error]>.status_code"
+        },
+        "testName": "test_patch_null_name_is_not_a_server_error"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.6,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "Tutorial app: PATCH /heroes/{id} with name or secret_name set to null returns 500 instead of a 4xx",
+        "reason": "I read main.py, and `HeroUpdate` declares `name` and `secret_name` as `str | None = None`, so `{\"name\": null}` passes validation. `model_dump(exclude_unset=True)` keeps the explicit null, `sqlmodel_update` sets it on the Hero, and the commit hits the NOT NULL constraint and returns 500, which matches the repro. A client error should get a 4xx, not a 500 that leaves the request unhandled. Against that, this is a simplified docs tutorial app rather than library code, so the maintainers may not think it needs changing.",
+        "maintainerWouldFix": false
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "import importlib\n\nfrom fastapi.testclient import TestClient\nfrom sqlalchemy.pool import StaticPool\nfrom sqlmodel import Session, SQLModel, create_engine\n\nfrom docs_src.tutorial.fastapi.app_testing.tutorial001_py310 import main as _main\n\n\ndef test_patch_null_name_is_not_a_server_error(clear_sqlmodel):\n    main = importlib.reload(_main)\n    engine = create_engine(\n        \"sqlite://\", connect_args={\"check_same_thread\": False}, poolclass=StaticPool\n    )\n    SQLModel.metadata.create_all(engine)\n\n    def override():\n        with Session(engine) as s:\n            yield s\n\n    main.app.dependency_overrides[main.get_session] = override\n    client = TestClient(main.app, raise_server_exceptions=False)\n    pr = client.post(\"/heroes/\", json={\"name\": \"a\", \"secret_name\": \"b\", \"age\": None})\n    assert pr.status_code == 200, (pr.status_code, pr.text)\n    h = pr.json()\n    r = client.patch(f\"/heroes/{h['id']}\", json={\"name\": None})\n    assert r.status_code < 500, (r.status_code, r.text)\n",
+      "bugDir": ".proofhound/runs/20261018-053219/bugs/PH-001-tutorial-app-patch-heroes-id-with-name-or-secret"
+    }
+  ]
+}

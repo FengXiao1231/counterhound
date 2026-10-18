@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Resource lookup resolves inherited Object.prototype keys (GET /constructor returns 200 with empty body, PUT /toString creates a resource)",
+    "function": "GET /:name",
+    "kind": "contract-violation",
+    "property": "unknown resource names give 404, never a 200 or a mutation",
+    "property_test": "unknown / odd names never 5xx",
+    "repro_file": "repro_prototype_names.test.mjs",
+    "input": "db.data = {posts:[{id:'1'}]}; GET /constructor; PUT /toString with {\"a\":1}",
+    "expected": "404 Not Found for both; db.data gains no 'toString' key",
+    "actual": "GET /constructor returns 200 with an empty body (the Object function is serialized); PUT /toString returns 200 and writes an own 'toString' key into db.data",
+    "evidence": "Service.#get does this.#db.data[name] without an own-property check, although Service.has() exists and uses hasOwnProperty; the final handler returns 404 whenever the lookup yields undefined, which shows unknown names are meant to be 404."
+  }
+]
