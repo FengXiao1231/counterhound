@@ -25,14 +25,15 @@ function walk(root, start, out) {
 }
 
 // an assignment to, or a mutating call on, something reached through `this`
-const MUTATES_THIS = /\bthis\.[\w$.[\]'"]+\s*(=[^=]|\+=|-=|\*=|\/=|\+\+|--|\|\|=|\?\?=)|\bthis\.[\w$.[\]'"]+\.(push|pop|shift|unshift|splice|set|delete|clear|add|sort|reverse|fill|copyWithin)\(|\bdelete\s+this\./;
+const MUTATES_THIS = /\bthis\.[#\w$.[\]'"]+\s*(=[^=]|\+=|-=|\*=|\/=|\+\+|--|\|\|=|\?\?=)|\bthis\.[#\w$.[\]'"]+\.(push|pop|shift|unshift|splice|set|delete|clear|add|sort|reverse|fill|copyWithin)\(|\bdelete\s+this\./;
 const IMPURE = /\b(fetch|require\(['"](fs|http|https|net|child_process)['"]\)|fs\.|process\.env|Date\.now|new Date\(\)|Math\.random|setTimeout|setInterval|localStorage|document\.|window\.|XMLHttpRequest|console\.)/g;
 
 /** Find the end of a function body by brace matching (good enough for ranking, not parsing). */
-function bodyExtent(lines, startLine) {
+function bodyExtent(lines, startLine, { startCol = 0, maxLines = 600 } = {}) {
   let depth = 0, seen = false, parens = 0;
-  for (let i = startLine; i < Math.min(lines.length, startLine + 600); i++) {
-    const l = lines[i].replace(/(["'`])(?:\\.|(?!\1).)*\1/g, '""').replace(/\/\/.*$/, '');
+  for (let i = startLine; i < Math.min(lines.length, startLine + maxLines); i++) {
+    let l = lines[i].replace(/(["'`])(?:\\.|(?!\1).)*\1/g, '""').replace(/\/\/.*$/, '');
+    if (i === startLine && startCol) l = l.slice(startCol); // skip a header such as `class A<K extends {}>`
     for (const ch of l) {
       if (!seen && (ch === '(' || ch === ')')) parens += ch === '(' ? 1 : -1;
       else if (!seen && parens > 0) continue; // braces of a destructured parameter, not the body
@@ -146,7 +147,8 @@ export function scanFile(root, file) {
   ];
   // classes whose methods change `this`: tested as a whole, with a model (see targets.js)
   const classRe = new RegExp(`^\\s*(?:export\\s+(?:default\\s+)?)?(?:abstract\\s+)?class\\s+(${ID})\\b[^{]*\\{`);
-  const methodRe = new RegExp(`^\\s*(?:(static|get|set)\\s+)?(async\\s+)?\\*?\\s*(${ID})\\s*(<[^>]*>)?\\s*\\(([^)]*)\\)\\s*(:\\s*[^{]+)?\\{`);
+  const methodRe = new RegExp(`^\\s*(?:(?:public|protected|override|readonly)\\s+)*(?:(static|get|set|private)\\s+)?(?:(?:public|protected|override)\\s+)*(async\\s+)?\\*?\\s*(#?${ID})\\s*\\??\\s*(<[^>]*>)?\\s*\\(([^)]*)\\)\\s*(:\\s*[^{]+)?\\{`);
+  const openParens = (x) => (x.match(/\(/g) || []).length - (x.match(/\)/g) || []).length;
   const classSpans = [];
   lines.forEach((raw, i) => {
     const m = raw.match(classRe);
@@ -154,31 +156,46 @@ export function scanFile(root, file) {
     const name = m[1];
     const exported = /^\s*export\s/.test(raw) ? { name, access: /export\s+default/.test(raw) ? 'default' : 'named' } : ex.get(name);
     if (!exported || name.startsWith('_')) return;
-    const end = bodyExtent(lines, i);
+    const end = bodyExtent(lines, i, { startCol: raw.indexOf('{', m[0].length - 1 - (m[0].length - 1 - m[0].lastIndexOf('{'))), maxLines: 20000 });
     classSpans.push([i, end]);
     const methods = [];
     let ctor = '()';
     for (let k = i + 1; k < end; k++) {
-      const mm = lines[k].match(methodRe);
+      // a parameter list that spans lines: join until the parentheses balance
+      let line = lines[k];
+      if (/^\s*[\w$]+\s*\??\s*(<[^>]*>)?\s*\([^)]*$/.test(line) && openParens(line) > 0) {
+        for (let j = k + 1; j < Math.min(lines.length, k + 30) && openParens(line) > 0; j++) line += ' ' + lines[j].replace(/\/\/.*$/, '').trim();
+      }
+      const mm = line.match(methodRe);
       if (!mm) continue;
       const [, kind, isAsync, mname, , params, ret] = mm;
       if (mname === 'constructor') { ctor = `(${(params || '').trim()})`; k = bodyExtent(lines, k); continue; }
-      if (kind === 'get' || kind === 'set' || mname.startsWith('_') || /^(if|for|while|switch|catch|function|return)$/.test(mname)) continue;
+      if (kind === 'get' || kind === 'set' || /^(if|for|while|switch|catch|function|return)$/.test(mname)) continue;
       const mEnd = bodyExtent(lines, k);
       const body = lines.slice(k, mEnd + 1).join('\n');
       methods.push({
         name: mname, line: k + 1, loc: mEnd - k + 1, static: kind === 'static', async: Boolean(isAsync), params: (params || '').trim(), ret,
-        doc: jsdocBefore(lines, k).slice(0, 600), body,
+        doc: jsdocBefore(lines, k).slice(0, 600), body, hidden: kind === 'private' || mname.startsWith('_') || mname.startsWith('#'),
         mutates: kind !== 'static' && MUTATES_THIS.test(body),
       });
       k = mEnd;
     }
-    const pub = methods.filter((x) => !x.static);
+    // a public method that only delegates to a private one (`clear() { return this.#clear() }`) changes state too
+    for (let changed = true; changed;) {
+      changed = false;
+      for (const x of methods) {
+        if (x.mutates || x.static) continue;
+        const calls = [...x.body.matchAll(/\bthis\.(#?[\w$]+)\s*\(/g)].map((c) => c[1]);
+        if (calls.some((c) => methods.some((y) => y.name === c && y.mutates))) { x.mutates = true; changed = true; }
+      }
+    }
+    const visible = methods.filter((x) => !x.hidden);
+    const pub = visible.filter((x) => !x.static);
     const cls = {
       owner: name, ownerAccess: exported.access, ownerDoc: jsdocBefore(lines, i).slice(0, 400), ownerInit: ctor,
       ownerMethods: pub.length, ownerMutators: pub.filter((x) => x.mutates).length,
     };
-    for (const x of methods) {
+    for (const x of visible) {
       if (out.some((f) => f.qualname === `${name}.${x.name}`)) continue;
       const impure = [...new Set([...x.body.matchAll(IMPURE)].map((y) => y[1].replace(/[.(].*$/, '')))];
       out.push({
