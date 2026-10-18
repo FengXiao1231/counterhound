@@ -40,6 +40,7 @@ npx proofhound                    # 在最值得测的 6 个模块里找 Bug
 npx proofhound targets            # 只看会测哪些函数，不调用 AI
 npx proofhound --only parse_url   # 聚焦某个函数、模块或文件
 npx proofhound src/codec --budget 2
+npx proofhound --api              # 改为测 HTTP API（FastAPI、Flask、Express、Fastify）而不是函数
 ```
 
 需要：
@@ -79,8 +80,8 @@ flowchart LR
   F --> G[确认的 Bug<br/>+ 失败测试]
 ```
 
-1. **排序**。静态扫描（Python 用 `ast`，Go 用 `go/ast`，JS/TS、Rust 和 Java 用扫描器）列出公开函数和方法，按"好不好验证"打分：有文档、有类型、无副作用、名字像变换（`parse`、`encode`、`merge`、`normalize`……），如果存在逆函数还会加分（有 `encode`/`decode` 就天然有往返性质）。会碰网络、文件、时钟、随机数的函数排在后面。公开方法会改变自身状态的类（购物车、账户、缓存、带游标的解析器）在 Python 和 JavaScript 里会被当作一个整体目标：它的 `add`/`remove`/`update` 单独看都是很差的目标，合在一起却是最好的那种。
-2. **猎捕**。每个模块交给一个编程 Agent：读源码、文档字符串、README 和调用处，用 [Hypothesis](https://hypothesis.works)、[fast-check](https://fast-check.dev)、[rapid](https://github.com/flyingmutant/rapid)、[proptest](https://github.com/proptest-rs/proptest) 或 [QuickTheories](https://github.com/quicktheories/QuickTheories) 写属性测试，比如往返、不变量、幂等、和参考实现对照、蜕变关系。对有状态的类，它写的是基于模型的测试（`hypothesis.stateful`、`fc.commands`）：随机生成一串方法调用，对照一个简单模型，每一步之后检查查询方法承诺的性质，所以复现就是一小段调用序列。它还会被告知项目自己的测试里定义了哪些 fixture、工厂和辅助函数（`conftest.py`、`factories.py`、`test/helpers.*`），用它们来构造合法的用户、订单、会话，而不是自己瞎猜；`tests/conftest.py` 也会为它的测试加载。它会运行测试，分清是自己写错了还是真失败，并为它相信的每个 Bug 写一个确定性的复现测试。Agent 只能在 `.proofhound/runs/` 里写文件，只能通过 proofhound 自己的测试运行器跑测试。
+1. **排序**。静态扫描（Python 用 `ast`，Go 用 `go/ast`，JS/TS、Rust 和 Java 用扫描器）列出公开函数和方法，按"好不好验证"打分：有文档、有类型、无副作用、名字像变换（`parse`、`encode`、`merge`、`normalize`……），如果存在逆函数还会加分（有 `encode`/`decode` 就天然有往返性质）。会碰网络、文件、时钟、随机数的函数排在后面。公开方法会改变自身状态的类（购物车、账户、缓存、带游标的解析器）在 Python 和 JavaScript 里会被当作一个整体目标：它的 `add`/`remove`/`update` 单独看都是很差的目标，合在一起却是最好的那种。加 `--api` 时目标换成 FastAPI、Flask、Express、Fastify、Koa 或 Hono 应用的路由（装饰器、带前缀的 router 和 blueprint、app 工厂），按契约和有没有配对的路由（POST 配 GET、PUT、列表接口）排名。
+2. **猎捕**。每个模块交给一个编程 Agent：读源码、文档字符串、README 和调用处，用 [Hypothesis](https://hypothesis.works)、[fast-check](https://fast-check.dev)、[rapid](https://github.com/flyingmutant/rapid)、[proptest](https://github.com/proptest-rs/proptest) 或 [QuickTheories](https://github.com/quicktheories/QuickTheories) 写属性测试，比如往返、不变量、幂等、和参考实现对照、蜕变关系。对有状态的类，它写的是基于模型的测试（`hypothesis.stateful`、`fc.commands`）：随机生成一串方法调用，对照一个简单模型，每一步之后检查查询方法承诺的性质，所以复现就是一小段调用序列。测 HTTP API 时它在进程内驱动应用（FastAPI 的 `TestClient`、Flask 的 test client、Fastify 的 `inject`，Express 则起一个回环端口的服务），检查契约：合法输入不出 5xx 和未捕获异常、响应体符合声明的 response model 或 OpenAPI schema、创建后能读回、PUT 幂等、DELETE 之后 404、分页每条恰好出现一次。handler 里抛出的异常和其他崩溃一样定位到那一行。它还会被告知项目自己的测试里定义了哪些 fixture、工厂和辅助函数（`conftest.py`、`factories.py`、`test/helpers.*`），用它们来构造合法的用户、订单、会话，而不是自己瞎猜；`tests/conftest.py` 也会为它的测试加载。它会运行测试，分清是自己写错了还是真失败，并为它相信的每个 Bug 写一个确定性的复现测试。Agent 只能在 `.proofhound/runs/` 里写文件，只能通过 proofhound 自己的测试运行器跑测试。
 3. **重放**。由 proofhound（不是 Agent）把每个复现测试在全新进程里重跑 N 次（默认 3 次）。只要有一次通过、失败原因前后不一致、用了随机数或时钟、或者根本加载不了，就丢弃。
 4. **归因**。检查调用栈。测试自身抛出的错误（`NameError`、参数传错、测试自己算错导致的 `KeyError`）、Hypothesis/fast-check 的错误、第三方库内部的错误，都算测试的问题，不算你的 Bug。崩溃（包括从 goroutine 调用栈和 Rust backtrace 里读出的 panic）会定位到你代码里最深的那一帧；如果是显式的 `raise`/`throw`/`panic` 会单独标出来，让复核者判断是不是文档里写明的行为。
 5. **去重**。出错位置相同、或同一函数上同一性质的发现会被合并。
@@ -165,6 +166,7 @@ proofhound doctor                检查工具链
 --agent <claude|codex>    用哪个 AI 命令行工具（自动识别）
 --model <name>            猎手用的模型，如 sonnet、opus
 --review-model <name>     复核用的模型（默认同 --model）
+--api                     测 HTTP API（FastAPI、Flask、Express、Fastify 的路由）而不是函数
 --only <names>            逗号分隔的函数、模块或文件
 --max-modules <n>         最多猎捕几个模块（默认 6）
 --per-module <n>          每个模块最多几个函数（默认 6）
@@ -211,7 +213,7 @@ proofhound 生成的所有东西都在 `.proofhound/` 里，里面自带一个 `
 ## 路线图
 
 - Go、Rust、Java 也支持有状态（基于模型）的测试和 fixture 复用，和现在的 Python、JavaScript 一样
-- HTTP API：按 OpenAPI 或进程内应用生成请求，检查契约（合法输入不返回 500、返回符合 schema、PUT 幂等、POST 之后 GET 查得到）
+- HTTP API：Django REST framework 和 NestJS 的路由；只有 OpenAPI、只能走网络访问的应用
 - `proofhound fix`：对已有的运行结果直接补写补丁，不用重新找 Bug
 - Kotlin
 

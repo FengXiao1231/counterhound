@@ -51,7 +51,34 @@ const f = (title, fn, repro, kind = 'wrong-result') => ({
   input: 'see repro', expected: 'see repro', actual: 'see repro', evidence: 'doc comment',
 });
 
+// Express API fixture: repros drive the app over a loopback server, as the hunter is told to.
+const JSAPI = (toSrc) => {
+  const head = `import test, { before, after } from 'node:test';\nimport assert from 'node:assert/strict';\nimport app from '${toSrc}/app.js';\nlet server, base;\nbefore(() => { server = app.listen(0); base = \`http://127.0.0.1:\${server.address().port}\`; });\nafter(() => server.close());\nconst json = (method, url, body) => fetch(base + url, { method, headers: { 'content-type': 'application/json' }, body: body && JSON.stringify(body) });\n`;
+  return {
+    'repro_api_unknown.test.mjs': head + "test('repro_api_unknown', async () => { const r = await json('GET', '/items/999999'); assert.equal(r.status, 404); });\n",
+    'repro_api_put_twice.test.mjs': head + "test('repro_api_put_twice', async () => { const item = await (await json('POST', '/items', { name: 'a', price: 1 })).json(); const body = { name: 'b', price: 2 }; const first = await (await json('PUT', `/items/${item.id}`, body)).json(); const second = await (await json('PUT', `/items/${item.id}`, body)).json(); assert.deepEqual(first, second); });\n",
+    // built on the project's own test helper
+    'repro_api_paging.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { startApp } from '${toSrc}/../test/helpers.mjs';\ntest('repro_api_paging', async () => { const { base, stop } = startApp(); try { const ids = []; for (let i = 0; i < 3; i++) ids.push((await (await fetch(base + '/items', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'x', price: 1 }) })).json()).id); const p1 = (await (await fetch(base + '/items?offset=0&limit=2')).json()).map((i) => i.id); const p2 = (await (await fetch(base + '/items?offset=2&limit=2')).json()).map((i) => i.id); assert.deepEqual([...p1, ...p2].sort(), ids.sort()); } finally { stop(); } });\n`,
+    'repro_api_negative.test.mjs': head + "test('repro_api_negative', async () => { const r = await json('POST', '/items', { name: 'a', price: -1 }); assert.equal(r.status, 201); });\n",
+  };
+};
+
 export default async function fakeAgent({ prompt, cwd }) {
+  if (prompt.includes("proofhound's bug hunter") && prompt.includes('HTTP API (express')) {
+    const dir = path.join(cwd, prompt.match(/Create files only inside `([^`]+)\/`/)[1]);
+    const toSrc = path.relative(dir, path.join(cwd, 'src')).split(path.sep).join('/');
+    for (const need of ['app `src/app.js:app`', '`GET /items/:id` → `inline handler`', `import app from '${toSrc}/app.js'`, 'test/helpers.mjs: `startApp`']) {
+      if (!prompt.includes(need)) throw new Error(`api prompt lacks: ${need}`);
+    }
+    for (const [name, src] of Object.entries(JSAPI(toSrc))) fs.writeFileSync(path.join(dir, name), src);
+    fs.writeFileSync(path.join(dir, 'findings.json'), JSON.stringify([
+      f('GET /items/:id returns 200 with an empty object for an unknown id', 'GET /items/:id', 'repro_api_unknown.test.mjs'),
+      f('PUT is not idempotent: version changes on a no-op update', 'PUT /items/:id', 'repro_api_put_twice.test.mjs'),
+      f('GET /items paging drops the last item of every page', 'GET /items', 'repro_api_paging.test.mjs'),
+      f('POST /items rejects a negative price', 'POST /items', 'repro_api_negative.test.mjs'),
+    ]));
+    return 'reported 4 bugs';
+  }
   if (prompt.includes("proofhound's bug hunter")) {
     const dir = path.join(cwd, prompt.match(/Create files only inside `([^`]+)\/`/)[1]);
     const isGo = prompt.includes('Go + rapid');
@@ -117,7 +144,7 @@ export default async function fakeAgent({ prompt, cwd }) {
     return 'fixed';
   }
   if (prompt.includes('skeptical, experienced maintainer')) {
-    if (/MustPositive|parse_percent|parsePercent|chunk panics on zero|rangeInclusive|unknown sku/.test(prompt)) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented.","maintainer_would_fix":false}';
+    if (/MustPositive|parse_percent|parsePercent|chunk panics on zero|rangeInclusive|unknown sku|negative price/.test(prompt)) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented.","maintainer_would_fix":false}';
     return '{"verdict":"bug","confidence":0.9,"severity":"medium","category":"wrong-result","title":"confirmed","reason":"Contradicts the doc comment.","maintainer_would_fix":true}';
   }
   throw new Error('unexpected prompt');

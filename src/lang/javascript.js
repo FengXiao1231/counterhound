@@ -353,6 +353,78 @@ export const javascript = {
     return `import { ${name} } from '${rel}'`;
   },
 
+  /** The HTTP routes of an Express, Fastify, Koa or Hono app, as targets; null when the project has none. */
+  listRoutes(repo, cfg, only = []) {
+    const pkg = readJSON(path.join(repo, 'package.json'), {}) || {};
+    const deps = { ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) };
+    const framework = ['express', 'fastify', 'koa', 'hono'].find((f) => deps[f]) || null;
+    const files = [];
+    const starts = only.length ? only.map((o) => path.join(repo, o)) : [repo];
+    for (const st of starts) {
+      if (fs.existsSync(st) && fs.statSync(st).isFile()) files.push(st);
+      else walk(repo, st, files);
+    }
+    const routes = [], apps = [], mounts = [];
+    const routeRe = new RegExp(`^\\s*(?:export\\s+default\\s+)?(${ID})\\.(get|post|put|patch|delete|head|options|all)\\s*\\(\\s*(['"\`])([^'"\`]*)\\3`, 'gm');
+    const fastifyRouteRe = /\.route\s*\(\s*\{([^}]*)\}/g;
+    for (const f of files) {
+      const src = fs.readFileSync(f, 'utf8');
+      if (src.length > 400000) continue;
+      const rel = path.relative(repo, f).split(path.sep).join('/');
+      const lines = src.split('\n');
+      const lineOf = (idx) => src.slice(0, idx).split('\n').length;
+      const prefixes = {};
+      for (const m of src.matchAll(/(?:const|let|var)\s+([\w$]+)\s*=\s*(?:express\.Router\(|new\s+Router\(|Router\(|new\s+Hono\()([^)]*)\)/g)) {
+        const p = /prefix\s*:\s*(['"`])([^'"`]*)\1/.exec(m[2]);
+        prefixes[m[1]] = p ? p[2] : '';
+      }
+      const { ex } = exportsOf(src, f);
+      for (const m of src.matchAll(/(?:const|let|var)\s+([\w$]+)\s*=\s*(?:express\(\)|[Ff]astify\(|new\s+Koa\(|new\s+Hono\()/g)) {
+        const name = m[1];
+        const info = ex.get(name);
+        apps.push({ file: rel, name, access: info ? info.access : null, framework: /express/.test(m[0]) ? 'express' : /astify/.test(m[0]) ? 'fastify' : /Koa/.test(m[0]) ? 'koa' : 'hono' });
+      }
+      for (const m of src.matchAll(/\b([\w$]+)\.(?:use|register)\s*\(\s*(?:(['"`])([^'"`]*)\2\s*,\s*)?([\w$.]+)(?:\s*,\s*\{[^}]*prefix\s*:\s*(['"`])([^'"`]*)\5)?/g)) {
+        if (m[3] || m[6]) mounts.push({ app: m[1], target: m[4], prefix: m[3] || m[6] });
+      }
+      for (const m of src.matchAll(routeRe)) {
+        const [, owner, method, , p] = m;
+        if (['app', 'router', 'server', 'fastify', 'api', 'route'].indexOf(owner) < 0 && !prefixes[owner] && !apps.some((a) => a.name === owner) && !/^(r|v\d|routes?)$/.test(owner)) continue;
+        const line = lineOf(m.index);
+        const doc = jsdocBefore(lines, line - 1).slice(0, 600);
+        const rest = (lines[line - 1] + ' ' + (lines[line] || '')).slice(m[0].length - m[0].indexOf(m[1]));
+        // `app.get('/x', handler)` names the handler; `(req, res) =>`, `async (req) =>` or `function` is inline
+        const named = rest.match(/^[^,]*,\s*(?!async\b|function\b)([\w$]+(?:\.[\w$]+)*)\s*\)/);
+        routes.push({ method: method === 'all' ? 'ALL' : method.toUpperCase(), path: (prefixes[owner] || '') + p, owner, file: rel, line, doc, handler: named ? named[1] : 'inline handler' });
+      }
+      for (const m of src.matchAll(fastifyRouteRe)) {
+        const mm = /method\s*:\s*(['"`])(\w+)\1/.exec(m[1]), u = /url\s*:\s*(['"`])([^'"`]*)\1/.exec(m[1]);
+        if (mm && u) routes.push({ method: mm[2].toUpperCase(), path: u[2], owner: 'route', file: rel, line: lineOf(m.index), doc: '', handler: 'route' });
+      }
+    }
+    if (!routes.length) return null;
+    // routers mounted with a prefix: apply it to the routes of a file that exports that router (matched by name)
+    for (const mo of mounts) {
+      const name = mo.target.split('.').pop();
+      for (const r of routes) if ((r.owner === name || (r.owner === 'router' && files.length > 1 && !r.file.endsWith(apps[0]?.file || '\0'))) && mo.prefix && !r.path.startsWith(mo.prefix)) r.path = mo.prefix + r.path;
+    }
+    const app = apps.find((a) => a.access) || apps[0] || null;
+    const fw = framework || app?.framework || 'express';
+    const api = { framework: fw, app: app ? { module: app.file, name: app.name, factory: false, access: app.access } : null, apps, openapi: null };
+    const importLine = app ? (app.access === 'default' || !app.access ? `import app from '<relative path to ${app.file}>';` : `import { ${app.name} as app } from '<relative path to ${app.file}>';`) : "import app from '<relative path to the file that creates the app>';";
+    api.client = fw === 'fastify'
+      ? `${importLine}\n// Fastify: no server needed\nconst res = await app.inject({ method: 'POST', url: '/items', payload: { name: 'a' } });\nres.statusCode; res.json();`
+      : fw === 'hono'
+        ? `${importLine}\n// Hono: no server needed\nconst res = await app.request('/items', { method: 'POST', body: JSON.stringify({ name: 'a' }), headers: { 'content-type': 'application/json' } });`
+        : `${importLine}\nimport { before, after } from 'node:test';\nlet server, base;\nbefore(() => { server = ${fw === 'koa' ? 'app.callback ? app.listen(0) : app.listen(0)' : 'app.listen(0)'}; base = \`http://127.0.0.1:\${server.address().port}\`; });\nafter(() => server.close());\n// then: const res = await fetch(\`\${base}/items\`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'a' }) });`;
+    const targets = routes.map((rt) => ({
+      file: rt.file, module: rt.file, name: `${rt.method} ${rt.path}`, qualname: `${rt.method} ${rt.path}`, owner: null, line: rt.line, loc: 1,
+      signature: ` → ${rt.handler}`, nArgs: 1, doc: rt.doc, async: false, impure: [], annotated: false, decorators: [], esm: true, lang: 'javascript', id: `${rt.method} ${rt.path}`,
+      route: { method: rt.method, path: rt.path, handler: rt.handler, responseModel: null, statusCode: null },
+    }));
+    return { api, targets };
+  },
+
   /** Helper modules the project's tests already have (builders, setup, mocks), for the hunter to reuse. */
   listFixtures(repo) {
     const helpers = [];

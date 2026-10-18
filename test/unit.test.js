@@ -497,3 +497,23 @@ test('python route scanner: FastAPI and Flask routes, routers with prefixes, app
   assert.equal(python.listRoutes(path.join(ROOT, 'test', 'fixtures', 'pylib'), {}), null);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
+
+test('javascript route scanner: Express app and routers with mounted prefixes, Fastify route objects', () => {
+  const repo = path.join(ROOT, 'test', 'fixtures', 'jsapi');
+  const { api, targets } = javascript.listRoutes(repo, {});
+  assert.deepEqual([api.framework, api.app.module, api.app.name, api.app.access], ['express', 'src/app.js', 'app', 'default']);
+  assert.deepEqual(targets.map((t) => [t.name, t.line]), [['POST /items', 17], ['GET /items/:id', 26], ['PUT /items/:id', 32], ['DELETE /items/:id', 43], ['GET /items', 50]]);
+  assert.match(targets[2].doc, /idempotent/);
+  assert.match(api.client, /app\.listen\(0\)/);
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-jsroutes-'));
+  fs.writeFileSync(path.join(tmp, 'package.json'), '{"dependencies":{"fastify":"5"}}');
+  fs.writeFileSync(path.join(tmp, 'orders.js'), "import { Router } from 'express';\nconst router = Router();\nrouter.get('/', listOrders);\nrouter.post('/:id/pay', pay);\nexport default router;\n");
+  fs.writeFileSync(path.join(tmp, 'server.js'), "import express from 'express';\nimport orders from './orders.js';\nconst app = express();\napp.use('/api/orders', orders);\napp.get('/health', (req, res) => res.send('ok'));\nexport default app;\n");
+  fs.writeFileSync(path.join(tmp, 'f.js', ), "const fastify = Fastify();\nfastify.route({ method: 'GET', url: '/ping', handler: () => 'pong' });\nfastify.post('/echo', async (req) => req.body);\n");
+  const r = javascript.listRoutes(tmp, {});
+  assert.equal(r.api.framework, 'fastify'); // from package.json
+  assert.deepEqual(r.targets.map((t) => t.name).sort(), ['GET /api/orders/', 'GET /health', 'GET /ping', 'POST /api/orders/:id/pay', 'POST /echo']);
+  assert.equal(r.targets.find((t) => t.name === 'GET /api/orders/').route.handler, 'listOrders');
+  assert.equal(javascript.listRoutes(path.join(ROOT, 'test', 'fixtures', 'jslib'), {}), null);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});

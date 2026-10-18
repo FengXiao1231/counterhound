@@ -86,6 +86,27 @@ test('--api: routes of a FastAPI app are hunted through its test client; handler
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+test('--api on JavaScript: Express routes are hunted over a loopback server', { timeout: 600000 }, (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-e2e-jsapi-'));
+  fs.cpSync(path.join(ROOT, 'test', 'fixtures', 'jsapi'), dir, { recursive: true, filter: (s) => !s.includes('.proofhound') && !s.includes('node_modules') });
+  const install = spawnSync('npm', ['install', '--no-audit', '--no-fund', '--silent'], { cwd: dir, encoding: 'utf8' });
+  if (install.status !== 0) { fs.rmSync(dir, { recursive: true, force: true }); return t.skip('npm install express failed (offline?)'); }
+  const r = spawnSync(process.execPath, [BIN, '--api', '--agent', 'fake', '--runs', '2', '--json', '-q'], {
+    cwd: dir, encoding: 'utf8', env: { ...process.env, PROOFHOUND_FAKE_AGENT: path.join(ROOT, 'test', 'helpers', 'fake-agent-compiled.mjs') },
+  });
+  assert.equal(r.status, 1, r.stderr);
+  const result = JSON.parse(r.stdout);
+  const by = Object.fromEntries(result.findings.map((f) => [f.title, f]));
+  assert.deepEqual(result.api, { framework: 'express', app: 'src/app.js:app' });
+  assert.deepEqual(result.groups[0].functions.sort(), ['DELETE /items/:id', 'GET /items', 'GET /items/:id', 'POST /items', 'PUT /items/:id']);
+  assert.equal(by['GET /items/:id returns 200 with an empty object for an unknown id'].status, 'confirmed');
+  assert.equal(by['PUT is not idempotent: version changes on a no-op update'].status, 'confirmed');
+  assert.equal(by['GET /items paging drops the last item of every page'].status, 'confirmed');
+  assert.equal(by['POST /items rejects a negative price'].status, 'rejected');
+  assert.equal(result.counts.confirmed, 3);
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 const hasGo = spawnSync('go', ['version']).status === 0;
 const hasCargo = spawnSync('cargo', ['--version']).status === 0;
 

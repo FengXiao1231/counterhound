@@ -91,7 +91,13 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
     fs.mkdirSync(workdir, { recursive: true });
     lang.prepareGroup?.(repo, group, workdir, cfg);
     const imports = api ? [] : group.functions.slice(0, 3).map((f) => lang.importHint(f, workdir, repo));
-    const prompt = hunterPrompt({ lang, group, workdir: workRel, testCmd, imports: [...new Set(imports)], notes: cfg.notes, fixtures, api });
+    let groupApi = api;
+    if (api?.app && /<relative path to /.test(api.client || '')) {
+      let rel = path.relative(workdir, path.join(repo, api.app.module)).split(path.sep).join('/');
+      if (!rel.startsWith('.')) rel = './' + rel;
+      groupApi = { ...api, client: api.client.replace(/<relative path to [^>]+>/g, rel) };
+    }
+    const prompt = hunterPrompt({ lang, group, workdir: workRel, testCmd, imports: [...new Set(imports)], notes: cfg.notes, fixtures, api: groupApi });
     writeFile(path.join(workdir, 'prompt.md'), prompt);
     log(c.dim(`  ▸ hunting in ${group.file} (${group.classes?.length ? `${group.classes.map((k) => k.name).join(', ')} as state machine${group.classes.length > 1 ? 's' : ''}; ` : ''}${group.functions.map((f) => f.name).join(', ')})`));
     const r = await agent.call({
