@@ -8,15 +8,23 @@ const PAIRS = [
   ['format', 'parse'], ['stringify', 'parse'], ['encrypt', 'decrypt'],
 ];
 
+/** A method of a class whose public methods change its state: tested as a whole, with a model. */
+export function isStateful(t) {
+  return Boolean(t.owner) && (t.ownerMutators || 0) >= 1 && (t.ownerMethods || 0) >= 2;
+}
+
 export function scoreTarget(t, siblings = []) {
   let s = 0;
   const why = [];
+  const stateful = isStateful(t);
   if (STRONG.test(t.name)) { s += 3; why.push('name suggests a checkable transformation'); }
-  if (WEAK.test(t.name) && !STRONG.test(t.name)) s -= 2;
+  // add/remove/update are weak names for a free function, but they are the whole point of a stateful class
+  if (WEAK.test(t.name) && !STRONG.test(t.name) && !stateful) s -= 2;
+  if (stateful) { s += t.mutates ? 2.5 : 2; why.push(`${t.mutates ? 'changes' : 'reads'} the state of ${t.owner} (model-based test)`); }
   if (t.doc) { s += Math.min(3, 1 + t.doc.length / 200); why.push('documented'); }
   if (t.annotated) { s += 1; why.push('typed'); }
   if (t.entry) { s += 3; why.push('public entry point'); }
-  if (t.nArgs === 0) s -= 3;
+  if (t.nArgs === 0 && !stateful) s -= 3;
   else if (t.nArgs <= 3) s += 1;
   else if (t.nArgs > 5) s -= 1;
   if (t.loc < 3) s -= 2;
@@ -33,6 +41,23 @@ export function scoreTarget(t, siblings = []) {
     }
   }
   return { score: Math.round(s * 10) / 10, why };
+}
+
+/**
+ * The stateful classes a group touches, with all their public methods (not only the picked ones):
+ * a model-based test needs the whole interface.
+ */
+export function statefulClasses(all, picked) {
+  const owners = new Set(picked.filter(isStateful).map((t) => t.owner));
+  return [...owners].map((owner) => {
+    const methods = all.filter((t) => t.owner === owner);
+    const first = methods[0];
+    return {
+      name: owner, module: first.module, doc: first.ownerDoc || '', init: first.ownerInit || '()',
+      mutators: methods.filter((m) => m.mutates).map((m) => m.name + m.signature),
+      queries: methods.filter((m) => !m.mutates).map((m) => m.name + m.signature),
+    };
+  });
 }
 
 /**
@@ -55,7 +80,7 @@ export function planGroups(targets, { maxGroups = 8, perGroup = 6, minScore = 0,
     const picked = fns.filter((t) => all || t.score > minScore || (only && only.length)).sort((a, b) => b.score - a.score).slice(0, perGroup);
     if (!picked.length) continue;
     const top = picked.slice(0, 3).reduce((a, t) => a + t.score, 0);
-    groups.push({ file, module: picked[0].module, lang: picked[0].lang, functions: picked, score: Math.round(top * 10) / 10 });
+    groups.push({ file, module: picked[0].module, lang: picked[0].lang, functions: picked, score: Math.round(top * 10) / 10, classes: statefulClasses(fns, picked) });
   }
   groups.sort((a, b) => b.score - a.score);
   return groups.slice(0, maxGroups).map((g, i) => ({ ...g, id: `g${String(i + 1).padStart(2, '0')}-${g.file.replace(/[^\w]+/g, '-').replace(/^-|-$/g, '').slice(-48)}` }));

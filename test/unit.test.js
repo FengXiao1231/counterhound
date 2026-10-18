@@ -12,7 +12,8 @@ import { classify, signature } from '../src/verify.js';
 import { python } from '../src/lang/python.js';
 import { javascript, scanFile } from '../src/lang/javascript.js';
 import { go } from '../src/lang/go.js';
-import { planGroups, scoreTarget } from '../src/targets.js';
+import { planGroups, scoreTarget, isStateful, statefulClasses } from '../src/targets.js';
+import { conftestPlugins } from '../src/lang/python.js';
 import { relocateImports } from '../src/report/bugs.js';
 import { isTestFile } from '../src/fix.js';
 import { parseArgs } from '../src/cli.js';
@@ -98,7 +99,7 @@ test('python target scan and ranking on the fixture', () => {
   if (python.check(fixture, {}).ok === false) return;
   const targets = python.listTargets(fixture, {});
   const groups = planGroups(targets, { maxGroups: 10 });
-  assert.equal(groups.length, 3);
+  assert.equal(groups.length, 4);
   const codec = groups.find((g) => g.file === 'textkit/codec.py');
   assert.ok(codec.functions[0].why.some((w) => w.includes('inverse')));
   const only = planGroups(targets, { only: ['median'] });
@@ -401,4 +402,45 @@ test('an explicit throw/panic on the same line as its if is still flagged', () =
   assert.ok(!javascript.isExplicitRaise({ code: "const s = 'do not throw here';" }));
   assert.ok(go.isExplicitRaise({ code: 'if n < 0 { panic("negative") }' }));
   assert.ok(!go.isExplicitRaise({ code: 'defer func() { recover() }()' }));
+});
+
+test('python scanner: methods that change self are stateful, and rank as a class', () => {
+  const targets = python.listTargets(path.join(ROOT, 'test', 'fixtures', 'pylib'));
+  const cart = Object.fromEntries(targets.filter((t) => t.owner === 'Cart').map((t) => [t.name, t]));
+  assert.deepEqual(Object.keys(cart).sort(), ['add', 'apply_discount', 'quantity', 'remove', 'subtotal', 'total']);
+  assert.equal(cart.add.mutates, true);        // self._lines[sku] = ...
+  assert.equal(cart.remove.mutates, true);     // del self._lines[sku]
+  assert.equal(cart.apply_discount.mutates, true);
+  assert.equal(cart.total.mutates, false);
+  assert.equal(cart.add.ownerMutators, 3);
+  assert.ok(isStateful(cart.total) && !isStateful(targets.find((t) => t.name === 'chunk')));
+  // "add", "remove" and a zero-argument "total" would rank badly as free functions
+  assert.ok(scoreTarget(cart.remove).score > scoreTarget({ ...cart.remove, owner: null, ownerMutators: 0 }).score + 2);
+  assert.ok(scoreTarget(cart.total).score > scoreTarget({ ...cart.total, owner: null, ownerMutators: 0 }).score + 4);
+  const [cls] = statefulClasses(Object.values(cart), Object.values(cart));
+  assert.equal(cls.name, 'Cart');
+  assert.deepEqual(cls.mutators.map((m) => m.split('(')[0]), ['add', 'remove', 'apply_discount']);
+  assert.deepEqual(cls.queries.map((m) => m.split('(')[0]), ['quantity', 'subtotal', 'total']);
+  const groups = planGroups(targets, {});
+  assert.equal(groups[0].file, 'textkit/cart.py');
+  assert.equal(groups[0].classes[0].name, 'Cart');
+  assert.deepEqual(groups[1].classes, []);
+});
+
+test('python fixtures: conftest fixtures are listed and tests/conftest.py is loaded as a plugin', { skip: spawnSync('python3', ['-c', 'import pytest']).status !== 0 && 'needs pytest' }, () => {
+  const repo = path.join(ROOT, 'test', 'fixtures', 'pylib');
+  const fx = python.listFixtures(repo, {});
+  assert.deepEqual(fx.fixtures.map((f) => [f.name, f.file, f.returns, f.scope]), [['cart', 'tests/conftest.py', 'Cart', 'function']]);
+  assert.match(fx.fixtures[0].doc, /two of one item/);
+  assert.deepEqual(fx.conftests, ['tests/conftest.py']);
+  assert.deepEqual(conftestPlugins(repo).map((p) => [p.module, p.error]), [['tests.conftest', undefined]]);
+  // a conftest that cannot be imported is reported, not registered
+  const broken = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-conftest-'));
+  fs.mkdirSync(path.join(broken, 'tests'));
+  fs.writeFileSync(path.join(broken, 'tests', 'conftest.py'), 'import no_such_module_ph\n');
+  fs.writeFileSync(path.join(broken, 'mod.py'), 'def f(x):\n    return x\n');
+  const bad = python.listFixtures(broken, {});
+  assert.deepEqual(bad.fixtures, []);
+  assert.match(bad.unloaded[0], /tests\/conftest\.py \(.*no_such_module_ph/);
+  fs.rmSync(broken, { recursive: true, force: true });
 });

@@ -33,7 +33,21 @@ test('end to end: only bugs that replay and survive review are reported', { skip
   assert.equal(div.verification.explicitRaise, true);
   assert.equal(div.status, 'rejected');
 
-  assert.equal(result.counts.confirmed, 1);
+  // the stateful class: a plain step sequence, and a repro built from the project's own fixture
+  const removeQty = by['Cart.remove ignores qty and drops the whole line'];
+  assert.equal(removeQty.status, 'confirmed', JSON.stringify(removeQty.verification));
+  const negative = by['Cart.total goes negative after a discount when lines are removed'];
+  assert.equal(negative.status, 'confirmed', JSON.stringify(negative.verification));
+  assert.equal(negative.verification.kind, 'assertion');
+  const missing = by['Cart.remove raises KeyError for an unknown sku'];
+  assert.equal(missing.verification.explicitRaise, true);
+  assert.equal(missing.status, 'rejected');
+  const cartPrompt = fs.readFileSync(path.join(dir, removeQty.workdir, 'prompt.md'), 'utf8');
+  assert.match(cartPrompt, /Stateful classes[\s\S]*`Cart\(self\) -> None`[\s\S]*changes state: `add\(/);
+  assert.match(cartPrompt, /fixture `cart` -> Cart \(tests\/conftest\.py\): A cart holding two/);
+  assert.ok(result.groups[0].file === 'textkit/cart.py', 'the stateful class is hunted first: ' + result.groups.map((g) => g.file).join(', '));
+
+  assert.equal(result.counts.confirmed, 3);
   const bugDir = path.join(dir, by['chunk() drops the final partial chunk'].bugDir);
   assert.ok(fs.existsSync(path.join(bugDir, 'BUG.md')));
   assert.ok(fs.existsSync(path.join(bugDir, 'test_repro_chunk.py')));

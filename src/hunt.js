@@ -50,6 +50,9 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
   lang.prepare?.(repo, path.join(repo, HOME), cfg);
 
   let targets = lang.listTargets(repo, cfg, opts.paths || []);
+  const fixtures = lang.listFixtures?.(repo, cfg) || null;
+  if (fixtures?.fixtures?.length || fixtures?.factories?.length) log(c.dim(`  reusing the project's test setup: ${[fixtures.fixtures.length && `${fixtures.fixtures.length} fixture${fixtures.fixtures.length > 1 ? 's' : ''}`, fixtures.factories.length && `${fixtures.factories.length} factor${fixtures.factories.length > 1 ? 'ies' : 'y'}`].filter(Boolean).join(', ')}`));
+  for (const u of fixtures?.unloaded || []) log(c.yellow(`  note: ${u.split(' (')[0]} could not be imported, its fixtures are not available to the hunter (${u.split(' (')[1]}`));
   let diff = null;
   if (opts.diff) {
     const changes = changedLines(repo, opts.diff);
@@ -78,9 +81,9 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
     fs.mkdirSync(workdir, { recursive: true });
     lang.prepareGroup?.(repo, group, workdir, cfg);
     const imports = group.functions.slice(0, 3).map((f) => lang.importHint(f, workdir, repo));
-    const prompt = hunterPrompt({ lang, group, workdir: workRel, testCmd, imports: [...new Set(imports)], notes: cfg.notes });
+    const prompt = hunterPrompt({ lang, group, workdir: workRel, testCmd, imports: [...new Set(imports)], notes: cfg.notes, fixtures });
     writeFile(path.join(workdir, 'prompt.md'), prompt);
-    log(c.dim(`  ▸ hunting in ${group.file} (${group.functions.map((f) => f.name).join(', ')})`));
+    log(c.dim(`  ▸ hunting in ${group.file} (${group.classes?.length ? `${group.classes.map((k) => k.name).join(', ')} as state machine${group.classes.length > 1 ? 's' : ''}; ` : ''}${group.functions.map((f) => f.name).join(', ')})`));
     const r = await agent.call({
       prompt, cwd: repo, writeDirs: [workRel], runCommands: [testCmd], model: opts.model,
       timeoutMs: (cfg.agentTimeoutSec || 1200) * 1000, budgetUsd: remaining(opts.budget),

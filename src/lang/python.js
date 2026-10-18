@@ -27,6 +27,26 @@ function pythonPath(repo) {
   return parts.join(path.delimiter);
 }
 
+// Project conftest.py files that pytest would not load for tests under .proofhound/ (only the
+// root one is on their path), registered as plugins so the project's own fixtures are usable.
+// Cached per project; a conftest that does not import (test-only dependencies missing) is skipped.
+const conftestCache = new Map();
+export function conftestPlugins(repo, cfg = {}) {
+  if (conftestCache.has(repo)) return conftestCache.get(repo);
+  const found = [];
+  for (const dir of ['tests', 'test', 'testing']) {
+    const file = path.join(repo, dir, 'conftest.py');
+    if (!fs.existsSync(file)) continue;
+    const mod = `${dir}.conftest`;
+    const r = sh(interpreter(repo, cfg), ['-c', `import importlib; importlib.import_module(${JSON.stringify(mod)})`],
+      { cwd: repo, env: { ...process.env, ...(cfg.env || {}), PYTHONPATH: pythonPath(repo), PYTHONDONTWRITEBYTECODE: '1' } });
+    if (r.code === 0) found.push({ module: mod, file: `${dir}/conftest.py` });
+    else found.push({ module: mod, file: `${dir}/conftest.py`, error: r.stderr.trim().split('\n').pop() });
+  }
+  conftestCache.set(repo, found);
+  return found;
+}
+
 export const python = {
   id: 'python',
   name: 'Python',
@@ -70,6 +90,18 @@ export const python = {
     return JSON.parse(r.stdout).map((t) => ({ ...t, lang: 'python', id: `${t.module}.${t.qualname}` }));
   },
 
+  /** Fixtures and factories the project's tests already define, for the hunter to reuse. */
+  listFixtures(repo, cfg) {
+    const r = sh(interpreter(repo, cfg), [path.join(PLUGIN_DIR, 'ph_fixtures.py'), repo], { cwd: repo });
+    if (r.code !== 0) return { fixtures: [], factories: [], conftests: [] };
+    const data = JSON.parse(r.stdout);
+    const plugins = conftestPlugins(repo, cfg);
+    // a fixture is only usable if pytest will load the conftest that defines it
+    const loadable = (f) => !f.file.includes('/') || plugins.some((p) => p.file === f.file && !p.error);
+    const unloaded = plugins.filter((p) => p.error).map((p) => `${p.file} (${p.error})`);
+    return { ...data, fixtures: data.fixtures.filter(loadable), unloaded };
+  },
+
   importHint(target) {
     return target.owner
       ? `from ${target.module} import ${target.owner}`
@@ -92,6 +124,7 @@ export const python = {
     const args = ['-m', 'pytest', '-p', 'ph_pytest_plugin', '-p', 'no:cacheprovider', '-q', '--no-header', '-rN',
       '--tb=short', '-o', 'addopts=', '--rootdir', cwd, ...selectors];
     if (seed != null) args.push(`--hypothesis-seed=${seed}`);
+    for (const p of conftestPlugins(repo, cfg)) if (!p.error) args.push('-p', p.module);
     const env = {
       ...process.env, ...(cfg.env || {}),
       PYTHONPATH: pythonPath(repo), PROOFHOUND_REPORT: reportFile, PYTHONDONTWRITEBYTECODE: '1',

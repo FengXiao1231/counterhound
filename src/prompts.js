@@ -6,7 +6,23 @@ const LANG_GUIDE = {
 - Imports: the project root and src/ are on sys.path, so import the code like this: ${imports.join('; ')}.
 - Use \`from hypothesis import given, assume, example, settings, strategies as st\` and plain \`assert\`.
 - Property test names start with \`test_\`. Keep \`max_examples\` at the default unless a test is slow.
-- Repro files are plain pytest: one function \`def test_repro_<name>():\` that calls the code with the concrete input and asserts the correct result. No Hypothesis, no randomness, no fixtures from the project unless needed.`,
+- Repro files are plain pytest: one function \`def test_repro_<name>():\` that calls the code with the concrete input and asserts the correct result. No Hypothesis, no randomness. A repro may take a project fixture as an argument when the listed fixtures are the natural way to build the input.
+- Stateful classes (listed above, if any) get a model-based test with \`hypothesis.stateful\`:
+    from hypothesis.stateful import RuleBasedStateMachine, rule, invariant, precondition, initialize
+    class CartMachine(RuleBasedStateMachine):
+        def __init__(self):
+            super().__init__()
+            self.cart = Cart()
+            self.model = {}            # a simple model of what the state should be
+        @rule(sku=st.sampled_from(['a', 'b']), price=st.integers(0, 100), qty=st.integers(1, 5))
+        def add(self, sku, price, qty):
+            self.cart.add(sku, price, qty)
+            self.model[sku] = (price, self.model.get(sku, (0, 0))[1] + qty)
+        @invariant()
+        def total_matches_model(self):
+            assert self.cart.total() == sum(p * q for p, q in self.model.values())
+    TestCart = CartMachine.TestCase
+  Rules call the mutating methods on a fresh object, keeping a model alongside; invariants check what the class promises (consistency between queries, no negative totals, size bookkeeping, idempotence of repeated calls). Use \`@precondition(lambda self: ...)\` for rules that need state. The shrunk failure is printed as a sequence of steps: the repro is that sequence written out as a plain test, one call per line, ending in the failing assertion.`,
   javascript: ({ imports }) => `Language notes (JavaScript/TypeScript + fast-check, run by node:test):
 - Test files are ES modules. Start with:
     import test from 'node:test';
@@ -75,7 +91,29 @@ const FINDING_SCHEMA = `{
   "evidence": "why the expected behaviour is really promised: quote the docstring/README/type/caller, or name the convention"
 }`;
 
-export function hunterPrompt({ lang, group, workdir, testCmd, imports, notes }) {
+function statefulSection(group) {
+  if (!group.classes?.length) return '';
+  const one = (cls) => {
+    const doc = cls.doc ? `\n  ${cls.doc.trim().replace(/\s*\n\s*/g, ' ').slice(0, 400)}` : '';
+    return `- \`${cls.name}${cls.init}\`${doc}\n  changes state: ${cls.mutators.map((m) => `\`${m}\``).join(', ') || 'none'}\n  reads state: ${cls.queries.map((m) => `\`${m}\``).join(', ') || 'none'}`;
+  };
+  return `
+Stateful classes (test these as a whole: random sequences of the state-changing methods, checking what the reading methods promise after every step):
+${group.classes.map(one).join('\n')}
+`;
+}
+
+function fixtureSection(fixtures) {
+  if (!fixtures || (!fixtures.fixtures?.length && !fixtures.factories?.length)) return '';
+  const fx = (fixtures.fixtures || []).slice(0, 25).map((f) => `- fixture \`${f.name}\`${f.returns ? ` -> ${f.returns}` : ''} (${f.file}${f.scope !== 'function' ? `, ${f.scope} scope` : ''})${f.doc ? `: ${f.doc}` : ''}`);
+  const fac = (fixtures.factories || []).slice(0, 25).map((f) => `- factory \`${f.name}\`${f.model ? ` for ${f.model}` : ''} (${f.file})${f.doc ? `: ${f.doc}` : ''}`);
+  return `
+The project's own test setup, which you may use (fixtures are available by name as test function arguments, exactly as in the project's tests; factories are imported from their file). Prefer them over building objects by hand: they know how to make valid users, orders, sessions or database rows. A fixture is set up per test, so in a property test either use it only for data that is not mutated, or add \`@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])\` and make the test reset what it changes.
+${[...fx, ...fac].join('\n')}
+`;
+}
+
+export function hunterPrompt({ lang, group, workdir, testCmd, imports, notes, fixtures }) {
   const files = lang.files();
   const fns = group.functions.map((f) => {
     const doc = f.doc ? ` — ${f.doc.trim().split(/\n\s*\n/)[0].replace(/\s+/g, ' ')}`.slice(0, 220) : '';
@@ -87,7 +125,7 @@ export function hunterPrompt({ lang, group, workdir, testCmd, imports, notes }) 
 File: ${group.file}
 Functions (most promising first):
 ${fns}
-
+${statefulSection(group)}${fixtureSection(fixtures)}
 ## Hard rules
 - Do not modify any project file. Create files only inside \`${workdir}/\`.
 - Run tests only with: \`${testCmd} <file>\`, for example \`${testCmd} ${workdir}/${files.props}\`. It prints each test's result, the shrunk counterexample, and where the error was raised. Use it exactly like that, as a single command from the project root: no \`cd\`, pipes, redirections, \`&&\` or other commands, which are blocked. To try out an idea, write a small test file and run it.
@@ -95,7 +133,7 @@ ${fns}
 
 ## How to work
 1. Read the target source, its docstrings and comments, type hints, the README/docs, and how the functions are called elsewhere in the project. Work out the intended contract: valid inputs, promised outputs, documented errors.
-2. Write properties that the contract really implies. Strong kinds: round-trip (decode(encode(x)) == x), invariants (sorted, length or sum preserved, within bounds), idempotence (f(f(x)) == f(x)), agreement with a simple reference implementation you write, metamorphic relations, algebraic laws, and "does not crash on valid input".
+2. Write properties that the contract really implies. Strong kinds: round-trip (decode(encode(x)) == x), invariants (sorted, length or sum preserved, within bounds), idempotence (f(f(x)) == f(x)), agreement with a simple reference implementation you write, metamorphic relations, algebraic laws, and "does not crash on valid input". For a stateful class: a model-based test that drives random sequences of its methods and checks its invariants after every step (see the language notes).
 3. Generate only valid inputs. Respect documented preconditions with strategy bounds or assume/pre. Do not report failures that depend on inputs the contract excludes or leaves unspecified. Raising a clear, documented exception on invalid input is correct behaviour, not a bug. Avoid NaN/infinity/float-precision noise and huge sizes unless the function claims to handle them.
    Be thorough: cover every listed function with several properties, and push on the edges the contract allows (empty and single-element inputs, boundaries, unicode, duplicates, negative numbers, unusual-but-valid combinations of options). Well-tested code hides its bugs in the corners.
 4. Run the tests. For every failure decide: is my test wrong (fix it), is the input invalid (tighten the strategy), or is it a genuine bug? Re-run after each change.
