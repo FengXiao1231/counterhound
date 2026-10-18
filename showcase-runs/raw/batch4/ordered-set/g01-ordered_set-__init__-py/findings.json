@@ -1,0 +1,26 @@
+[
+  {
+    "title": "pop(index) leaves stale indices in map, so index() returns wrong values",
+    "function": "ordered_set.OrderedSet.pop",
+    "kind": "wrong-result",
+    "property": "after pop(i), index(x) equals the position of x in the set's iteration order",
+    "property_test": "runTest (M state machine in test_ph_props.py)",
+    "repro_file": "test_repro_pop_stale_index.py",
+    "input": "s = OrderedSet([0, 1]); s.pop(0); s.index(1)",
+    "expected": "0, since the set is now OrderedSet([1])",
+    "actual": "1 (map still holds the old position)",
+    "evidence": "index() docstring: 'Get the index of a given entry'; add() returns the item's index. discard() renumbers map after removal, but pop() only deletes the entry and never adjusts later indices. Popping a non-last element is allowed by the documented 'Remove and return item at index'."
+  },
+  {
+    "title": "symmetric_difference_update adds duplicates when other contains repeated items",
+    "function": "ordered_set.OrderedSet.symmetric_difference_update",
+    "kind": "inconsistency",
+    "property": "the set stays duplicate-free and matches symmetric_difference(other)",
+    "property_test": "test_symdiff_update",
+    "repro_file": "test_repro_symdiff_update_dups.py",
+    "input": "OrderedSet().symmetric_difference_update([0, 0])",
+    "expected": "OrderedSet([0]), same as OrderedSet().symmetric_difference([0, 0])",
+    "actual": "items == [0, 0] while map has one key, so the set holds a duplicate and len is 2",
+    "evidence": "other is typed SetLike[T], which accepts lists; symmetric_difference handles it correctly and an OrderedSet must contain unique items. items_to_add is built without de-duplicating."
+  }
+]

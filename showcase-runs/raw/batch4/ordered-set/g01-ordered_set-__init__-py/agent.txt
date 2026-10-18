@@ -1,0 +1,13 @@
+I tested 4 properties and reported 2 bugs. Both repro files fail as expected.
+
+- **`pop(index)`:** popping a non-last element leaves the later items' recorded positions stale, so `index()` gives wrong answers. `OrderedSet([0, 1])` after `pop(0)` still reports `index(1) == 1`. `discard` renumbers correctly and `pop` doesn't.
+- **`symmetric_difference_update`:** when `other` has repeated items, the set ends up holding a duplicate. `OrderedSet().symmetric_difference_update([0, 0])` gives `[0, 0]`, while `symmetric_difference([0, 0])` correctly gives `[0]`.
+
+`symmetric_difference`, `difference`, `difference_update`, `union` and `intersection` agreed with a plain reference model. I did not write a separate test for `intersection_update`, `issubset` or `issuperset`.
+
+One note: my first `mkdir` for the run directory was denied, but the file writes created the directory anyway, so everything is in the run directory.
+
+The findings are in `findings.json` in the run directory. The property tests are in `test_ph_props.py` there, and the repros are `test_repro_pop_stale_index.py` and `test_repro_symdiff_update_dups.py`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261018-041233/g01-ordered_set-__init__-py"}

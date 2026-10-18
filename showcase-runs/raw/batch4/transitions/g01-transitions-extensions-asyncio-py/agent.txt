@@ -1,0 +1,6 @@
+I tested 3 properties (`on_timeout` listifying, `dispatch` across several models, and random trigger sequences on a timeout state) and reported 0 bugs. All three passed, and `findings.json` is `[]`.
+
+I didn't write separate properties for `create_timer`, `enter`, `callback` or `cancel_running_transitions`. They were only exercised indirectly through the timeout-machine sequences, so coverage of the listed functions is thin.
+
+Permission denials:
+Bash: {"command":"sed -i 's/    return asyncio.new_event_loop().run_until_complete(coro)/    loop = asyncio.new_event_loop()\\n    try:\\n        return loop.run_until_complete(coro)\\n    finally:\\n        loop.close()/' .proofhound/runs/20261018-041332/g01-transitions-extensions-asyncio-py/test_ph_prop

@@ -1,0 +1,14 @@
+[
+  {
+    "title": "remove_transition ignores State/Enum members inside a list for source/dest",
+    "function": "transitions.core.Machine.remove_transition",
+    "kind": "wrong-result",
+    "property": "removing with source=[State] (or dest=[State]) removes exactly the same transitions as passing the state name strings",
+    "property_test": "test_remove_by_source_list",
+    "repro_file": "test_repro_remove_list_of_states.py",
+    "input": "Machine(states=['A','B','C'], auto_transitions=False); add_transition('go','A','B'); add_transition('go','B','C'); remove_transition('go', source=[m.get_state('A')])",
+    "expected": "only the B->C transition remains",
+    "actual": "nothing is removed; both transitions remain",
+    "evidence": "Docstring: source/dest are 'str, Enum or State'; the code listify()s the argument and converts each element, but the comprehension tests hasattr(source, 'name') (the whole list/original arg) instead of hasattr(s, 'name'), so list elements that are State/Enum are never converted to names and never match t.source/t.dest (stored as names). The same State passed alone (not in a list) works."
+  }
+]

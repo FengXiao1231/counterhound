@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofhound · node-lru-cache</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}h1 span{color:var(--accent)}h2{font-size:18px;margin:40px 0 12px}
+.meta{color:var(--dim);font-size:13px}.meta code{font-size:12px}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+.funnel{margin:20px 0 8px;display:grid;gap:6px}.step{position:relative;height:30px}
+.bar{position:absolute;inset:0 auto 0 0;background:var(--bar1);border-radius:6px}.bar[data-i="3"]{background:var(--bar3)}
+.lab{position:relative;padding:5px 10px;font-size:13px;white-space:nowrap}.bar[data-i="3"]+.lab{color:#fff}
+.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:14px 0}
+.bug.needs-look{border-left-color:var(--warn)}
+.bug header{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.bug h3{margin:0;font-size:17px;flex:1 1 300px}
+.id{font:600 12px ui-monospace,monospace;color:var(--accent)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--dim)}
+.badge.ok{color:var(--ok);border-color:currentColor}.sev-high{color:var(--accent);border-color:currentColor}.sev-medium{color:var(--warn);border-color:currentColor}
+.where{margin:6px 0 10px;color:var(--dim);font-size:13px;word-break:break-all}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0 0 8px}dt{color:var(--dim);font-size:13px}dd{margin:0;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.copy{margin-left:8px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer}
+.err{color:var(--accent);margin:4px 0}.dim{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:500}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center}
+.tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+footer{margin-top:48px;color:var(--dim);font-size:12.5px}
+@media (max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style></head><body><main>
+<h1>proof<span>hound</span> report</h1>
+<div class="meta">node-lru-cache · javascript · claude (sonnet) · 1 modules, 8 functions · 56s · $0.24 · 10/18/2026, 4:22:40 AM</div>
+<div class="funnel">
+    <div class="step"><div class="bar" style="width:100%" data-i="0"></div>
+    <div class="lab"><b>1</b> reported by the hunter</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="1"></div>
+    <div class="lab"><b>1</b> reproduced deterministically</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="2"></div>
+    <div class="lab"><b>1</b> unique</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="3"></div>
+    <div class="lab"><b>1</b> confirmed by review</div></div></div>
+<p class="meta">Every bug below failed the same way in 3 fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
+
+<h2>1 confirmed bug</h2>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-001</span>
+    <h3>LRUCache.load() overwrites `start` on the caller&#39;s entry objects, so reloading the same dump gives wrong TTLs</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.80</span>
+      <span class="badge ok">failed 3/3</span>
+      
+    </span>
+  </header>
+  <p class="where"><code>LRUCache.load</code> · <code>src/index.ts</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>a=new LRUCache({max:5,ttl:100000}); a.set(1,&#39;x&#39;); d=a.dump(); new LRUCache({max:5,ttl:100000}).load(d); then inspect d[0][1].start / load d into another cache</code></dd>
+    <dt>Expected</dt><dd>d is unchanged after load (start stays the portable Date.now() timestamp), so a second load restores the intended remaining TTL</dd>
+    <dt>Actual</dt><dd>load assigns entry.start = perf.now() - age on the caller&#39;s entry object, replacing the portable timestamp (e.g. 1792297393352 becomes 220.9). A later load of the same array treats it as a Date.now() timestamp, computes a huge age, and the entry is immediately stale.</dd>
+    <dt>Property</dt><dd>load(arr) does not modify arr; the same dump can be loaded into several caches with the same result</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>import test from &#39;node:test&#39;;
+import assert from &#39;node:assert/strict&#39;;
+import { LRUCache } from &#39;../../../../../src/index.ts&#39;;
+
+test(&#39;repro_load_mutates_input: loading the same dump twice keeps entries alive&#39;, () =&gt; {
+  const a = new LRUCache({ max: 5, ttl: 100000 });
+  a.set(1, &#39;x&#39;);
+  const d = a.dump();
+  const startBefore = d[0][1].start;
+  const b = new LRUCache({ max: 5, ttl: 100000 });
+  b.load(d);
+  assert.equal(d[0][1].start, startBefore, &#39;load() must not mutate its argument&#39;);
+  const c = new LRUCache({ max: 5, ttl: 100000 });
+  c.load(d);
+  assert.equal(c.get(1), &#39;x&#39;);
+});</code></pre>
+  <p class="err"><code>AssertionError: load() must not mutate its argument</code></p></details>
+  
+  
+  <details><summary>Why this is a bug</summary><p>dump() docs say its output &#39;can be passed to load&#39;; load&#39;s doc says start fields &#39;are assumed to be calculated relative to a portable Date.now() timestamp&#39;. After load the array violates that assumption. Mutating an input argument is also unexpected for a load/restore API.</p><p><b>Independent review:</b> In `src/index.ts`, `load()` runs `entry.start = this.#perf.now() - age` on the entry objects the caller passed in. That replaces the portable `Date.now()` timestamp with a `performance.now()`-relative value. `load()` documents `start` as a portable `Date.now()` timestamp and `dump()` produces exactly that format. A second `load()` of the same array therefore computes a huge age (about 1.79e12 ms), and the entry comes out immediately stale. The input is valid, the repro is deterministic, and it is not a float artefact. The fix is small, for example building a copy of the entry with the adjusted `start` before calling `#set`. The impact is narrow, because it only affects someone who reuses a dump array, so it is a low-severity but legitimate bug.</p>
+  
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261018-042240/bugs/PH-001-lrucache-load-overwrites-start-on-the-caller-s-e/BUG.md</code></p></details>
+</article>
+
+
+
+<h2>Filtered out (0)</h2>
+<p class="dim">Nothing was filtered out.</p>
+
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
+<tr><td><code>src/index.ts</code></td><td>LRUCache.load, LRUCache.dump, LRUCache.set, LRUCache.has, LRUCache.get, LRUCache.pop, LRUCache.peek, LRUCache.delete</td><td>1</td><td>1</td><td>43s</td></tr>
+</table>
+<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));
+</script>
+</body></html>

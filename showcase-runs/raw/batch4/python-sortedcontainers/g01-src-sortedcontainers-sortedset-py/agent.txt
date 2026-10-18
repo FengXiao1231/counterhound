@@ -1,0 +1,2 @@
+I tested 7 properties (the six set operations, self-application, and one stateful model machine with 9 rules) and reported 0 bugs. All 7 passed, so `findings.json` is `[]`.
+

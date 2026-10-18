@@ -7,7 +7,7 @@ None of these have been reported upstream yet.
 
 Run: 25 libraries, 46 modules, 204 functions, Claude Sonnet, about 32 minutes of machine time and $9 in total.
 (23 reported → 21 reproduced → 20 confirmed; 1 rejected by review, 2 dropped as broken tests).
-The raw data of every run (`results.json`, the hunter's tests and repros, the reviewer's verdicts and reports) is in `showcase-runs/raw/<batch>/<library>/`, for all five batches including this one: `early` and `batch1` (together this table), `batch2` (Go and Rust), `batch3` (five languages with `--fix`; the patches there had a log-file hunk removed by hand, see `manual-verification.md`) and `self`.
+The raw data of every run (`results.json`, the hunter's tests and repros, the reviewer's verdicts and reports) is in `showcase-runs/raw/<batch>/<library>/`, for all five batches including this one: `early` and `batch1` (together this table), `batch2` (Go and Rust), `batch3` (five languages with `--fix`; the patches there had a log-file hunk removed by hand, see `manual-verification.md`), `batch4` (stateful classes) and `self`.
 Hand-checking the 20 confirmed findings: 17 are clear bugs, 3 are debatable (listed separately below), none were wrong.
 
 | Library | Bug | Repro |
@@ -107,6 +107,26 @@ Debatable:
 
 No bugs reported in: more-itertools, tabulate, furl, python-json-pointer, pathspec, path-to-regexp, parse-duration, filenamify, decamelize, commons-lang, commons-text, commons-csv, dtolnay/semver, unicode-width, shell-words, shlex, rust-lang/glob, wildmatch, blang/semver, go-runewidth, stringy.
 Not run: pluralize (a UMD module the scanner cannot see into), slugify (Java dependencies not resolved), timeago (no `go.mod`).
+
+## Stateful classes
+
+Run on 12 libraries whose public API is a class that changes its own state (caches, ordered sets, queues, a state machine), with the
+model-based testing and fixture reuse added on 2026-10-18: 6 Python (cachetools, bidict, sortedcontainers, pqdict, ordered-set,
+transitions) and 6 JavaScript (lru-cache, quick-lru, yocto-queue, tinyqueue, denque, mnemonist). 17 modules, 93 functions, Claude Sonnet,
+`--max-modules 2 --budget 0.6`, about $3.30 in total (6 reported → 6 reproduced → 6 confirmed; nothing rejected).
+Hand-checking the 6 against the source: all 6 are clear bugs, none debatable, none wrong. The hunter wrote state machines for every class
+(for cachetools, five of them) and correctly withheld one FIFO-cache finding that the code does on purpose.
+
+| Library | Bug | Repro |
+|---|---|---|
+| [ordered-set](https://github.com/rspeer/ordered-set) (Python) | `pop(index)` never renumbers the position map, unlike `discard`, so `index()` is wrong afterwards | `s = OrderedSet([0, 1]); s.pop(0); s.index(1)` → `1` (the set is `[1]`) |
+| [ordered-set](https://github.com/rspeer/ordered-set) (Python) | `symmetric_difference_update` does not de-duplicate `other`, so the set holds duplicates | `s = OrderedSet(); s.symmetric_difference_update([0, 0]); list(s)` → `[0, 0]` |
+| [transitions](https://github.com/pytransitions/transitions) (Python) | `remove_transition` tests `hasattr(source, 'name')` on the whole list instead of each element, so a list of `State` objects removes nothing | `m.remove_transition('go', source=[m.get_state('A')])` leaves `A → B` in place (a single `State` works) |
+| [denque](https://github.com/invertase/denque) (JS) | `removeOne` accepts a negative index but picks the shifting branch with the raw one, corrupting the queue | `new Denque([1, 2]).removeOne(-1)` returns 2, the queue becomes `[undefined]` |
+| [denque](https://github.com/invertase/denque) (JS) | `remove(index, count)` with a negative index and `count > 1` uses the raw index in every branch after normalising it | `new Denque([1, 2, 3, 4]).remove(-3, 2)` → `[2, 3]`, queue becomes `[undefined, 1, 2, 3, 4]` |
+| [lru-cache](https://github.com/isaacs/node-lru-cache) (JS) | `load()` overwrites `start` on the caller's dump entries with a `performance.now()`-relative value, so loading the same dump twice makes the entries stale | `b.load(d); c.load(d); c.get(1)` → `undefined` |
+
+No bugs reported in: cachetools, bidict, sortedcontainers, pqdict, quick-lru, yocto-queue, tinyqueue, mnemonist.
 
 ## proofhound on itself
 

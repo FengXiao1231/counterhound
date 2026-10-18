@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-041332",
+  "diff": null,
+  "fixRun": false,
+  "repo": "transitions",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T04:13:32.775Z",
+  "ms": 61003,
+  "spend": {
+    "usd": 0.4069726,
+    "tokensIn": 952222,
+    "tokensOut": 8781,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-transitions-extensions-asyncio-py",
+      "file": "transitions/extensions/asyncio.py",
+      "functions": [
+        "AsyncTimeout.on_timeout",
+        "AsyncMachine.dispatch",
+        "AsyncTimeout.create_timer",
+        "AsyncMachine.callback",
+        "AsyncTimeout.enter",
+        "AsyncMachine.cancel_running_transitions"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 42579,
+      "costUsd": 0.16306460000000003,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-transitions-core-py",
+      "file": "transitions/core.py",
+      "functions": [
+        "Machine.dispatch",
+        "Event.trigger",
+        "Machine.callback",
+        "Machine.remove_transition",
+        "EventData.update",
+        "Machine.is_state"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 44329,
+      "costUsd": 0.1861363,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "remove_transition ignores State/Enum members inside a list for source/dest",
+      "function": "transitions.core.Machine.remove_transition",
+      "kind": "wrong-result",
+      "property": "removing with source=[State] (or dest=[State]) removes exactly the same transitions as passing the state name strings",
+      "property_test": "test_remove_by_source_list",
+      "repro_file": "test_repro_remove_list_of_states.py",
+      "input": "Machine(states=['A','B','C'], auto_transitions=False); add_transition('go','A','B'); add_transition('go','B','C'); remove_transition('go', source=[m.get_state('A')])",
+      "expected": "only the B->C transition remains",
+      "actual": "nothing is removed; both transitions remain",
+      "evidence": "Docstring: source/dest are 'str, Enum or State'; the code listify()s the argument and converts each element, but the comprehension tests hasattr(source, 'name') (the whole list/original arg) instead of hasattr(s, 'name'), so list elements that are State/Enum are never converted to names and never match t.source/t.dest (stored as names). The same State passed alone (not in a list) works.",
+      "group": "g02-transitions-core-py",
+      "file": "transitions/core.py",
+      "workdir": ".proofhound/runs/20261018-041332/g02-transitions-core-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_remove_list_of_states.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_remove_transition_list_of_state_objects",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert [('A', 'B'), ('B', 'C')] == [('B', 'C')]\n  \n  At index 0 diff: ('A', 'B') != ('B', 'C')\n  Left contains one more item: ('B', 'C')\n  Use -v to get more diff"
+        },
+        "testName": "test_repro_remove_transition_list_of_state_objects"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_remove_by_source_list(\n    trs=[(\n         'A',\n         'A',  # or any other generated value\n     )],\n    srcs=['A'],\n    use_state=True,\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.85,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "remove_transition does not convert State/Enum elements in a source/dest list to names",
+        "reason": "In core.py:1141 and 1143 the comprehensions test `hasattr(source, 'name')` and `hasattr(dest, 'name')` on the whole argument instead of the loop variable `s`/`d`. After `listify`, a list of State or Enum objects therefore keeps its elements unconverted and never matches `t.source`/`t.dest`, which are stored as names. A single State passed alone works because `listify` wraps it and the whole-argument check happens to see `.name`. The repro is valid and fails deterministically, and the fix is a one-token change that a maintainer would accept. The only doubt is that the docstring says `str, Enum or State` and doesn't explicitly mention lists, but the code runs `listify` and a list of names works, so lists are clearly intended.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "from transitions import Machine\n\n\ndef test_repro_remove_transition_list_of_state_objects():\n    m = Machine(states=['A', 'B', 'C'], initial='A', auto_transitions=False)\n    m.add_transition('go', 'A', 'B')\n    m.add_transition('go', 'B', 'C')\n    m.remove_transition('go', source=[m.get_state('A')])\n    assert [(t.source, t.dest) for t in m.get_transitions('go')] == [('B', 'C')]\n",
+      "bugDir": ".proofhound/runs/20261018-041332/bugs/PH-001-remove-transition-does-not-convert-state-enum-el"
+    }
+  ]
+}

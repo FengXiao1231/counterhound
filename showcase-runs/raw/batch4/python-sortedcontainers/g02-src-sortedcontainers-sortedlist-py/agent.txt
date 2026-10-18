@@ -1,0 +1,12 @@
+I tested 4 properties (the 4th is a stateful `SortedKeyList` model test) and reported 0 bugs. All 4 pass, and `findings.json` is `[]`.
+
+The properties cover:
+- `SortedList` bisect against `bisect` on a sorted reference.
+- `SortedKeyList` bisect and key-bisect against the same kind of reference.
+- `SortedKeyList.update` preserving contents, length and key order.
+- The stateful test, which adds, updates, discards and clears at a small load and checks `_check()` and key-bisect after every step.
+
+My first run failed on `test_skl_update`, but that was my own mistake: I set the load to values below 4, and `_check` requires 4 or more. After I raised the minimum load to 4, it passed.
+
+I didn't write properties for the other `SortedList` methods (`islice`, `irange`, `insert`, `pop` and the like).
+

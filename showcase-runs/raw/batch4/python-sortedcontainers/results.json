@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-041057",
+  "diff": null,
+  "fixRun": false,
+  "repo": "python-sortedcontainers",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T04:10:57.265Z",
+  "ms": 47946,
+  "spend": {
+    "usd": 0.2723628,
+    "tokensIn": 584598,
+    "tokensOut": 5574,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-src-sortedcontainers-sortedset-py",
+      "file": "src/sortedcontainers/sortedset.py",
+      "functions": [
+        "SortedSet.difference",
+        "SortedSet.intersection",
+        "SortedSet.intersection_update",
+        "SortedSet.symmetric_difference",
+        "SortedSet.symmetric_difference_update",
+        "SortedSet.difference_update"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 31213,
+      "costUsd": 0.1298492,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-src-sortedcontainers-sortedlist-py",
+      "file": "src/sortedcontainers/sortedlist.py",
+      "functions": [
+        "SortedList.bisect_left",
+        "SortedList.bisect_right",
+        "SortedKeyList.update",
+        "SortedKeyList.bisect_left",
+        "SortedKeyList.bisect_right",
+        "SortedKeyList.bisect_key_left"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 47841,
+      "costUsd": 0.1425136,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

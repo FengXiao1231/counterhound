@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-041145",
+  "diff": null,
+  "fixRun": false,
+  "repo": "pqdict",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T04:11:45.722Z",
+  "ms": 47756,
+  "spend": {
+    "usd": 0.21083159999999998,
+    "tokensIn": 366626,
+    "tokensOut": 5455,
+    "calls": 1
+  },
+  "groups": [
+    {
+      "group": "g01-pqdict-__init__-py",
+      "file": "pqdict/__init__.py",
+      "functions": [
+        "pqdict.top",
+        "pqdict.topvalue",
+        "pqdict.updateitem",
+        "pqdict.topitem",
+        "pqdict.fromkeys",
+        "pqdict.popitems"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 47670,
+      "costUsd": 0.21083159999999998,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

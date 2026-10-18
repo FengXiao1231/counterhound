@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-041605",
+  "diff": null,
+  "fixRun": false,
+  "repo": "denque",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T04:16:05.271Z",
+  "ms": 64451,
+  "spend": {
+    "usd": 0.3075546,
+    "tokensIn": 484577,
+    "tokensOut": 7647,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-index-js",
+      "file": "index.js",
+      "functions": [
+        "Denque"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 50723,
+      "costUsd": 0.19730460000000002,
+      "reported": 2,
+      "verified": 2
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 1,
+    "reported": 2,
+    "verified": 2,
+    "duplicates": 0,
+    "confirmed": 2,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "removeOne() with a negative index removes the wrong element and corrupts the queue",
+      "function": "Denque.prototype.removeOne",
+      "kind": "wrong-result",
+      "property": "removeOne(i) behaves like Array.prototype.splice(i,1) on the equivalent array, including negative indices, leaving the remaining items intact",
+      "property_test": "ops vs array model",
+      "repro_file": "repro_removeone_negative.test.mjs",
+      "input": "new Denque([1,2]).removeOne(-1)",
+      "expected": "returns 2 and the queue becomes [1]",
+      "actual": "returns 2 but the queue becomes [undefined, 1]-like corrupted state (the front slot is cleared and head advanced instead of removing the last item)",
+      "evidence": "removeOne explicitly accepts negative indices (range check i < -size, then i += size), and peekAt documents negative indices as counting from the end. The shifting branch is chosen with the un-normalised `index` (index < size/2), so a negative index always takes the front branch with a zero-iteration loop.",
+      "group": "g01-index-js",
+      "file": "index.js",
+      "workdir": ".proofhound/runs/20261018-041605/g01-index-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_removeone_negative.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_removeone_negative",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   undefined\n-   1\n  ]\n",
+          "example": null
+        },
+        "testName": "repro_removeone_negative"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Counterexample: [[],[[\"unshift\",0],[\"splice\",1,1,[0]]]]"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.93,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "removeOne() with a negative index corrupts the queue because the branch choice uses the un-normalised index",
+        "reason": "removeOne explicitly accepts negative indices (`i < -size` is rejected, otherwise `i += size`), but the branch test `index < size / 2` and the loop counters still use the original `index`. With index -1, the front branch is taken with a zero-iteration loop. It then clears the slot of the last element and advances `_head`, so the queue ends up as [undefined] instead of [1]. The fix is to use the normalised `i` for the branch test and loop counts, which a maintainer would accept.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport Denque from '../../../../../index.js';\n\ntest('repro_removeone_negative', () => {\n  const d = new Denque([1, 2]);\n  assert.equal(d.removeOne(-1), 2);\n  assert.deepEqual(d.toArray(), [1]);\n});\n",
+      "bugDir": ".proofhound/runs/20261018-041605/bugs/PH-001-removeone-with-a-negative-index-corrupts-the-que"
+    },
+    {
+      "title": "remove() with a negative index and count > 1 removes the wrong items and corrupts the queue",
+      "function": "Denque.prototype.remove",
+      "kind": "wrong-result",
+      "property": "remove(i, n) behaves like Array.prototype.splice(i, n), including negative i",
+      "property_test": "ops vs array model",
+      "repro_file": "repro_remove_negative.test.mjs",
+      "input": "new Denque([1,2,3,4]).remove(-3, 2)",
+      "expected": "returns [2,3] and the queue becomes [1,4]",
+      "actual": "queue is left with undefined holes and wrong contents",
+      "evidence": "remove() accepts negative indices (i < -size check, i += size) but the later branches use the raw `index` (index + count === size, index === 0, index < 0) instead of the normalised i.",
+      "group": "g01-index-js",
+      "file": "index.js",
+      "workdir": ".proofhound/runs/20261018-041605/g01-index-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_remove_negative.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_remove_negative",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   undefined,\n    1,\n+   2,\n+   3,\n    4\n  ]\n",
+          "example": null
+        },
+        "testName": "repro_remove_negative"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Counterexample: [[0,0],[[\"remove\",-1,2]]]"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.9,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "remove() with a negative index and count > 1 corrupts the queue",
+        "reason": "remove() explicitly accepts negative indices (`i < -size` check, then `i += size`). After that, the multi-item branches still test and use the raw `index` (`index + count === size`, `index === 0`, `this._head + index + count`, `index < 0`) instead of the normalised `i`. For `remove(-3, 2)` on [1,2,3,4], none of the fast paths match and the middle-removal branch uses a negative `index`. That leaves `undefined` holes and wrong contents, as the repro shows. The `count === 1` path uses the normalised `i` and works, and positive indices are unaffected, so this is an incomplete normalisation that a maintainer would fix.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport Denque from '../../../../../index.js';\n\ntest('repro_remove_negative', () => {\n  const d = new Denque([1, 2, 3, 4]);\n  assert.deepEqual(d.remove(-3, 2), [2, 3]);\n  assert.deepEqual(d.toArray(), [1, 4]);\n});\n",
+      "bugDir": ".proofhound/runs/20261018-041605/bugs/PH-002-remove-with-a-negative-index-and-count-1-corrupt"
+    }
+  ]
+}

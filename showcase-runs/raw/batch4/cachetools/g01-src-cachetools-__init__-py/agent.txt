@@ -1,0 +1,6 @@
+I tested 8 properties and reported 0 bugs: 5 model-based state machines (Cache, FIFO, LFU, TTL, TLRU), 2 ordering properties and 1 LFU property.
+
+The one failure was FIFOCache re-ordering a key that is set again. A re-set key moves to the end of the eviction order, so `popitem` removes the other key first. The code does this on purpose and the docstring doesn't rule it out, so I didn't report it.
+
+`findings.json` is `[]`.
+

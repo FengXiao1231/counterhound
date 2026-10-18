@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-041233",
+  "diff": null,
+  "fixRun": false,
+  "repo": "ordered-set",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T04:12:33.987Z",
+  "ms": 58258,
+  "spend": {
+    "usd": 0.2838954,
+    "tokensIn": 468680,
+    "tokensOut": 5192,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-ordered_set-__init__-py",
+      "file": "ordered_set/__init__.py",
+      "functions": [
+        "OrderedSet.symmetric_difference",
+        "OrderedSet.difference",
+        "OrderedSet.difference_update",
+        "OrderedSet.union",
+        "OrderedSet.intersection",
+        "OrderedSet.symmetric_difference_update"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 35736,
+      "costUsd": 0.15160410000000002,
+      "reported": 2,
+      "verified": 2
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 2,
+    "verified": 2,
+    "duplicates": 0,
+    "confirmed": 2,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "pop(index) leaves stale indices in map, so index() returns wrong values",
+      "function": "ordered_set.OrderedSet.pop",
+      "kind": "wrong-result",
+      "property": "after pop(i), index(x) equals the position of x in the set's iteration order",
+      "property_test": "runTest (M state machine in test_ph_props.py)",
+      "repro_file": "test_repro_pop_stale_index.py",
+      "input": "s = OrderedSet([0, 1]); s.pop(0); s.index(1)",
+      "expected": "0, since the set is now OrderedSet([1])",
+      "actual": "1 (map still holds the old position)",
+      "evidence": "index() docstring: 'Get the index of a given entry'; add() returns the item's index. discard() renumbers map after removal, but pop() only deletes the entry and never adjusts later indices. Popping a non-last element is allowed by the documented 'Remove and return item at index'.",
+      "group": "g01-ordered_set-__init__-py",
+      "file": "ordered_set/__init__.py",
+      "workdir": ".proofhound/runs/20261018-041233/g01-ordered_set-__init__-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_pop_stale_index.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_pop_stale_index",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert 1 == 0\n +  where 1 = index(1)\n +    where index = OrderedSet([1]).index"
+        },
+        "testName": "test_repro_pop_stale_index"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.93,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "OrderedSet.pop(index) does not renumber map, so index() returns stale positions after popping a non-last element",
+        "reason": "The source shows pop() does `del self.items[index]; del self.map[elem]` and never decrements the map values for the items after the removed one. discard() does that renumbering (`if v >= i: self.map[k] = v - 1`), so the two removal paths leave the set in different states. The invariant `map[items[i]] == i` is broken, so index(), get_loc() and later add() calls give wrong results. For example, after pop(0) on OrderedSet([0, 1]), index(1) returns 1 while the set is [1]. The repro uses documented API (`pop(index)` is documented to remove the item at index) and failed every time. A maintainer would accept a fix that renumbers the map after popping a non-last index, as discard() does.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "from ordered_set import OrderedSet\n\n\ndef test_repro_pop_stale_index():\n    s = OrderedSet([0, 1])\n    assert s.pop(0) == 0\n    assert list(s) == [1]\n    assert s.index(1) == 0\n",
+      "bugDir": ".proofhound/runs/20261018-041233/bugs/PH-001-orderedset-pop-index-does-not-renumber-map-so-in"
+    },
+    {
+      "title": "symmetric_difference_update adds duplicates when other contains repeated items",
+      "function": "ordered_set.OrderedSet.symmetric_difference_update",
+      "kind": "inconsistency",
+      "property": "the set stays duplicate-free and matches symmetric_difference(other)",
+      "property_test": "test_symdiff_update",
+      "repro_file": "test_repro_symdiff_update_dups.py",
+      "input": "OrderedSet().symmetric_difference_update([0, 0])",
+      "expected": "OrderedSet([0]), same as OrderedSet().symmetric_difference([0, 0])",
+      "actual": "items == [0, 0] while map has one key, so the set holds a duplicate and len is 2",
+      "evidence": "other is typed SetLike[T], which accepts lists; symmetric_difference handles it correctly and an OrderedSet must contain unique items. items_to_add is built without de-duplicating.",
+      "group": "g01-ordered_set-__init__-py",
+      "file": "ordered_set/__init__.py",
+      "workdir": ".proofhound/runs/20261018-041233/g01-ordered_set-__init__-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_symdiff_update_dups.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_symdiff_update_dups",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert [0, 0] == [0]\n  \n  Left contains one more item: 0\n  Use -v to get more diff"
+        },
+        "testName": "test_repro_symdiff_update_dups"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_symdiff_update(\n    a=[],\n    b=[0, 0],\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.93,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "symmetric_difference_update leaves duplicate items when `other` contains repeated elements",
+        "reason": "`other` is typed `SetLike[T]`, which allows lists, and `symmetric_difference` already handles repeats correctly (`OrderedSet().symmetric_difference([0, 0])` gives `[0]`). In `symmetric_difference_update`, `items_to_add = [item for item in other if item not in self]` is not de-duplicated, so `_update_items` sets `items` to `[0, 0]` while `map` has one key. That breaks the OrderedSet uniqueness invariant, and builtin `set.symmetric_difference_update` also de-duplicates. A fix is small, for example by iterating over `dict.fromkeys(other)`, and a maintainer would likely accept it.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "reproSource": "from ordered_set import OrderedSet\n\n\ndef test_repro_symdiff_update_dups():\n    s = OrderedSet()\n    s.symmetric_difference_update([0, 0])\n    assert list(s) == [0]\n    assert list(OrderedSet().symmetric_difference([0, 0])) == [0]\n",
+      "bugDir": ".proofhound/runs/20261018-041233/bugs/PH-002-symmetric-difference-update-leaves-duplicate-ite"
+    }
+  ]
+}

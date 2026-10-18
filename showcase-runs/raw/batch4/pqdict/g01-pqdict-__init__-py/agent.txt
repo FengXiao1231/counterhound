@@ -1,0 +1,6 @@
+I tested 7 properties (6 function-level tests plus one stateful machine covering 9 methods) and reported 0 bugs. All 7 passed. `findings.json` is `[]`.
+
+The package isn't installed in this environment, so `import pqdict` failed on its `version("pqdict")` call. I worked around that inside my test file only, with no project files changed.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261018-041145/g01-pqdict-__init__-py && cat > .proofhound/runs/20261018-041145/g01-pqdict-__init__-py/test_ph_props.py <<'EOF'\nimport pytest\nfrom hypothesis import given, strategies as st\nfrom hypothesis.stateful import RuleBasedStateMachine, rule, invarian

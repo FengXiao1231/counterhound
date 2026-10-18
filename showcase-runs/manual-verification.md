@@ -24,3 +24,12 @@ num2words bn 0.01 currency = "দশ পয়সা", 1.05 == 1.5 reading.
 17 patches written, 17 verified (repro passes; project suite passed for 12, already failing for 3, none for 2), all apply with git apply --check.
 The raw run's patches also contained a hunk for the run's own log file (ph-err.txt); proofhound now diffs against a snapshot, and the
 copies here have those hunks removed. 9 bugs got no patch because the per-library --budget 0.5 was used up (now --fix-budget).
+
+## Batch 4: 12 stateful libraries, model-based tests (2026-10-18)
+
+6 confirmed, 6 real on hand check (ran each repro by hand and read the source line): ordered-set pop() (`del self.map[elem]` with no
+renumbering, discard() renumbers), ordered-set symmetric_difference_update (`items_to_add` list not de-duplicated), transitions core.py:1141/1143
+(`hasattr(source, 'name')` on the whole argument), denque removeOne/remove (branch tests use `index`, not the normalised `i`),
+lru-cache src/index.ts:2124 (`entry.start = this.#perf.now() - age` on the caller's object). 0 wrong, 0 debatable.
+lru-cache first produced no targets: the scanner stopped at the `{}` inside `class LRUCache<K extends {}, …>` and did not see state changes made
+through private `#methods`; both fixed, then re-run alone (--max-modules 1 --budget 0.7). Total about $3.30 for the batch.

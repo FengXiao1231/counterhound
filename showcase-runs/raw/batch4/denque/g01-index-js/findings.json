@@ -1,0 +1,26 @@
+[
+  {
+    "title": "removeOne() with a negative index removes the wrong element and corrupts the queue",
+    "function": "Denque.prototype.removeOne",
+    "kind": "wrong-result",
+    "property": "removeOne(i) behaves like Array.prototype.splice(i,1) on the equivalent array, including negative indices, leaving the remaining items intact",
+    "property_test": "ops vs array model",
+    "repro_file": "repro_removeone_negative.test.mjs",
+    "input": "new Denque([1,2]).removeOne(-1)",
+    "expected": "returns 2 and the queue becomes [1]",
+    "actual": "returns 2 but the queue becomes [undefined, 1]-like corrupted state (the front slot is cleared and head advanced instead of removing the last item)",
+    "evidence": "removeOne explicitly accepts negative indices (range check i < -size, then i += size), and peekAt documents negative indices as counting from the end. The shifting branch is chosen with the un-normalised `index` (index < size/2), so a negative index always takes the front branch with a zero-iteration loop."
+  },
+  {
+    "title": "remove() with a negative index and count > 1 removes the wrong items and corrupts the queue",
+    "function": "Denque.prototype.remove",
+    "kind": "wrong-result",
+    "property": "remove(i, n) behaves like Array.prototype.splice(i, n), including negative i",
+    "property_test": "ops vs array model",
+    "repro_file": "repro_remove_negative.test.mjs",
+    "input": "new Denque([1,2,3,4]).remove(-3, 2)",
+    "expected": "returns [2,3] and the queue becomes [1,4]",
+    "actual": "queue is left with undefined holes and wrong contents",
+    "evidence": "remove() accepts negative indices (i < -size check, i += size) but the later branches use the raw `index` (index + count === size, index === 0, index < 0) instead of the normalised i."
+  }
+]

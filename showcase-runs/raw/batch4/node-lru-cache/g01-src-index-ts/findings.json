@@ -1,0 +1,14 @@
+[
+  {
+    "title": "load() mutates the caller's dump entries, so reusing a dump gives wrong TTL start times",
+    "function": "LRUCache.load",
+    "kind": "contract-violation",
+    "property": "load(arr) does not modify arr; the same dump can be loaded into several caches with the same result",
+    "property_test": "load does not mutate input",
+    "repro_file": "repro_load_mutates_input.test.mjs",
+    "input": "a=new LRUCache({max:5,ttl:100000}); a.set(1,'x'); d=a.dump(); new LRUCache({max:5,ttl:100000}).load(d); then inspect d[0][1].start / load d into another cache",
+    "expected": "d is unchanged after load (start stays the portable Date.now() timestamp), so a second load restores the intended remaining TTL",
+    "actual": "load assigns entry.start = perf.now() - age on the caller's entry object, replacing the portable timestamp (e.g. 1792297393352 becomes 220.9). A later load of the same array treats it as a Date.now() timestamp, computes a huge age, and the entry is immediately stale.",
+    "evidence": "dump() docs say its output 'can be passed to load'; load's doc says start fields 'are assumed to be calculated relative to a portable Date.now() timestamp'. After load the array violates that assumption. Mutating an input argument is also unexpected for a load/restore API."
+  }
+]

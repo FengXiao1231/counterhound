@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261018-040914",
+  "diff": null,
+  "fixRun": false,
+  "repo": "cachetools",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-18T04:09:14.985Z",
+  "ms": 50810,
+  "spend": {
+    "usd": 0.5174178,
+    "tokensIn": 504557,
+    "tokensOut": 7477,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g02-src-cachetools-func-py",
+      "file": "src/cachetools/func.py",
+      "functions": [
+        "fifo_cache",
+        "lfu_cache",
+        "lru_cache",
+        "ttl_cache",
+        "rr_cache"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 35285,
+      "costUsd": 0.24698309999999996,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-src-cachetools-__init__-py",
+      "file": "src/cachetools/__init__.py",
+      "functions": [
+        "Cache.getsizeof",
+        "TLRUCache.expire",
+        "TTLCache.popitem",
+        "TLRUCache.popitem",
+        "FIFOCache.popitem",
+        "LFUCache.popitem"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 50651,
+      "costUsd": 0.27043470000000003,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 11,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}
