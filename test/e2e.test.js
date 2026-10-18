@@ -55,6 +55,37 @@ test('end to end: only bugs that replay and survive review are reported', { skip
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
+const hasFastapi = spawnSync('python3', ['-c', 'import hypothesis, pytest, fastapi, httpx']).status === 0;
+
+test('--api: routes of a FastAPI app are hunted through its test client; handler crashes are attributed', { skip: !hasFastapi && 'needs python3 with pytest, hypothesis, fastapi and httpx' }, () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-e2e-api-'));
+  fs.cpSync(path.join(ROOT, 'test', 'fixtures', 'pyapi'), dir, { recursive: true, filter: (s) => !s.includes('.proofhound') && !s.includes('__pycache__') });
+  const r = spawnSync(process.execPath, [BIN, '--api', '--agent', 'fake', '--runs', '2', '--json', '-q'], {
+    cwd: dir, encoding: 'utf8',
+    env: { ...process.env, PROOFHOUND_FAKE_AGENT: path.join(ROOT, 'test', 'helpers', 'fake-agent.mjs') },
+  });
+  assert.equal(r.status, 1, r.stderr);
+  const result = JSON.parse(r.stdout);
+  const by = Object.fromEntries(result.findings.map((f) => [f.title, f]));
+  assert.deepEqual(result.api, { framework: 'fastapi', app: 'app.main:app' });
+  assert.deepEqual(result.groups.map((g) => g.functions), [['POST /items', 'PUT /items/{item_id}', 'GET /items', 'GET /items/{item_id}', 'DELETE /items/{item_id}']]);
+  const crash = by['GET /items/{id} crashes for an unknown id instead of 404'];
+  assert.equal(crash.status, 'confirmed', JSON.stringify(crash.verification));
+  assert.equal(crash.verification.kind, 'crash');
+  assert.equal(crash.verification.site.file, 'app/main.py');
+  assert.equal(crash.verification.error.type, 'KeyError');
+  assert.equal(by['PUT is not idempotent: the version changes on a no-op update'].status, 'confirmed');
+  assert.equal(by['GET /items paging drops the last item of every page'].status, 'confirmed');
+  const decoy = by['POST /items rejects a negative price'];
+  assert.equal(decoy.verification.kind, 'assertion');
+  assert.equal(decoy.status, 'rejected');
+  assert.equal(result.counts.confirmed, 3);
+  const openapi = JSON.parse(fs.readFileSync(path.join(dir, '.proofhound', 'openapi.json'), 'utf8'));
+  assert.ok(openapi.paths['/items/{item_id}'].put, 'openapi.json is written for the hunter');
+  assert.ok(fs.existsSync(path.join(dir, crash.bugDir, 'BUG.md')));
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
 const hasGo = spawnSync('go', ['version']).status === 0;
 const hasCargo = spawnSync('cargo', ['--version']).status === 0;
 

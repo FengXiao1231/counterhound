@@ -49,7 +49,16 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
   const testCmd = writeTestWrapper(repo, binPath);
   lang.prepare?.(repo, path.join(repo, HOME), cfg);
 
-  let targets = lang.listTargets(repo, cfg, opts.paths || []);
+  let targets, api = null;
+  if (opts.api) {
+    const found = lang.listRoutes?.(repo, cfg, opts.paths || []);
+    if (!found) throw new Error(`no HTTP routes found${lang.listRoutes ? ' (proofhound knows FastAPI, Flask, Express and Fastify routes)' : ` for ${lang.name}`}`);
+    ({ api, targets } = found);
+    if (api.openapi) { writeFile(path.join(repo, HOME, 'openapi.json'), api.openapi); api.openapiPath = `${HOME}/openapi.json`; }
+    else if (api.openapiError) log(c.yellow(`  note: could not load the app for its OpenAPI document (${api.openapiError}); the hunter works from the source`));
+  } else {
+    targets = lang.listTargets(repo, cfg, opts.paths || []);
+  }
   const fixtures = lang.listFixtures?.(repo, cfg) || null;
   if (fixtures?.fixtures?.length || fixtures?.factories?.length) log(c.dim(`  reusing the project's test setup: ${[fixtures.fixtures.length && `${fixtures.fixtures.length} fixture${fixtures.fixtures.length > 1 ? 's' : ''}`, fixtures.factories.length && `${fixtures.factories.length} factor${fixtures.factories.length > 1 ? 'ies' : 'y'}`].filter(Boolean).join(', ')}`));
   for (const u of fixtures?.unloaded || []) log(c.yellow(`  note: ${u.split(' (')[0]} could not be imported, its fixtures are not available to the hunter (${u.split(' (')[1]}`));
@@ -62,9 +71,10 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
   }
   // In diff mode every changed function is a candidate, however it scores.
   const groups = planGroups(targets, { maxGroups: opts.maxGroups, perGroup: opts.perGroup, only: opts.only, all: Boolean(diff) });
-  if (!groups.length && !diff) throw new Error('no candidate functions found. Point proofhound at a source directory, or use --only');
+  if (!groups.length && !diff) throw new Error(api ? 'no routes selected' : 'no candidate functions found. Point proofhound at a source directory, or use --only');
   const ts = lang.needsTs(groups.flatMap((g) => g.functions.map((f) => f.file)));
-  log(c.bold(`\nproofhound`) + c.dim(` · ${lang.name} · ${agent.id}${opts.model ? ` (${opts.model})` : ''} · ${groups.length} module${groups.length > 1 ? 's' : ''}, ${groups.reduce((a, g) => a + g.functions.length, 0)} functions\n`));
+  const nouns = api ? ['route', 'routes'] : ['function', 'functions'];
+  log(c.bold(`\nproofhound`) + c.dim(` · ${lang.name}${api ? ` · HTTP API (${api.framework})` : ''} · ${agent.id}${opts.model ? ` (${opts.model})` : ''} · ${groups.length} module${groups.length > 1 ? 's' : ''}, ${groups.reduce((a, g) => a + g.functions.length, 0)} ${nouns[1]}\n`));
 
   const spend = { usd: 0, tokensIn: 0, tokensOut: 0, calls: 0 };
   const account = (r) => { spend.usd += r.costUsd || 0; spend.tokensIn += r.tokensIn || 0; spend.tokensOut += r.tokensOut || 0; spend.calls++; };
@@ -80,8 +90,8 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
     const workdir = path.join(repo, workRel);
     fs.mkdirSync(workdir, { recursive: true });
     lang.prepareGroup?.(repo, group, workdir, cfg);
-    const imports = group.functions.slice(0, 3).map((f) => lang.importHint(f, workdir, repo));
-    const prompt = hunterPrompt({ lang, group, workdir: workRel, testCmd, imports: [...new Set(imports)], notes: cfg.notes, fixtures });
+    const imports = api ? [] : group.functions.slice(0, 3).map((f) => lang.importHint(f, workdir, repo));
+    const prompt = hunterPrompt({ lang, group, workdir: workRel, testCmd, imports: [...new Set(imports)], notes: cfg.notes, fixtures, api });
     writeFile(path.join(workdir, 'prompt.md'), prompt);
     log(c.dim(`  ▸ hunting in ${group.file} (${group.classes?.length ? `${group.classes.map((k) => k.name).join(', ')} as state machine${group.classes.length > 1 ? 's' : ''}; ` : ''}${group.functions.map((f) => f.name).join(', ')})`));
     const r = await agent.call({
@@ -160,7 +170,7 @@ export async function hunt({ repo, cfg, lang, agent, opts, binPath }) {
   if (opts.fix && bugs.length) await fixBugs({ repo, cfg, lang, agent, bugs, runRel, binPath, opts, account, overBudget: fixOverBudget, remaining: () => remaining(opts.budget ? opts.budget + fixBudget : 0) });
 
   const result = {
-    version: 1, tool: 'proofhound', runId: id, diff, fixRun: Boolean(opts.fix), repo: path.basename(repo), lang: lang.id, agent: agent.id, model: opts.model || null,
+    version: 1, tool: 'proofhound', runId: id, diff, fixRun: Boolean(opts.fix), api: api ? { framework: api.framework, app: api.app ? `${api.app.module}:${api.app.name}` : null } : null, repo: path.basename(repo), lang: lang.id, agent: agent.id, model: opts.model || null,
     startedAt: new Date(started).toISOString(), ms: Date.now() - started, spend,
     groups: groupLog,
     counts: {

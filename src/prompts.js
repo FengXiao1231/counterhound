@@ -88,6 +88,39 @@ const LANG_GUIDE = {
 - Repro files: \`class Repro<Name>Test\` with a plain JUnit 5 \`@Test\` method calling the code with the concrete input and \`assertEquals(expected, actual)\`. No QuickTheories, Random or clocks.`,
 };
 
+const API_GUIDE = {
+  python: (api) => `Language notes (Python + Hypothesis, HTTP API through ${api.framework === 'fastapi' ? 'FastAPI\'s TestClient' : 'Flask\'s test client'}):
+- Get a client like this, at module level of each test file:
+    ${api.client.split('\n').join('\n    ')}
+  Requests run in-process: no server, no network, no ports. ${api.framework === 'fastapi' ? 'An exception inside a handler propagates into the test (TestClient raises server exceptions), so a would-be 500 shows up with the traceback into the handler: report it as a crash at that line.' : 'With TESTING on, an exception inside a view propagates into the test, so a would-be 500 shows up with the traceback into the view.'}
+- Use \`from hypothesis import given, settings, strategies as st\` with strategies that build VALID request bodies and parameters from the schema (field types, min/max, required). Keep each example cheap: a handful of requests. Create the resources a test needs inside the test; do not depend on state left by other tests.
+- A repro is a plain pytest function that makes the fixed requests with concrete JSON and asserts on status codes and bodies. The project's fixtures listed above (for example a client or a database session) may be used in a repro.${api.openapiPath ? `\n- The app's OpenAPI document is at \`${api.openapiPath}\`: it is the contract. Check response bodies against the declared schemas and status codes against the declared responses.` : ''}`,
+  javascript: (api) => `Language notes (JavaScript/TypeScript + fast-check, HTTP API through ${api.framework}):
+- Get a client like this:
+    ${api.client.split('\n').join('\n    ')}
+- Use fc.assert(fc.asyncProperty(...)) with arbitraries that build VALID request bodies from the schema or the handler's validation. Keep each example cheap. Create what a test needs inside the test.
+- A repro is a plain \`test('repro_<name>', async () => { ... })\` making the fixed requests with concrete JSON and asserting on status codes and bodies. A 5xx response is a bug: assert on the status so the failure is attributed to that request.`,
+};
+
+function apiSection(group, api) {
+  const routes = group.functions.map((f) => {
+    const doc = f.doc ? ` — ${f.doc.trim().split(/\n\s*\n/)[0].replace(/\s+/g, ' ')}`.slice(0, 240) : '';
+    const extra = [f.route.responseModel && `response ${f.route.responseModel}`, f.route.statusCode && `status ${f.route.statusCode}`].filter(Boolean).join(', ');
+    return `- \`${f.route.method} ${f.route.path}\` → \`${f.route.handler}${f.signature.replace(/^ → [^(]+/, '')}\` (line ${f.line}${extra ? `, ${extra}` : ''})${doc}`;
+  }).join('\n');
+  return `## Target
+HTTP API (${api.framework}${api.app ? `, app \`${api.app.module}:${api.app.name}${api.app.factory ? '()' : ''}\`` : ''}), routes defined in ${group.file}:
+${routes}
+
+Properties worth checking for an HTTP API (pick the ones the routes above make possible):
+- no 5xx and no unhandled exception for any VALID request; invalid input gets a 4xx, not a 5xx
+- the response body matches the declared response model or schema, and the declared status code
+- create then read: what POST returns is what GET returns afterwards; after DELETE, GET is 404 and a second DELETE is 404 too
+- update: PUT with the same body twice leaves the resource identical (idempotent); PATCH changes only the given fields
+- lists: paging through every page returns each item exactly once, in a stable order, and agrees with single reads; filters never return non-matching items
+- unknown ids and malformed ids give 404 or 422, never a crash`;
+}
+
 const FINDING_SCHEMA = `{
   "title": "short issue title, e.g. 'chunk() drops the final partial chunk'",
   "function": "fully qualified function name",
@@ -129,8 +162,9 @@ ${[...fx, ...fac].join('\n')}
 `;
 }
 
-export function hunterPrompt({ lang, group, workdir, testCmd, imports, notes, fixtures }) {
+export function hunterPrompt({ lang, group, workdir, testCmd, imports, notes, fixtures, api }) {
   const files = lang.files();
+  if (api) return hunterApiPrompt({ lang, group, workdir, testCmd, notes, fixtures, api, files });
   const fns = group.functions.map((f) => {
     const doc = f.doc ? ` — ${f.doc.trim().split(/\n\s*\n/)[0].replace(/\s+/g, ' ')}`.slice(0, 220) : '';
     return `- \`${f.qualname}${f.signature}\` (line ${f.line})${doc}`;
@@ -160,6 +194,33 @@ ${FINDING_SCHEMA}
 Quality beats quantity: one real bug is worth more than five dubious ones, and an empty array is a fine answer. Every finding will be re-executed and then challenged by an independent reviewer, so do not report anything you cannot defend with evidence.
 
 ${LANG_GUIDE[lang.id]({ imports })}
+${notes ? `\nProject notes from the user:\n${notes}\n` : ''}
+When you are done, reply with one line: how many properties you tested and how many bugs you reported.`;
+}
+
+function hunterApiPrompt({ lang, group, workdir, testCmd, notes, fixtures, api, files }) {
+  return `You are proofhound's bug hunter. Find REAL bugs in the HTTP API below by writing property-based tests with ${lang.framework} that drive the app in-process, running them, and reporting only failures that are genuine bugs in the project's code.
+
+${apiSection(group, api)}
+${fixtureSection(fixtures)}
+## Hard rules
+- Do not modify any project file. Create files only inside \`${workdir}/\`.
+- Run tests only with: \`${testCmd} <file>\`, for example \`${testCmd} ${workdir}/${files.props}\`. It prints each test's result, the shrunk counterexample, and where the error was raised. Use it exactly like that, as a single command from the project root: no \`cd\`, pipes, redirections, \`&&\` or other commands, which are blocked. To try out an idea, write a small test file and run it.
+- Do not use the network. Do not start a server: use the in-process client described below.
+
+## How to work
+1. Read the route handlers, their models and schemas, the docstrings, the README and any API docs. Work out the contract of each route: valid inputs, the promised response, documented error codes.
+2. Write properties the contract really implies (see the list above). Generate only valid requests; a documented 4xx on invalid input is correct behaviour, not a bug.
+   Be thorough: cover every route, push on edges the contract allows (empty names, zero and maximum values, unicode, duplicates, paging boundaries, repeated calls), and combine routes (create → update → read → delete).
+3. Run the tests. For every failure decide: is my test wrong (fix it), is the request invalid (tighten the strategy), or is it a genuine bug? Re-run after each change.
+4. For each genuine bug, write a deterministic repro file \`${workdir}/${files.repro}\` (one file per bug, standalone) with the fixed requests from the shrunk counterexample. It must FAIL now and pass once the bug is fixed. Run it to confirm it fails for the right reason.
+5. Write \`${workdir}/findings.json\`: a JSON array (\`[]\` if you found nothing) of objects shaped like
+${FINDING_SCHEMA}
+   with "function" set to the route, e.g. "PUT /items/{item_id}".
+
+Quality beats quantity: one real bug is worth more than five dubious ones, and an empty array is a fine answer. Every finding will be re-executed and then challenged by an independent reviewer, so do not report anything you cannot defend with evidence.
+
+${API_GUIDE[lang.id](api)}
 ${notes ? `\nProject notes from the user:\n${notes}\n` : ''}
 When you are done, reply with one line: how many properties you tested and how many bugs you reported.`;
 }

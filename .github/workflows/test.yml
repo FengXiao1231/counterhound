@@ -31,5 +31,5 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - run: pip install pytest hypothesis
+      - run: pip install pytest hypothesis fastapi httpx
       - run: npm test

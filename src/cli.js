@@ -40,6 +40,7 @@ Options
   --agent <claude|codex>    which coding-agent CLI does the thinking (auto-detected)
   --model <name>            model for the hunter, e.g. sonnet, opus
   --review-model <name>     model for the reviewer (defaults to --model)
+  --api                     hunt the HTTP API (FastAPI, Flask, Express, Fastify routes) instead of functions
   --only <names>            comma-separated functions, modules or files to focus on
   --max-modules <n>         how many modules to hunt in (default 6)
   --per-module <n>          functions per module (default 6)
@@ -91,6 +92,7 @@ export function parseArgs(argv) {
         break;
       case '--summary-file': o.summaryFile = val(); break;
       case '--fix': o.fix = true; break;
+      case '--api': o.api = true; break;
       case '--keep-sandbox': o.keepSandbox = true; break;
       case '--report-url': o.reportUrl = val(); break;
       case '--json': o.json = true; break;
@@ -233,7 +235,13 @@ export async function main(argv) {
     }
 
     if (cmd === 'targets') {
-      let targets = lang.listTargets(repo, cfg, opts.paths);
+      let targets;
+      if (opts.api) {
+        const found = lang.listRoutes?.(repo, cfg, opts.paths);
+        if (!found) { console.log('no HTTP routes found'); return 0; }
+        targets = found.targets;
+        console.log(c.dim(`HTTP API: ${found.api.framework}${found.api.app ? `, app ${found.api.app.module}:${found.api.app.name}${found.api.app.factory ? '()' : ''}` : ''}${found.api.openapiError ? ` (app could not be imported: ${found.api.openapiError})` : ''}`));
+      } else targets = lang.listTargets(repo, cfg, opts.paths);
       if (opts.diff) targets = touchedTargets(targets, changedLines(repo, opts.diff));
       const groups = planGroups(targets, { maxGroups: opts.maxGroups || 20, perGroup: opts.perGroup || 6, only: opts.only, all: Boolean(opts.diff) });
       if (opts.json) { console.log(JSON.stringify(groups, null, 2)); return 0; }
@@ -241,7 +249,7 @@ export async function main(argv) {
         console.log(`${c.bold(g.file)} ${c.dim(`score ${g.score}`)}`);
         for (const f of g.functions) console.log(`  ${String(f.score).padStart(5)}  ${f.qualname}${c.dim(f.signature)}${f.why.length ? c.dim(`  — ${f.why.join(', ')}`) : ''}`);
       }
-      if (!groups.length) console.log('no candidate functions found');
+      if (!groups.length) console.log(opts.api ? 'no routes found' : 'no candidate functions found');
       return 0;
     }
 

@@ -13,7 +13,27 @@ export function isStateful(t) {
   return Boolean(t.owner) && (t.ownerMutators || 0) >= 1 && (t.ownerMethods || 0) >= 2;
 }
 
+/** HTTP routes: what makes one worth testing is its contract and whether it has a partner to round-trip with. */
+function scoreRoute(t, siblings) {
+  const r = t.route;
+  let s = 4;
+  const why = [];
+  if (t.doc) { s += Math.min(3, 1 + t.doc.length / 200); why.push('documented'); }
+  if (r.responseModel) { s += 2; why.push('declares a response model'); }
+  const base = r.path.replace(/\/\{[^}]+\}$/, '').replace(/\/<[^>]+>$/, '');
+  const has = (m, p) => siblings.some((x) => x.route && x.route.method === m && x.route.path === p);
+  const hasBase = (m) => siblings.some((x) => x.route && x.route.method === m && x.route.path.replace(/\/\{[^}]+\}$/, '').replace(/\/<[^>]+>$/, '') === base && x.route.path !== base);
+  if (r.method === 'POST' && hasBase('GET')) { s += 3; why.push('create, then read it back (round trip)'); }
+  if (r.method === 'GET' && /[{<][^}>]+[}>]$/.test(r.path) && has('POST', base)) { s += 2; why.push('reads what POST creates'); }
+  if (r.method === 'GET' && !/[{<]/.test(r.path) && hasBase('GET')) { s += 2; why.push('list endpoint: pagination and consistency with single reads'); }
+  if (r.method === 'PUT' || r.method === 'PATCH') { s += 2; why.push('update: idempotence, read-after-write'); }
+  if (r.method === 'DELETE') { s += 1.5; why.push('delete: gone afterwards, 404 twice'); }
+  if (/^\/(docs|redoc|openapi\.json|health|healthz|ping|metrics|static)/.test(r.path)) s -= 5;
+  return { score: Math.round(s * 10) / 10, why };
+}
+
 export function scoreTarget(t, siblings = []) {
+  if (t.route) return scoreRoute(t, siblings);
   let s = 0;
   const why = [];
   const stateful = isStateful(t);

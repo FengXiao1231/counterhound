@@ -6,7 +6,7 @@ cd proofhound
 npm test        # unit + e2e against the planted-bug fixtures, no AI calls
 ```
 
-The e2e tests drive a fake agent (`test/helpers/`) against `test/fixtures/`, so they are deterministic and free. Tests that need `go`, `cargo`, a JDK or `pip install pytest hypothesis` skip when the tool is missing.
+The e2e tests drive a fake agent (`test/helpers/`) against `test/fixtures/`, so they are deterministic and free. Tests that need `go`, `cargo`, a JDK, `pip install pytest hypothesis` or `pip install fastapi httpx` skip when the tool is missing.
 
 - A new language is one adapter in `src/lang/` plus a fixture with planted bugs and a decoy (a documented error that must *not* be reported). Look at `src/lang/go.js` for the smallest complete one.
 - Keep the funnel one-directional: a stage may drop or merge findings, never add them.

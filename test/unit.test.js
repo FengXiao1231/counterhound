@@ -473,3 +473,27 @@ test('javascript scanner: class methods that change `this` are stateful; test he
   assert.equal(q[0].ownerMethods, 2);
   fs.rmSync(tmp, { recursive: true, force: true });
 });
+
+test('python route scanner: FastAPI and Flask routes, routers with prefixes, app factories', () => {
+  const repo = path.join(ROOT, 'test', 'fixtures', 'pyapi');
+  const { api, targets } = python.listRoutes(repo, {});
+  assert.equal(api.framework, 'fastapi');
+  assert.deepEqual([api.app.module, api.app.name, api.app.factory], ['app.main', 'app', false]);
+  assert.match(api.client, /TestClient\(app\)/);
+  assert.deepEqual(targets.map((t) => t.name), ['POST /items', 'GET /items/{item_id}', 'PUT /items/{item_id}', 'DELETE /items/{item_id}', 'GET /items']);
+  assert.deepEqual([targets[0].route.responseModel, targets[0].route.statusCode, targets[0].line], ['Item', 201, 25]);
+  assert.ok(scoreTarget(targets[0], targets).why.includes('create, then read it back (round trip)'));
+  assert.ok(scoreTarget(targets[4], targets).why.some((w) => w.startsWith('list endpoint')));
+  // Flask: blueprints with url_prefix, methods=[...], an app factory, and a mounted prefix
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-flask-'));
+  fs.mkdirSync(path.join(tmp, 'shop'));
+  fs.writeFileSync(path.join(tmp, 'shop', '__init__.py'), 'from flask import Flask\nfrom .orders import bp\n\n\ndef create_app():\n    app = Flask(__name__)\n    app.register_blueprint(bp, url_prefix="/api")\n    return app\n');
+  fs.writeFileSync(path.join(tmp, 'shop', 'orders.py'), 'from flask import Blueprint\n\nbp = Blueprint("orders", __name__, url_prefix="/orders")\n\n\n@bp.route("/", methods=["GET", "POST"])\ndef orders():\n    """List or create."""\n    return []\n\n\n@bp.get("/<int:order_id>")\ndef order(order_id):\n    return {}\n');
+  const flask = python.listRoutes(tmp, {});
+  assert.equal(flask.api.framework, 'flask');
+  assert.deepEqual([flask.api.app.module, flask.api.app.name, flask.api.app.factory], ['shop', 'create_app', true]);
+  assert.match(flask.api.client, /app = create_app\(\)[\s\S]*test_client\(\)/);
+  assert.deepEqual(flask.targets.map((t) => t.name), ['GET /api/orders/', 'POST /api/orders/', 'GET /api/orders/<int:order_id>']);
+  assert.equal(python.listRoutes(path.join(ROOT, 'test', 'fixtures', 'pylib'), {}), null);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});

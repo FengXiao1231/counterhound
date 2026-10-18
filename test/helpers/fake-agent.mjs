@@ -60,10 +60,36 @@ const CART_FILES = {
   'test_repro_remove_missing.py': 'from textkit.cart import Cart\n\n\ndef test_repro_remove_missing():\n    Cart().remove("nope")\n',
 };
 
+const API_HEAD = 'from fastapi.testclient import TestClient\n\nfrom app.main import app\n\nclient = TestClient(app)\n\n\n';
+const API_FILES = {
+  'test_ph_props.py': 'from hypothesis import given, strategies as st\n' + API_HEAD + '@given(st.text(min_size=1, max_size=20), st.integers(0, 10000))\ndef test_create_then_read(name, price):\n    r = client.post("/items", json={"name": name, "price": price})\n    assert r.status_code == 201\n    assert client.get(f"/items/{r.json()[\'id\']}").json() == r.json()\n',
+  // a handler crash: TestClient raises the KeyError from read_item
+  'test_repro_get_unknown.py': API_HEAD + 'def test_repro_get_unknown():\n    r = client.get("/items/999999")\n    assert r.status_code == 404\n',
+  // built on the project\'s own `client` fixture from tests/conftest.py
+  'test_repro_put_twice.py': 'def test_repro_put_twice(client):\n    item = client.post("/items", json={"name": "a", "price": 1}).json()\n    body = {"name": "b", "price": 2}\n    first = client.put(f"/items/{item[\'id\']}", json=body).json()\n    second = client.put(f"/items/{item[\'id\']}", json=body).json()\n    assert first == second\n',
+  'test_repro_pagination.py': 'def test_repro_pagination(client):\n    ids = [client.post("/items", json={"name": "x", "price": 1}).json()["id"] for _ in range(3)]\n    page1 = [i["id"] for i in client.get("/items", params={"offset": 0, "limit": 2}).json()]\n    page2 = [i["id"] for i in client.get("/items", params={"offset": 2, "limit": 2}).json()]\n    assert sorted(page1 + page2) == sorted(ids)\n',
+  // documented 422 for a negative price: the reviewer must throw this one out
+  'test_repro_negative_price.py': API_HEAD + 'def test_repro_negative_price():\n    assert client.post("/items", json={"name": "a", "price": -1}).status_code == 201\n',
+};
+
 export default async function fakeAgent({ prompt, cwd }) {
   if (prompt.includes("proofhound's bug hunter")) {
     const rel = prompt.match(/Create files only inside `([^`]+)\/`/)[1];
     const dir = path.join(cwd, rel);
+    if (prompt.includes('HTTP API (fastapi')) {
+      for (const need of ['app `app.main:app`', '`GET /items/{item_id}` → `read_item(item_id: int) -> Item`', 'fixture `client` -> TestClient (tests/conftest.py)', 'client = TestClient(app)', '.proofhound/openapi.json']) {
+        if (!prompt.includes(need)) throw new Error(`api prompt lacks: ${need}`);
+      }
+      for (const [name, src] of Object.entries(API_FILES)) fs.writeFileSync(path.join(dir, name), src);
+      const api = (title, fn, repro, extra) => finding(title, repro, { function: fn, kind: 'wrong-result', property_test: 'test_create_then_read', evidence: 'Docstring and response model.', ...extra });
+      fs.writeFileSync(path.join(dir, 'findings.json'), JSON.stringify([
+        api('GET /items/{id} crashes for an unknown id instead of 404', 'GET /items/{item_id}', 'test_repro_get_unknown.py', { kind: 'crash', property: 'unknown ids give 404', input: 'GET /items/999999', expected: '404', actual: 'KeyError' }),
+        api('PUT is not idempotent: the version changes on a no-op update', 'PUT /items/{item_id}', 'test_repro_put_twice.py', { property: 'PUT twice with the same body gives the same resource', input: 'PUT same body twice', expected: 'equal', actual: 'version differs' }),
+        api('GET /items paging drops the last item of every page', 'GET /items', 'test_repro_pagination.py', { property: 'paging returns every item exactly once', input: '3 items, limit 2', expected: 'all 3 ids', actual: '2 ids' }),
+        api('POST /items rejects a negative price', 'POST /items', 'test_repro_negative_price.py', { property: 'any price is accepted', input: 'price -1', expected: '201', actual: '422' }),
+      ]));
+      return 'tested 1 property, reported 4 bugs';
+    }
     if (prompt.includes('textkit/cart.py')) {
       if (!prompt.includes('Stateful classes') || !prompt.includes('fixture `cart`')) throw new Error('cart prompt lacks the stateful class or the fixture');
       fs.writeFileSync(path.join(dir, 'test_ph_props.py'), CART_PROPS);
@@ -103,7 +129,7 @@ export default async function fakeAgent({ prompt, cwd }) {
     return 'Iterate up to len(xs) so the last partial chunk is kept.';
   }
   if (prompt.includes('skeptical, experienced maintainer')) {
-    if (prompt.includes('safe_div') || prompt.includes('remove_missing')) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented ValueError.","maintainer_would_fix":false}';
+    if (prompt.includes('safe_div') || prompt.includes('remove_missing') || prompt.includes('negative price')) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented ValueError.","maintainer_would_fix":false}';
     if (prompt.includes('Cart')) return '{"verdict":"bug","confidence":0.9,"severity":"medium","category":"wrong-result","title":"Cart state bug","reason":"The class docstring promises it.","maintainer_would_fix":true}';
     return '{"verdict":"bug","confidence":0.93,"severity":"medium","category":"wrong-result","title":"chunk() drops the last partial chunk","reason":"The docstring says the last chunk may be shorter.","maintainer_would_fix":true}';
   }

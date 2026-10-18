@@ -102,6 +102,36 @@ export const python = {
     return { ...data, fixtures: data.fixtures.filter(loadable), unloaded };
   },
 
+  /** The HTTP routes of a FastAPI or Flask app, as targets; null when the project has none. */
+  listRoutes(repo, cfg, only = []) {
+    const py = interpreter(repo, cfg);
+    const r = sh(py, [path.join(PLUGIN_DIR, 'ph_routes.py'), repo, ...only], { cwd: repo });
+    if (r.code !== 0) throw new Error(`route scan failed: ${r.stderr.trim().split('\n').slice(-3).join(' ')}`);
+    const data = JSON.parse(r.stdout);
+    if (!data.routes.length) return null;
+    const app = data.apps[0] || null;
+    const api = { framework: data.framework, app, apps: data.apps, client: null, openapi: null };
+    if (app) {
+      api.client = app.framework === 'fastapi'
+        ? `from fastapi.testclient import TestClient\n${app.factory ? `from ${app.module} import ${app.name}\napp = ${app.name}()` : `from ${app.module} import ${app.name}`}\nclient = TestClient(app)`
+        : `${app.factory ? `from ${app.module} import ${app.name}\napp = ${app.name}()` : `from ${app.module} import ${app.name}`}\napp.config["TESTING"] = True\nclient = app.test_client()`;
+      // the OpenAPI document is the contract the hunter checks responses against; best effort, never fatal
+      if (app.framework === 'fastapi') {
+        const code = `import json, sys\nfrom ${app.module} import ${app.name}\napp = ${app.name}${app.factory ? '()' : ''}\njson.dump(app.openapi(), sys.stdout)`;
+        const o = sh(py, ['-c', code], { cwd: repo, env: { ...process.env, ...(cfg.env || {}), PYTHONPATH: pythonPath(repo), PYTHONDONTWRITEBYTECODE: '1' } });
+        if (o.code === 0 && o.stdout.trim().startsWith('{')) api.openapi = o.stdout;
+        else api.openapiError = (o.stderr.trim().split('\n').pop() || 'could not import the app').slice(0, 200);
+      }
+    }
+    const targets = data.routes.map((rt) => ({
+      file: rt.file, module: rt.module, name: `${rt.method} ${rt.path}`, qualname: `${rt.method} ${rt.path}`, owner: null,
+      line: rt.line, loc: rt.loc, signature: ` → ${rt.handler}${rt.signature}`, nArgs: rt.nArgs, doc: rt.doc, async: rt.async,
+      impure: [], annotated: /:/.test(rt.signature), decorators: [], lang: 'python', id: `${rt.method} ${rt.path}`,
+      route: { method: rt.method, path: rt.path, handler: rt.handler, responseModel: rt.responseModel, statusCode: rt.statusCode },
+    }));
+    return { api, targets };
+  },
+
   importHint(target) {
     return target.owner
       ? `from ${target.module} import ${target.owner}`
