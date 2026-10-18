@@ -156,7 +156,16 @@ test('end to end on JavaScript, with --fix: errors are attributed, patches that 
   assert.match(by['bogus: build'].verification.reason, /could not be collected|loaded|test error/);
   assert.match(by['bogus: random'].verification.reason, /not deterministic/);
   assert.match(by['bogus: passes'].verification.reason, /repro passes/);
-  assert.equal(result.counts.confirmed, 2);
+  // the stateful class is hunted first, as a whole; one repro is built from the project's own test helper
+  assert.equal(result.groups[0].file, 'src/cart.js', result.groups.map((g) => g.file).join(', '));
+  assert.equal(by['Cart.remove ignores qty and drops the whole line'].status, 'confirmed');
+  assert.equal(by['Cart.total goes negative after a discount when lines are removed'].status, 'confirmed');
+  const missing = by['Cart.remove throws on an unknown sku'];
+  assert.equal(missing.verification.kind, 'crash');
+  assert.equal(missing.verification.explicitRaise, true);
+  assert.equal(missing.status, 'rejected');
+  assert.match(fs.readFileSync(path.join(dir, missing.workdir, 'prompt.md'), 'utf8'), /Stateful classes[\s\S]*`Cart\(\)`[\s\S]*changes state: `add\(sku, price, qty = 1\)`/);
+  assert.equal(result.counts.confirmed, 4);
   // --fix: the truncate patch is kept (the repro, re-imported from the sandbox, passes; npm test still green);
   // the uniqueBy patch also rewrote an existing test file, so it is rejected
   const tr = by['truncate exceeds max'].fix, un = by['uniqueBy keeps the last duplicate'].fix;

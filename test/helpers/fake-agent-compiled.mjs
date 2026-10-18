@@ -40,6 +40,10 @@ const JS = (toSrc) => ({
   'repro_build.test.mjs': `import test from 'node:test';\nimport { nope } from '${toSrc}/arrays.js';\ntest('repro_build', () => { nope(); });\n`,
   'repro_random.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\ntest('repro_random', () => { assert.ok(Math.random() < 0.5); });\n`,
   'repro_passes.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { camelToSnake } from '${toSrc}/text.js';\ntest('repro_passes', () => { assert.equal(camelToSnake('aB'), 'a_b'); });\n`,
+  // the stateful class: a plain step sequence, and a repro built from the project's own test helper
+  'repro_cart_remove.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { Cart } from '${toSrc}/cart.js';\ntest('repro_cart_remove', () => { const c = new Cart(); c.add('a', 100, 3); c.remove('a', 1); assert.equal(c.quantity('a'), 2); });\n`,
+  'repro_cart_negative.test.mjs': `import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { makeCart } from '${toSrc}/../test/helpers.mjs';\ntest('repro_cart_negative', () => { const c = makeCart(); c.applyDiscount(150); c.remove('apple', 2); assert.ok(c.total() >= 0, String(c.total())); });\n`,
+  'repro_cart_missing.test.mjs': `import test from 'node:test';\nimport { Cart } from '${toSrc}/cart.js';\ntest('repro_cart_missing', () => { new Cart().remove('nope'); });\n`,
 });
 
 const f = (title, fn, repro, kind = 'wrong-result') => ({
@@ -64,6 +68,9 @@ export default async function fakeAgent({ prompt, cwd }) {
       f('bogus: build', 'page', 'repro_build.test.mjs'),
       f('bogus: random', 'page', 'repro_random.test.mjs'),
       f('bogus: passes', 'camelToSnake', 'repro_passes.test.mjs'),
+      f('Cart.remove ignores qty and drops the whole line', 'Cart.remove', 'repro_cart_remove.test.mjs'),
+      f('Cart.total goes negative after a discount when lines are removed', 'Cart.total', 'repro_cart_negative.test.mjs'),
+      f('Cart.remove throws on an unknown sku', 'Cart.remove', 'repro_cart_missing.test.mjs', 'crash'),
     ] : isJava ? [
       f('Range.contains includes hi', 'com.example.textkit.Range.contains', 'ReproContainsTest.java'),
       f('median throws on empty input', 'com.example.textkit.TextKit.median', 'ReproMedianTest.java', 'crash'),
@@ -91,7 +98,8 @@ export default async function fakeAgent({ prompt, cwd }) {
     const inStats = prompt.includes('File: src/stats.rs');
     const inRange = prompt.includes('File: src/main/java/com/example/textkit/Range.java');
     const jsFile = (prompt.match(/^File: (src\/\w+\.js)$/m) || [])[1];
-    const mine = isJs ? findings.filter((x) => jsFile === (/truncate|camelToSnake/.test(x.function) ? 'src/text.js' : 'src/arrays.js'))
+    if (isJs && jsFile === 'src/cart.js' && !(prompt.includes('Stateful classes') && prompt.includes('test/helpers.mjs: `makeCart`'))) throw new Error('cart prompt lacks the stateful class or the helper');
+    const mine = isJs ? findings.filter((x) => jsFile === (/truncate|camelToSnake/.test(x.function) ? 'src/text.js' : /^Cart\./.test(x.function) ? 'src/cart.js' : 'src/arrays.js'))
       : isJava ? findings.filter((x) => x.function.includes('.Range.') === inRange)
       : isGo ? findings : findings.filter((x) => x.function.includes('::stats::') === inStats);
     fs.writeFileSync(path.join(dir, 'findings.json'), JSON.stringify(mine));
@@ -109,7 +117,7 @@ export default async function fakeAgent({ prompt, cwd }) {
     return 'fixed';
   }
   if (prompt.includes('skeptical, experienced maintainer')) {
-    if (/MustPositive|parse_percent|parsePercent|chunk panics on zero|rangeInclusive/.test(prompt)) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented.","maintainer_would_fix":false}';
+    if (/MustPositive|parse_percent|parsePercent|chunk panics on zero|rangeInclusive|unknown sku/.test(prompt)) return '{"verdict":"not_a_bug","confidence":0.9,"severity":"low","category":"crash","title":"x","reason":"Documented.","maintainer_would_fix":false}';
     return '{"verdict":"bug","confidence":0.9,"severity":"medium","category":"wrong-result","title":"confirmed","reason":"Contradicts the doc comment.","maintainer_would_fix":true}';
   }
   throw new Error('unexpected prompt');

@@ -444,3 +444,32 @@ test('python fixtures: conftest fixtures are listed and tests/conftest.py is loa
   assert.match(bad.unloaded[0], /tests\/conftest\.py \(.*no_such_module_ph/);
   fs.rmSync(broken, { recursive: true, force: true });
 });
+
+test('javascript scanner: class methods that change `this` are stateful; test helpers are listed', () => {
+  const repo = path.join(ROOT, 'test', 'fixtures', 'jslib');
+  const targets = javascript.listTargets(repo, {});
+  const cart = Object.fromEntries(targets.filter((t) => t.owner === 'Cart').map((t) => [t.name, t]));
+  assert.deepEqual(Object.keys(cart).sort(), ['add', 'applyDiscount', 'quantity', 'remove', 'subtotal', 'total']);
+  assert.equal(cart.add.mutates, true);           // this.lines.set(...)
+  assert.equal(cart.remove.mutates, true);        // this.lines.delete(...)
+  assert.equal(cart.applyDiscount.mutates, true); // this.discount = ...
+  assert.equal(cart.total.mutates, false);
+  assert.equal(cart.add.signature, '(sku, price, qty = 1)');
+  assert.match(cart.remove.doc, /Remove `qty` of `sku`/);
+  assert.equal(cart.add.ownerInit, '()');
+  assert.ok(isStateful(cart.quantity));
+  assert.equal(javascript.importHint(cart.add, path.join(repo, '.proofhound/runs/x/g'), repo), "import { Cart } from '../../../../src/cart.js'");
+  // free functions in the same project are untouched, and nothing inside the class body is taken for one
+  assert.ok(targets.some((t) => t.name === 'truncate' && !t.owner));
+  assert.ok(!targets.some((t) => t.name === 'constructor' || t.name === 'for'));
+  assert.equal(planGroups(targets, {})[0].file, 'src/cart.js');
+  assert.deepEqual(javascript.listFixtures(repo), { fixtures: [], factories: [], helpers: [{ file: 'test/helpers.mjs', exports: ['makeCart'] }] });
+  // a CommonJS class exported with module.exports is found too
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-jscls-'));
+  fs.writeFileSync(path.join(tmp, 'q.js'), 'class Queue {\n  constructor(cap) { this.items = []; this.cap = cap; }\n  push(x) {\n    if (this.items.length >= this.cap) throw new Error("full");\n    this.items.push(x);\n  }\n  size() { return this.items.length; }\n  static of(xs) { const q = new Queue(xs.length); for (const x of xs) q.push(x); return q; }\n}\nmodule.exports = Queue;\n');
+  const q = scanFile(tmp, path.join(tmp, 'q.js'));
+  assert.deepEqual(q.map((t) => [t.qualname, t.mutates, t.ownerAccess]), [['Queue.push', true, 'default'], ['Queue.size', false, 'default'], ['Queue.of', false, 'default']]);
+  assert.equal(q[0].ownerInit, '(cap)');
+  assert.equal(q[0].ownerMethods, 2);
+  fs.rmSync(tmp, { recursive: true, force: true });
+});

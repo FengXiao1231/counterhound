@@ -30,7 +30,17 @@ const LANG_GUIDE = {
     import fc from 'fast-check';
   and import the code with a path relative to the test file, e.g. ${imports.join('; ')}. CommonJS modules can be imported the same way (default export = module.exports).
 - One \`test('name', () => { fc.assert(fc.property(arbs..., (args) => { assert... })); })\` per property. Use \`fc.pre(cond)\` for preconditions.
-- Repro files: \`test('repro_<name>', () => { assert.deepEqual(fn(input), expected); })\`, no fast-check, no randomness.`,
+- Repro files: \`test('repro_<name>', () => { assert.deepEqual(fn(input), expected); })\`, no fast-check, no randomness. A repro may import the project's test helpers listed above.
+- Stateful classes (listed above, if any) get a model-based test with fast-check commands: each command checks a precondition on a simple model, runs one method on the real object and the model, and asserts what the class promises:
+    class AddCmd { constructor(sku, price, qty) { Object.assign(this, { sku, price, qty }); }
+      check() { return true; }
+      run(model, real) { real.add(this.sku, this.price, this.qty); model[this.sku] = (model[this.sku] || 0) + this.qty; assert.equal(real.quantity(this.sku), model[this.sku]); }
+      toString() { return \`add(\${this.sku}, \${this.price}, \${this.qty})\`; } }
+    test('cart model', () => {
+      fc.assert(fc.property(fc.commands([fc.tuple(fc.constantFrom('a', 'b'), fc.nat(100), fc.integer({ min: 1, max: 5 })).map((a) => new AddCmd(...a))], { size: '+1' }),
+        (cmds) => { fc.modelRun(() => ({ model: {}, real: new Cart() }), cmds); }));
+    });
+  Put the invariants (never negative, totals agree, size bookkeeping, repeated calls idempotent) in \`run\` after the call. The shrunk failure is the shortest command sequence: the repro is that sequence written out as plain calls, ending in the failing assertion.`,
   go: ({ imports }) => `Language notes (Go + rapid, run by go test):
 - Test files are compiled into the package under test: ${imports.join('; ')}. Start every file with that \`package\` clause (no \`_test\` suffix), so exported and unexported identifiers can be used directly without an import.
 - Name test functions \`TestPh<Something>\` and prefix any helper functions or types with \`ph\`, so nothing collides with the package's own code or tests.
@@ -104,7 +114,13 @@ ${group.classes.map(one).join('\n')}
 }
 
 function fixtureSection(fixtures) {
-  if (!fixtures || (!fixtures.fixtures?.length && !fixtures.factories?.length)) return '';
+  if (!fixtures || (!fixtures.fixtures?.length && !fixtures.factories?.length && !fixtures.helpers?.length)) return '';
+  if (!fixtures.fixtures?.length && !fixtures.factories?.length) {
+    return `
+The project's own test helpers, which you may import (with a path relative to your test file) instead of building objects by hand: they know how to make valid instances, sessions or sample data.
+${fixtures.helpers.map((h) => `- ${h.file}: ${h.exports.map((n) => `\`${n}\``).join(', ')}`).join('\n')}
+`;
+  }
   const fx = (fixtures.fixtures || []).slice(0, 25).map((f) => `- fixture \`${f.name}\`${f.returns ? ` -> ${f.returns}` : ''} (${f.file}${f.scope !== 'function' ? `, ${f.scope} scope` : ''})${f.doc ? `: ${f.doc}` : ''}`);
   const fac = (fixtures.factories || []).slice(0, 25).map((f) => `- factory \`${f.name}\`${f.model ? ` for ${f.model}` : ''} (${f.file})${f.doc ? `: ${f.doc}` : ''}`);
   return `

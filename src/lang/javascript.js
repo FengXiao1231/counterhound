@@ -24,6 +24,8 @@ function walk(root, start, out) {
   }
 }
 
+// an assignment to, or a mutating call on, something reached through `this`
+const MUTATES_THIS = /\bthis\.[\w$.[\]'"]+\s*(=[^=]|\+=|-=|\*=|\/=|\+\+|--|\|\|=|\?\?=)|\bthis\.[\w$.[\]'"]+\.(push|pop|shift|unshift|splice|set|delete|clear|add|sort|reverse|fill|copyWithin)\(|\bdelete\s+this\./;
 const IMPURE = /\b(fetch|require\(['"](fs|http|https|net|child_process)['"]\)|fs\.|process\.env|Date\.now|new Date\(\)|Math\.random|setTimeout|setInterval|localStorage|document\.|window\.|XMLHttpRequest|console\.)/g;
 
 /** Find the end of a function body by brace matching (good enough for ranking, not parsing). */
@@ -142,8 +144,54 @@ export function scanFile(root, file) {
     // module.exports = function (params) / (params) =>
     new RegExp(`^\\s*module\\.exports\\s*=\\s*(async\\s+)?(?:function\\s*\\*?\\s*(${ID})?\\s*)?\\(([^)]*)\\)`),
   ];
+  // classes whose methods change `this`: tested as a whole, with a model (see targets.js)
+  const classRe = new RegExp(`^\\s*(?:export\\s+(?:default\\s+)?)?(?:abstract\\s+)?class\\s+(${ID})\\b[^{]*\\{`);
+  const methodRe = new RegExp(`^\\s*(?:(static|get|set)\\s+)?(async\\s+)?\\*?\\s*(${ID})\\s*(<[^>]*>)?\\s*\\(([^)]*)\\)\\s*(:\\s*[^{]+)?\\{`);
+  const classSpans = [];
+  lines.forEach((raw, i) => {
+    const m = raw.match(classRe);
+    if (!m) return;
+    const name = m[1];
+    const exported = /^\s*export\s/.test(raw) ? { name, access: /export\s+default/.test(raw) ? 'default' : 'named' } : ex.get(name);
+    if (!exported || name.startsWith('_')) return;
+    const end = bodyExtent(lines, i);
+    classSpans.push([i, end]);
+    const methods = [];
+    let ctor = '()';
+    for (let k = i + 1; k < end; k++) {
+      const mm = lines[k].match(methodRe);
+      if (!mm) continue;
+      const [, kind, isAsync, mname, , params, ret] = mm;
+      if (mname === 'constructor') { ctor = `(${(params || '').trim()})`; k = bodyExtent(lines, k); continue; }
+      if (kind === 'get' || kind === 'set' || mname.startsWith('_') || /^(if|for|while|switch|catch|function|return)$/.test(mname)) continue;
+      const mEnd = bodyExtent(lines, k);
+      const body = lines.slice(k, mEnd + 1).join('\n');
+      methods.push({
+        name: mname, line: k + 1, loc: mEnd - k + 1, static: kind === 'static', async: Boolean(isAsync), params: (params || '').trim(), ret,
+        doc: jsdocBefore(lines, k).slice(0, 600), body,
+        mutates: kind !== 'static' && MUTATES_THIS.test(body),
+      });
+      k = mEnd;
+    }
+    const pub = methods.filter((x) => !x.static);
+    const cls = {
+      owner: name, ownerAccess: exported.access, ownerDoc: jsdocBefore(lines, i).slice(0, 400), ownerInit: ctor,
+      ownerMethods: pub.length, ownerMutators: pub.filter((x) => x.mutates).length,
+    };
+    for (const x of methods) {
+      if (out.some((f) => f.qualname === `${name}.${x.name}`)) continue;
+      const impure = [...new Set([...x.body.matchAll(IMPURE)].map((y) => y[1].replace(/[.(].*$/, '')))];
+      out.push({
+        file: rel, module: rel, name: x.name, local: name, access: exported.access, esm, qualname: `${name}.${x.name}`, line: x.line, loc: x.loc,
+        signature: `(${x.params})${x.ret ? x.ret.replace(/^:\s*/, ': ').trim() : ''}`, nArgs: countArgs(x.params), doc: x.doc, async: x.async,
+        impure, annotated: /:/.test(x.params) || Boolean(x.ret), decorators: x.static ? ['static'] : [], mutates: x.mutates, ...cls,
+      });
+    }
+  });
+  const inClass = (i) => classSpans.some(([a, b]) => i > a && i <= b);
   lines.forEach((raw, i) => {
     let local, params, isAsync, ret, info, m;
+    if (inClass(i)) return;
     // a parameter list that spans lines: join until the parentheses balance
     let line = raw;
     const open = (x) => (x.match(/\(/g) || []).length - (x.match(/\)/g) || []).length;
@@ -281,9 +329,33 @@ export const javascript = {
   importHint(target, fromDir, repo) {
     let rel = path.relative(fromDir, path.join(repo, target.file)).split(path.sep).join('/');
     if (!rel.startsWith('.')) rel = './' + rel;
-    if (target.access === 'default') return `import ${target.name} from '${rel}'`;
-    if (target.access === 'prop' || !target.esm) return `import mod from '${rel}'; const ${target.name} = mod.${target.name}`;
-    return `import { ${target.name} } from '${rel}'`;
+    const name = target.owner || target.name;
+    const access = target.owner ? target.ownerAccess : target.access;
+    if (access === 'default') return `import ${name} from '${rel}'`;
+    if (access === 'prop' || !target.esm) return `import mod from '${rel}'; const ${name} = mod.${name}`;
+    return `import { ${name} } from '${rel}'`;
+  },
+
+  /** Helper modules the project's tests already have (builders, setup, mocks), for the hunter to reuse. */
+  listFixtures(repo) {
+    const helpers = [];
+    const isHelper = (name) => /^(helpers?|setup|fixtures?|factories|factory|utils?|mocks?|builders?|test-?utils?)\.[cm]?[jt]sx?$/.test(name);
+    const visit = (dir, depth, viaHelperDir) => {
+      let entries;
+      try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+      for (const e of entries) {
+        if (e.name.startsWith('.') || e.name === 'node_modules') continue;
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) { if (depth < 2) visit(p, depth + 1, viaHelperDir || /^(helpers?|fixtures?|factories|utils?|mocks?|support)$/.test(e.name)); continue; }
+        if (!SRC_EXT.test(e.name) || /\.(test|spec)\./.test(e.name) || /\.d\.ts$/.test(e.name) || !(viaHelperDir || isHelper(e.name))) continue;
+        const src = fs.readFileSync(p, 'utf8');
+        if (src.length > 200000) continue;
+        const names = [...exportsOf(src, p).ex.values()].map((x) => x.name).filter((n) => n !== 'default' && !n.startsWith('_'));
+        if (names.length) helpers.push({ file: path.relative(repo, p).split(path.sep).join('/'), exports: names.slice(0, 20) });
+      }
+    };
+    for (const d of ['test', 'tests', '__tests__', 'spec']) if (fs.existsSync(path.join(repo, d))) visit(path.join(repo, d), 0, false);
+    return { fixtures: [], factories: [], helpers: helpers.slice(0, 15) };
   },
 
   files() { return { props: 'ph_props.test.mjs', repro: 'repro_<name>.test.mjs' }; },
