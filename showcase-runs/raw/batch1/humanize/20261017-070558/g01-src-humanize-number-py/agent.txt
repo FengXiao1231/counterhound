@@ -1,0 +1,6 @@
+I tested 13 properties and reported 1 bug: `ordinal()` gives the wrong suffix for negative integers, e.g. `ordinal(-1)` returns `'-1th'`. The repro `test_repro_ordinal_negative.py` fails now, and `findings.json` is written.
+
+The other 12 properties passed. They covered `intcomma`, `intword`, `apnumber`, `fractional` and `clamp`.
+
+`humanize._version` is missing in this checkout, so importing the package fails. My test files inject a stub module for it instead of changing any project file.
+

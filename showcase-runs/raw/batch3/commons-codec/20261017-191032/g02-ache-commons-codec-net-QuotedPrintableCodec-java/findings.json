@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Strict encode emits a 77-character line (exceeds RFC 76-char limit) before the final soft break",
+    "function": "org.apache.commons.codec.net.QuotedPrintableCodec.encodeQuotedPrintable",
+    "kind": "contract-violation",
+    "property": "in strict mode (full RFC 1521 ruleset) every encoded line, including the trailing '=' of a soft break, is at most 76 characters",
+    "property_test": "strictLineLength",
+    "repro_file": "ReproStrictLineLengthTest.java",
+    "input": "74 bytes: 'a' x70, 0x00, 0x00, 'a', 'a'; QuotedPrintableCodec(true).encode",
+    "expected": "every line <= 76 characters",
+    "actual": "first line is 70 'a' + '=00=00' + '=' = 77 characters; the soft break after the third-from-last octet is emitted without checking that the encoded octet fits",
+    "evidence": "strict mode 'implements the full ruleset' of RFC 1521, whose rule #5 limits encoded lines to 76 characters; the code defines SAFE_LENGTH=73 to guarantee this but the third-from-last octet handling (pos += 3 then soft break when pos > SAFE_LENGTH-2) overshoots it"
+  }
+]

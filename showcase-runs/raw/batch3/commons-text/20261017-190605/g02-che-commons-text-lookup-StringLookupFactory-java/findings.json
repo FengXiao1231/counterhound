@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Base64 encoder/decoder lookups use ISO-8859-1, corrupting non-Latin-1 text",
+    "function": "org.apache.commons.text.lookup.StringLookupFactory.base64EncoderStringLookup",
+    "kind": "wrong-result",
+    "property": "decoding the base64 encoding of a string gives back the original string",
+    "property_test": "base64RoundTripUnicode",
+    "repro_file": "ReproBase64Utf8Test.java",
+    "input": "\"\\u20ac\" (euro sign) encoded then decoded",
+    "expected": "\"\\u20ac\" (round trip preserved; UTF-8 is the library convention, as in the URL lookups)",
+    "actual": "\"?\" because the encoder uses getBytes(ISO_8859_1), which replaces unmappable chars with '?'",
+    "evidence": "INSTANCE_BASE64_ENCODER/DECODER in StringLookupFactory use StandardCharsets.ISO_8859_1; the sibling URL lookups document and use UTF-8, and the encoder silently loses data for any char above U+00FF."
+  }
+]

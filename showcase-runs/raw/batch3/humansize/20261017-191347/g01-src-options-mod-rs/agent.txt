@@ -1,0 +1,4 @@
+I tested 6 properties and reported 0 bugs. All six passed. They cover the five setters you listed and `from`. For each setter, the new value is set and the other fields stay unchanged. Setting it back to the original value restores the original options. `from` returns an identical copy. `findings.json` is `[]`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191347/g01-src-options-mod-rs && cat > .proofhound/runs/20261017-191347/g01-src-options-mod-rs/ph_props.rs <<'EOF'\nuse humansize::{FormatSizeOptions, BaseUnit, Kilo, DECIMAL, BINARY, WINDOWS};\nuse proptest::prelude::*;\n\nfn kilo() -> impl Strategy<Va

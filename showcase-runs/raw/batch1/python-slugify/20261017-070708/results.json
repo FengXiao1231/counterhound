@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-070708",
+  "repo": "python-slugify",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:07:08.769Z",
+  "ms": 53920,
+  "spend": {
+    "usd": 0.1569865,
+    "tokensIn": 326961,
+    "tokensOut": 3883,
+    "calls": 1
+  },
+  "groups": [
+    {
+      "group": "g01-slugify-slugify-py",
+      "file": "slugify/slugify.py",
+      "functions": [
+        "slugify"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 53853,
+      "costUsd": 0.1569865,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 1,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

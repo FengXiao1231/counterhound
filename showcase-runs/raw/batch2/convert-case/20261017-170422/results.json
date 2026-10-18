@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170422",
+  "repo": "convert-case",
+  "lang": "rust",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:04:22.382Z",
+  "ms": 88599,
+  "spend": {
+    "usd": 0.7122122000000001,
+    "tokensIn": 1311709,
+    "tokensOut": 14284,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g01-src-lib-rs",
+      "file": "src/lib.rs",
+      "functions": [
+        "StateConverter::from_case",
+        "StateConverter::to_case",
+        "Casing::to_case",
+        "Casing::from_case",
+        "StateConverter::remove_boundaries",
+        "StateConverter::set_boundaries"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 55006,
+      "costUsd": 0.2513567,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g02-src-converter-rs",
+      "file": "src/converter.rs",
+      "functions": [
+        "Converter::from_case",
+        "Converter::to_case",
+        "Converter::convert",
+        "Converter::remove_boundary",
+        "Converter::remove_boundaries",
+        "Converter::remove_pattern"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 70875,
+      "costUsd": 0.319628,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 2,
+    "verified": 2,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Delimiter splitting depends on which other boundaries are enabled (byte fast path ignores grapheme clusters)",
+      "function": "convert_case::StateConverter::set_boundaries / to_case (via boundary::split)",
+      "kind": "inconsistency",
+      "property": "adding a boundary that cannot match anywhere in the input does not change the conversion result",
+      "property_test": "ph_fast_vs_general_path",
+      "repro_file": "repro_fast_vs_general_path.rs",
+      "input": "\" \\u{301}\".set_boundaries(&[Space]).to_case(Snake) vs .set_boundaries(&[Space, LowerUpper])",
+      "expected": "same result for both; the doc says splitting is by graphemes, where ' '+U+0301 is a single non-space grapheme, so no split occurs (result \" \\u{301}\" -> \"_\\u{301}\" not produced)",
+      "actual": "[Space] only: \"_\\u{301}\" (split inside the grapheme cluster, byte-level fast path); with an extra irrelevant boundary: \" \\u{301}\" (grapheme path, no split)",
+      "evidence": "boundary::split has a byte-level fast path when all boundaries are Space/Hyphen/Underscore and a grapheme-cluster path otherwise; the General path comment says it needs graphemes, and Boundary::len docs count graphemes. The same string and same effective delimiters give different words depending on unrelated boundaries.",
+      "group": "g01-src-lib-rs",
+      "file": "src/lib.rs",
+      "workdir": ".proofhound/runs/20261017-170422/g01-src-lib-rs",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_fast_vs_general_path.rs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_fast_vs_general_path",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assertion `left == right` failed\n  left: \"_\\u{301}\"\n right: \" \\u{301}\"",
+          "example": null
+        },
+        "testName": "repro_fast_vs_general_path"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: s = \" \\u{301}\", bs = [ Space, ], c = Snake"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.6,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "Byte-level fast path in boundary::split splits inside grapheme clusters, unlike the general path",
+        "reason": "The fast path's comment says byte iteration is correct because the delimiters are ASCII. That ignores that a delimiter followed by a combining mark (' ' + U+0301) is a single grapheme, which the general path (the documented, grapheme-based one) does not split. Adding an unrelated boundary such as LowerUpper therefore changes the output for the same effective delimiters. The input is valid and the fix is small (fall back to the grapheme path when the string has non-ASCII bytes), though the case is rare and so low severity.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "use convert_case::{Boundary, Case, Casing};\n\n#[test]\nfn repro_fast_vs_general_path() {\n    let s = \" \\u{301}\"; // space + combining acute: one grapheme cluster\n    // LowerUpper can never match in this string, so it must not change the result.\n    let only_space = s.set_boundaries(&[Boundary::Space]).to_case(Case::Snake);\n    let with_extra = s\n        .set_boundaries(&[Boundary::Space, Boundary::LowerUpper])\n        .to_case(Case::Snake);\n    assert_eq!(only_space, with_extra);\n}\n",
+      "bugDir": ".proofhound/runs/20261017-170422/bugs/PH-001-byte-level-fast-path-in-boundary-split-splits-in"
+    },
+    {
+      "title": "Camel (and Sentence) pattern treats a leading empty word as the first word",
+      "function": "Converter::convert",
+      "kind": "contract-violation",
+      "property": "with the Camel pattern, the first non-empty word is lowercased and the remaining words are capitalized, even if the input has leading delimiters",
+      "property_test": "ph_camel_leading_delims",
+      "repro_file": "repro_camel_leading_empty_word.rs",
+      "input": "Converter::new().from_case(Case::Kebab).to_case(Case::Camel).convert(\"-a-a\")",
+      "expected": "\"aA\"",
+      "actual": "\"AA\" (the empty leading word consumes the 'first word' slot, so the real first word is capitalized)",
+      "evidence": "Pattern::Camel doc: 'Makes the first non-empty word lowercase and the remaining capitalized.' Pattern::Sentence doc says the same for 'first non-empty word capitalized' (convert(\"_a_a\") with Snake->Sentence gives \" a a\" instead of \" A a\"). Pattern::mutate uses index i == 0 instead of the first non-empty word.",
+      "group": "g02-src-converter-rs",
+      "file": "src/converter.rs",
+      "workdir": ".proofhound/runs/20261017-170422/g02-src-converter-rs",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_camel_leading_empty_word.rs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_camel_leading_empty_word",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assertion `left == right` failed\n  left: \"AA\"\n right: \"aA\"",
+          "example": null
+        },
+        "testName": "repro_camel_leading_empty_word"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: s = \"a\", t = \"a\", n = 1"
+      },
+      "review": {
+        "verdict": "not_a_bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "Pattern::Camel/Sentence docs say 'first non-empty word' but the implementation uses index 0",
+        "reason": "The crate-level docs in lib.rs (\"Delimiters\") say leading delimiters create empty words and that this \"can cause unintuitive behavior for patterns that transform words based on index\". They include a doctest, `ccase!(camel, \"_empty__first_word\") == \"EmptyFirstWord\"`, that asserts the same behavior as the report. They also give `remove_empty()` / `Pattern::RemoveEmpty` as the intended way to get `emptyFirstWord`, and a unit test in pattern.rs covers that path. So the output \"AA\" is deliberate and tested. The only real defect is that the per-variant doc comment wrongly says \"first non-empty word\", and a maintainer would fix that wording rather than change the behavior.",
+        "maintainerWouldFix": false
+      },
+      "status": "rejected"
+    }
+  ]
+}

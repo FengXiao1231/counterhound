@@ -1,0 +1,7 @@
+I tested 12 properties of `decamelize` and reported 0 bugs. Ten passed. The other two failed, and both failures come from my tests assuming things the contract doesn't promise.
+
+- **Idempotence with `preserveConsecutiveUppercase: true`:** `XZa` gives `X_za`, and `X_za` gives `x_za`. The docs don't promise idempotence in this mode.
+- **Greek final sigma:** a lone `Σ` at the end of an `aBcDéΣ` input comes out as `σ` instead of `ς`. The code deliberately lowercases the letters it has split out one at a time, so this is expected.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-192924/g01-index-js && ls .proofhound; ls test* 2>/dev/null | head"}

@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Lexer.Offset() runs ahead of the returned token inside character classes",
+    "function": "github.com/gobwas/glob/syntax.Lexer.Next",
+    "kind": "contract-violation",
+    "property": "for escape-free patterns, Offset() after each Next() equals the total source length of the tokens returned so far",
+    "property_test": "TestPhOffsetAfterToken",
+    "repro_file": "repro_offset_test.go",
+    "input": "\"[a-c]\" (also \"[]\"): call Next() once, then Offset()",
+    "expected": "Next() returns RangeOpen and Offset() == 1, right after the '['",
+    "actual": "Offset() == 5 (2 for \"[]\"): fetchRange lexes the whole class and queues all its tokens, so pos is already past them",
+    "evidence": "Doc of Offset: 'the byte offset in the source the lexer stopped at, that is, the position right after the most recently returned token.' The parser (parse.go) uses lex.Offset() for error positions, so errors reported at a token inside a class point past it."
+  }
+]

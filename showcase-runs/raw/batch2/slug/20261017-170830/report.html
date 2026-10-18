@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofhound · slug</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}h1 span{color:var(--accent)}h2{font-size:18px;margin:40px 0 12px}
+.meta{color:var(--dim);font-size:13px}.meta code{font-size:12px}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+.funnel{margin:20px 0 8px;display:grid;gap:6px}.step{position:relative;height:30px}
+.bar{position:absolute;inset:0 auto 0 0;background:var(--bar1);border-radius:6px}.bar[data-i="3"]{background:var(--bar3)}
+.lab{position:relative;padding:5px 10px;font-size:13px;white-space:nowrap}.bar[data-i="3"]+.lab{color:#fff}
+.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:14px 0}
+.bug.needs-look{border-left-color:var(--warn)}
+.bug header{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.bug h3{margin:0;font-size:17px;flex:1 1 300px}
+.id{font:600 12px ui-monospace,monospace;color:var(--accent)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--dim)}
+.badge.ok{color:var(--ok);border-color:currentColor}.sev-high{color:var(--accent);border-color:currentColor}.sev-medium{color:var(--warn);border-color:currentColor}
+.where{margin:6px 0 10px;color:var(--dim);font-size:13px;word-break:break-all}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0 0 8px}dt{color:var(--dim);font-size:13px}dd{margin:0;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.copy{margin-left:8px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer}
+.err{color:var(--accent);margin:4px 0}.dim{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:500}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center}
+.tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+footer{margin-top:48px;color:var(--dim);font-size:12.5px}
+@media (max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style></head><body><main>
+<h1>proof<span>hound</span> report</h1>
+<div class="meta">slug · go · claude (sonnet) · 1 modules, 5 functions · 49s · $0.28 · 10/17/2026, 5:08:30 PM</div>
+<div class="funnel">
+    <div class="step"><div class="bar" style="width:100%" data-i="0"></div>
+    <div class="lab"><b>2</b> reported by the hunter</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="1"></div>
+    <div class="lab"><b>2</b> reproduced deterministically</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="2"></div>
+    <div class="lab"><b>2</b> unique</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="3"></div>
+    <div class="lab"><b>2</b> confirmed by review</div></div></div>
+<p class="meta">Every bug below failed the same way in 3 fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
+
+<h2>2 confirmed bugs</h2>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-001</span>
+    <h3>MakeLang returns an empty slug when EnableSmartTruncate=false and MaxLength is 0 (the default)</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-medium">medium</span>
+      <span class="badge">confidence 0.93</span>
+      <span class="badge ok">failed 3/3</span>
+    </span>
+  </header>
+  <p class="where"><code>github.com/gosimple/slug.MakeLang</code> · <code>slug.go</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>EnableSmartTruncate=false, MaxLength=0, Make(&quot;a&quot;)</code></dd>
+    <dt>Expected</dt><dd>&quot;a&quot;</dd>
+    <dt>Actual</dt><dd>&quot;&quot; (slug[:0] since len(slug) &gt;= MaxLength is true)</dd>
+    <dt>Property</dt><dd>With MaxLength unset (0), slugs are not shortened, so a simple lowercase word is returned unchanged regardless of EnableSmartTruncate</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>package slug
+
+import &quot;testing&quot;
+
+func TestReproNonSmartZeroMaxLength(t *testing.T) {
+	EnableSmartTruncate = false
+	defer func() { EnableSmartTruncate = true }()
+	if got := Make(&quot;a&quot;); got != &quot;a&quot; {
+		t.Fatalf(&quot;Make(\&quot;a\&quot;) with MaxLength=0 and smart truncate off = %q, want \&quot;a\&quot;&quot;, got)
+	}
+}</code></pre>
+  <p class="err"><code>AssertionError: Make(&quot;a&quot;) with MaxLength=0 and smart truncate off = &quot;&quot;, want &quot;a&quot;</code></p></details>
+  <details><summary>Why this is a bug</summary><p>Doc on MaxLength: &#39;By default slugs aren&#39;t shortened.&#39; The non-smart branch `len(slug) &gt;= MaxLength` does not guard MaxLength &gt; 0 (unlike the smart branch).</p><p><b>Independent review:</b> slug.go:131 runs `if !EnableSmartTruncate &amp;&amp; len(slug) &gt;= MaxLength { slug = slug[:MaxLength] }` with no `MaxLength &gt; 0` check. With the default MaxLength=0, `len(slug) &gt;= 0` is always true, so every slug is cut to `slug[:0]` and comes back empty. The MaxLength doc says &#39;By default slugs aren&#39;t shortened&#39;, and the smart branch at line 144 guards with `MaxLength &gt; 0`, so the missing guard is an oversight and not intended. The repro uses the public API correctly, and a one-line fix is trivial for a maintainer to accept.</p>
+  <p><b>rapid shrank it to:</b> <code>Failing test case: s: &quot;a&quot;</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-170830/bugs/PH-001-makelang-returns-an-empty-slug-when-enablesmartt/BUG.md</code></p></details>
+</article>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-002</span>
+    <h3>Make() with MaxLength can return a slug ending in &#39;_&#39; that fails IsSlug</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.85</span>
+      <span class="badge ok">failed 3/3</span>
+    </span>
+  </header>
+  <p class="where"><code>github.com/gosimple/slug.MakeLang</code> · <code>slug.go</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>MaxLength=2, Make(&quot;0_0&quot;)</code></dd>
+    <dt>Expected</dt><dd>a slug without trailing &#39;_&#39; (e.g. &quot;0&quot;) that passes IsSlug</dd>
+    <dt>Actual</dt><dd>&quot;0_&quot;, IsSlug returns false</dd>
+    <dt>Property</dt><dd>All output of Make(text) passes IsSlug (when non-empty)</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>package slug
+
+import &quot;testing&quot;
+
+func TestReproTruncateTrailingUnderscore(t *testing.T) {
+	MaxLength = 2
+	defer func() { MaxLength = 0 }()
+	got := Make(&quot;0_0&quot;)
+	if got != &quot;&quot; &amp;&amp; !IsSlug(got) {
+		t.Fatalf(&quot;Make(\&quot;0_0\&quot;) with MaxLength=2 = %q, not a valid slug&quot;, got)
+	}
+}</code></pre>
+  <p class="err"><code>AssertionError: Make(&quot;0_0&quot;) with MaxLength=2 = &quot;0_&quot;, not a valid slug</code></p></details>
+  <details><summary>Why this is a bug</summary><p>IsSlug doc: &#39;All output from slug.Make(text) should pass this test&#39; and slugs may not end with &#39;-&#39; or &#39;_&#39;. smartTruncate cuts text[:MaxLength] without re-trimming &#39;_&#39; / &#39;-&#39;.</p><p><b>Independent review:</b> The IsSlug doc says all output from Make should pass it, and IsSlug rejects a trailing &#39;_&#39; or &#39;-&#39;. With smart truncation, Make trims the ends first and then calls smartTruncate. smartTruncate cuts at `text[:MaxLength]`, or at the last &#39;-&#39;, without re-trimming. So &quot;0_0&quot; with MaxLength=2 becomes &quot;0_&quot;, and a cut at a &#39;-&#39; can leave a trailing &#39;_&#39; in the same way. The input is ordinary, the guarantee is documented, and re-trimming `-_` after truncation is a small fix a maintainer would accept.</p>
+  <p><b>rapid shrank it to:</b> <code>Failing test case: s: &quot;0_z&quot;, m: 2</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-170830/bugs/PH-002-make-with-maxlength-can-return-a-slug-ending-in/BUG.md</code></p></details>
+</article>
+
+
+
+<h2>Filtered out (0)</h2>
+<p class="dim">Nothing was filtered out.</p>
+
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
+<tr><td><code>slug.go</code></td><td>IsSlug, Substitute, Make, MakeLang, SubstituteRune</td><td>2</td><td>2</td><td>33s</td></tr>
+</table>
+<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));
+</script>
+</body></html>

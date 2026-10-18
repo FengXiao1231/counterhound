@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170539",
+  "repo": "bytesize",
+  "lang": "rust",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:05:39.838Z",
+  "ms": 29650,
+  "spend": {
+    "usd": 0.21803909999999999,
+    "tokensIn": 386486,
+    "tokensOut": 4004,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g02-src-parse-rs",
+      "file": "src/parse.rs",
+      "functions": [
+        "Unit::from_str"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 29019,
+      "costUsd": 0.103674,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-src-lib-rs",
+      "file": "src/lib.rs",
+      "functions": [
+        "ByteSize::b",
+        "ByteSize::kb",
+        "ByteSize::kib",
+        "ByteSize::mb",
+        "ByteSize::mib",
+        "ByteSize::gb"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 29632,
+      "costUsd": 0.1143651,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 7,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

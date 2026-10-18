@@ -1,0 +1,14 @@
+[
+  {
+    "title": "activate() ignores `path` when the locale was activated before from another path",
+    "function": "humanize.i18n.activate",
+    "kind": "contract-violation",
+    "property": "activate(locale, path) loads the catalogue from `path`; if none exists there it raises FileNotFoundError, regardless of earlier activations",
+    "property_test": "test_activate_uses_given_path",
+    "repro_file": "test_repro_path_ignored_after_cache.py",
+    "input": "activate('fr_FR', dirA) (has catalogue) then activate('fr_FR', emptyDir)",
+    "expected": "FileNotFoundError because emptyDir has no fr_FR catalogue (and a different dir's catalogue is used if it differs)",
+    "actual": "Returns the cached translations from dirA silently; `path` is ignored because _TRANSLATIONS is keyed by locale only",
+    "evidence": "Docstring: 'Search for locale in directory `path`' and 'Raises: FileNotFoundError: If humanize cannot find the locale folder'. Cache key at i18n.py:88 omits path."
+  }
+]

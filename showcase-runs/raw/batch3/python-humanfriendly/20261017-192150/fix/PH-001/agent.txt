@@ -1,0 +1,1 @@
+I fixed `format_timespan` in `humanfriendly/__init__.py`. When no unit has a non-zero count, which includes inputs so small they round to zero, it now returns `'0 seconds'` instead of an empty string. The repro test passes. I didn't run the project's other tests.

@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Compare ignores prerelease when segment counts differ (1.0.0.0-alpha == 1.0.0)",
+    "function": "github.com/hashicorp/go-version.(*Version).Compare",
+    "kind": "wrong-result",
+    "property": "A prerelease version is lower than the same segments without prerelease, regardless of trailing zero-padding of segments; equality is consistent/transitive",
+    "property_test": "TestPhZeroPadPrerelease",
+    "repro_file": "repro_prerelease_ignored_extra_segment_test.go",
+    "input": "a=1.0.0-alpha, b=1.0.0.0-alpha, c=1.0.0",
+    "expected": "1.0.0.0-alpha < 1.0.0 (as 1.0.0-alpha < 1.0.0), since trailing zero segments are treated as equal",
+    "actual": "1.0.0.0-alpha.Compare(1.0.0) == 0 while 1.0.0-alpha.Compare(1.0.0) == -1, so Equal is non-transitive (1.0.0-alpha == 1.0.0.0-alpha == 1.0.0 but 1.0.0-alpha != 1.0.0)",
+    "evidence": "Compare's own jagged-segment logic treats missing trailing segments as zeros (1.0 == 1.0.0 including prerelease handling via equalSegments only when lengths match); the fallthrough path returns 0 without ever comparing prereleases, violating SemVer precedence and the total-order contract that sort/Equal rely on."
+  }
+]

@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170259",
+  "repo": "humantime",
+  "lang": "rust",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:02:59.401Z",
+  "ms": 60520,
+  "spend": {
+    "usd": 0.4224572,
+    "tokensIn": 585395,
+    "tokensOut": 9687,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-src-date-rs",
+      "file": "src/date.rs",
+      "functions": [
+        "parse_rfc3339",
+        "format_rfc3339",
+        "format_rfc3339_millis",
+        "format_rfc3339_micros",
+        "format_rfc3339_nanos",
+        "format_rfc3339_seconds"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 43607,
+      "costUsd": 0.1810398,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g02-src-duration-rs",
+      "file": "src/duration.rs",
+      "functions": [
+        "parse_duration",
+        "format_duration"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 49340,
+      "costUsd": 0.190043,
+      "reported": 1,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 8,
+    "reported": 2,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 1
+  },
+  "findings": [
+    {
+      "title": "parse_rfc3339 accepts trailing garbage after the seconds when the string ends in Z",
+      "function": "humantime::parse_rfc3339",
+      "kind": "contract-violation",
+      "property": "a timestamp with extra characters between the seconds and the final Z is not a valid RFC3339 timestamp and must be rejected",
+      "property_test": "ph_no_trailing_garbage",
+      "repro_file": "repro_trailing_garbage.rs",
+      "input": "1970-01-01T00:00:00ZZ",
+      "expected": "Err(Error::InvalidFormat) (or other error)",
+      "actual": "Ok(UNIX_EPOCH): weak parser only checks b[19]=='Z' and len<=25, ignoring the remaining bytes",
+      "evidence": "Docs say parse_rfc3339 is for strictly programmatically generated strings; only 'Z' or '+00:00' suffix is supported. 'ZZ' and 'Zabc+00:00' are not valid RFC3339 (the crate's own tests reject '+00:00abcd' and similar trailing junk).",
+      "group": "g01-src-date-rs",
+      "file": "src/date.rs",
+      "workdir": ".proofhound/runs/20261017-170259/g01-src-date-rs",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_trailing_garbage.rs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_trailing_garbage",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assertion failed: parse_rfc3339(\"1970-01-01T00:00:00ZZ\").is_err()",
+          "example": null
+        },
+        "testName": "repro_trailing_garbage"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: s = 0, g = \"Z\""
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.85,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "parse_rfc3339 accepts trailing garbage after 'Z' (e.g. \"...00ZZ\")",
+        "reason": "The strict `parse_rfc3339` only checks that the last byte is 'Z' or that the string ends with \"+00:00\", then hands off to `parse_rfc3339_weak`. In the weak parser, the no-fraction branch at date.rs:187 rejects the input only when `len > 25` or `b[19]` is neither 'Z' nor the full \"+00:00\". As a result, \"…00ZZ\" and \"…00Zabc+00:00\" (up to 25 bytes) pass, even though the docs say only `Z` or `+00:00` is supported for this strict function. The fix is simple (require `b.len()==20` with 'Z', or exactly `+00:00` at b[19..]), so a maintainer would likely accept it, though the impact is minor.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "use humantime::parse_rfc3339;\n\n#[test]\nfn repro_trailing_garbage() {\n    assert!(parse_rfc3339(\"1970-01-01T00:00:00ZZ\").is_err());\n    assert!(parse_rfc3339(\"1970-01-01T00:00:00Zabc+00:00\").is_err());\n}\n",
+      "bugDir": ".proofhound/runs/20261017-170259/bugs/PH-001-parse-rfc3339-accepts-trailing-garbage-after-z-e"
+    },
+    {
+      "title": "parse_duration silently merges digits separated by whitespace into one number",
+      "function": "humantime::parse_duration",
+      "kind": "wrong-result",
+      "property": "a number that is not followed by a unit (e.g. '1' in '1 30m') is rejected, rather than being concatenated with the next number",
+      "property_test": "ph_ws_in_number",
+      "repro_file": "repro_ws_merges_numbers.rs",
+      "input": "\"1 0s\" (also \"1 30m\")",
+      "expected": "Err (time unit needed / number without unit), as for '10 months 1'",
+      "actual": "Ok(10s); '1 30m' parses as 130 minutes",
+      "evidence": "Docs: a duration is a concatenation of time spans, each 'an integer number and a suffix'; a number omitted/unit missing is meant to be an error (UnknownUnit with empty unit, test_nice_error_message). The digit loop in Parser::parse treats whitespace as ignorable inside the number, so '1 30m' mis-parses as 130m instead of reporting a missing unit.",
+      "group": "g02-src-duration-rs",
+      "file": "src/duration.rs",
+      "workdir": ".proofhound/runs/20261017-170259/g02-src-duration-rs",
+      "verification": {
+        "verified": false,
+        "reason": "test error: panic was raised outside the project's code",
+        "reproFile": "repro_ws_merges_numbers.rs",
+        "error": {
+          "type": "panic",
+          "message": "Ok(7800s)",
+          "notes": [],
+          "frames": [
+            {
+              "file": "/rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs",
+              "line": 250,
+              "func": "<fn() -> core::result::Result<(), alloc::string::String> as core::ops::function::FnOnce<()>>::call_once",
+              "code": ""
+            },
+            {
+              "file": "/rustc/2d8144b7880597b6e6d3dfd63a9a9efae3f533d3/library/core/src/ops/function.rs",
+              "line": 250,
+              "func": "<ph_repro_ws_merges_numbers::repro_ws_merges_numbers::{closure#0} as core::ops::function::FnOnce<()>>::call_once",
+              "code": ""
+            },
+            {
+              "file": "/tmp/claude-0/zoo2/humantime/.proofhound/runs/20261017-170259/g02-src-duration-rs/repro_ws_merges_numbers.rs",
+              "line": 4,
+              "func": "ph_repro_ws_merges_numbers::repro_ws_merges_numbers::{closure#0}",
+              "code": "fn repro_ws_merges_numbers() {"
+            },
+            {
+              "file": "/tmp/claude-0/zoo2/humantime/.proofhound/runs/20261017-170259/g02-src-duration-rs/repro_ws_merges_numbers.rs",
+              "line": 6,
+              "func": "ph_repro_ws_merges_numbers::repro_ws_merges_numbers",
+              "code": "assert!(parse_duration(\"1 30m\").is_err(), \"{:?}\", parse_duration(\"1 30m\"));"
+            }
+          ],
+          "example": null
+        }
+      }
+    }
+  ]
+}

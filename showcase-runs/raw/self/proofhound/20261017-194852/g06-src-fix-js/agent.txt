@@ -1,0 +1,10 @@
+I tested 5 properties and reported 0 bugs.
+
+The one failing property was `makeSandbox` returning `undefined` on success. I didn't report it. The docstring says it "returns false if too big", but it throws instead, and both callers in `src/fix.js` catch that throw and read `e.message`. That makes it a stale docstring rather than a defect in the code. I did not run the 300MB case.
+
+The other four properties passed. They cover `makePatch` headers for modified, new and deleted files and for filenames with spaces. They also cover `changedFiles` detecting changed, added and deleted files, and `makeSandbox` skipping and linking the right directories.
+
+`findings.json` is `[]`.
+
+Permission denials:
+Bash: {"command":"cat > /tmp/claude-0/self/.proofhound/runs/20261017-194852/g06-src-fix-js/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport fs from 'node:fs';\nimport os from 'node:os';\nimport path from 'node:path';\n

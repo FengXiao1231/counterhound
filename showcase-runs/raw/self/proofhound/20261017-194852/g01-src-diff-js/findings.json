@@ -1,0 +1,14 @@
+[
+  {
+    "title": "parseDiff treats an added content line beginning with '++ ' as a new file header",
+    "function": "parseDiff",
+    "kind": "wrong-result",
+    "property": "an added line inside a hunk never changes the current file; changed ranges stay attributed to the right file",
+    "property_test": "prop_added_content_line_not_mistaken_for_file_header",
+    "repro_file": "repro_added_line_looks_like_header.test.mjs",
+    "input": "--- a/a.txt\n+++ b/a.txt\n@@ -4,0 +5 @@\n+++ x\n@@ -9,0 +11 @@\n+y\n",
+    "expected": "Map { 'a.txt' => [[5,5],[11,11]] }",
+    "actual": "'+++ x' (an added line with content '++ x') is parsed as a file header: file becomes 'x', a bogus entry 'x' is created and the later hunk is attributed to it, so a.txt loses range [11,11]",
+    "evidence": "parseDiff is documented to parse git diff --unified=0 into file -> new-side ranges; with unified=0 added lines are printed as '+' + content, so content '++ x' yields '+++ x' inside a hunk. The parser does not track hunk line counts, so it cannot tell it from a header. Changed functions in the real file can be missed in diff mode."
+  }
+]

@@ -1,0 +1,13 @@
+I tested 6 properties and reported 0 bugs, so `findings.json` is `[]`. All 6 passed.
+
+The properties covered:
+- **Int-list round-trip:** `format_int_list` then `parse_int_list` returns the sorted unique input, with default and custom delimiters.
+- **`int_ranges_from_int_list`:** the ranges it returns cover exactly the input integers.
+- **`iter_splitlines`:** no returned line contains a line-ending character.
+- **`strip_ansi`:** it removes an inserted escape code from text and leaves bytes without escapes unchanged.
+- **`escape_shell_args`:** with `style='sh'`, `shlex.split` of the output gives back the original arguments.
+
+One Bash call was denied at first, but the same `ph-test` command ran fine on the second try.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-064016/g02-boltons-strutils-py && cat > .proofhound/runs/20261017-064016/g02-boltons-strutils-py/test_ph_props.py <<'EOF'\nfrom hypothesis import given, assume, strategies as st\nfrom boltons.strutils import *\n\nints = st.lists(st.integers(0, 200))\n\n

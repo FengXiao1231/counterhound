@@ -1,0 +1,14 @@
+[
+  {
+    "title": "toASCII/toUnicode silently drop everything after a second '@'",
+    "function": "punycode.toASCII",
+    "kind": "wrong-result",
+    "property": "converting an address/domain must not lose characters: an ASCII-only input is returned unchanged",
+    "property_test": "toASCII/toUnicode preserve text outside the domain in emails with several @",
+    "repro_file": "repro_multi_at.test.mjs",
+    "input": "toASCII('a@b@c')",
+    "expected": "'a@b@c' (already ASCII, so unchanged; only the domain part is punycoded)",
+    "actual": "'a@b' (the '@c' suffix is silently discarded; toUnicode has the same behaviour)",
+    "evidence": "Docs say 'Only the non-ASCII parts of the domain name will be converted, i.e. it doesn't matter if you call it with a domain that's already in ASCII', and mapDomain says 'Leave the local part (i.e. everything up to `@`) intact'. mapDomain uses domain.split('@') and only keeps parts[0] and parts[1], so parts[2..] are lost. Quoted local parts may legally contain '@' (RFC 5321), so this is data loss rather than a rejected input."
+  }
+]

@@ -1,0 +1,265 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-070728",
+  "repo": "dateutil",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:07:28.811Z",
+  "ms": 77877,
+  "spend": {
+    "usd": 0.40780510000000003,
+    "tokensIn": 728902,
+    "tokensOut": 11762,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g02-src-dateutil-rrule-py",
+      "file": "src/dateutil/rrule.py",
+      "functions": [
+        "rruleset.exdate",
+        "rruleset.rdate",
+        "rrulebase.xafter",
+        "rrulebase.before",
+        "rrulebase.after",
+        "rruleset.exrule"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 32460,
+      "costUsd": 0.12055730000000003,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g03-src-dateutil-parser-_parser-py",
+      "file": "src/dateutil/parser/_parser.py",
+      "functions": [
+        "parserinfo.convertyear",
+        "parse",
+        "parserinfo.hms",
+        "parserinfo.validate",
+        "parser.parse",
+        "parserinfo.weekday"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 33031,
+      "costUsd": 0.1032081,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-src-dateutil-parser-isoparser-py",
+      "file": "src/dateutil/parser/isoparser.py",
+      "functions": [
+        "isoparser.parse_tzstr",
+        "isoparser.parse_isodate",
+        "isoparser.parse_isotime",
+        "isoparser.isoparse"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 72561,
+      "costUsd": 0.1840397,
+      "reported": 1,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 3,
+    "functions": 16,
+    "reported": 1,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 1
+  },
+  "findings": [
+    {
+      "title": "isoparse('9999-12-31T24:00') raises OverflowError instead of ValueError",
+      "function": "dateutil.parser.isoparser.isoparser.isoparse",
+      "kind": "contract-violation",
+      "property": "isoparse signals every string it cannot turn into a datetime with ValueError",
+      "property_test": "test_isoparse_24_last_day",
+      "repro_file": "test_repro_24h_overflow.py",
+      "input": "9999-12-31T24:00",
+      "expected": "ValueError, like every other out-of-range input (year 0000, month 13, hour 25)",
+      "actual": "OverflowError: date value out of range, raised from `datetime(*components) + timedelta(days=1)`",
+      "evidence": "The parser consistently reports bad or unrepresentable input as ValueError (the docstring's own examples of failing strings, and every internal check). Callers doing `except ValueError` are bypassed only by the 24:00 path, which adds a timedelta after construction.",
+      "group": "g01-src-dateutil-parser-isoparser-py",
+      "file": "src/dateutil/parser/isoparser.py",
+      "workdir": ".proofhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py",
+      "verification": {
+        "verified": false,
+        "reason": "test error: Failed means the test itself is broken",
+        "reproFile": "test_repro_24h_overflow.py",
+        "error": {
+          "type": "Failed",
+          "message": "OverflowError escaped instead of ValueError",
+          "notes": [],
+          "frames": [
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/runner.py",
+              "line": 361,
+              "func": "from_call",
+              "code": "result: TResult | None = func()"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/runner.py",
+              "line": 250,
+              "func": "<lambda>",
+              "code": "lambda: runtest_hook(item=item, **kwds),"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_caller.py",
+              "line": 197,
+              "func": "__call__",
+              "code": "return self._hookexec("
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_manager.py",
+              "line": 183,
+              "func": "_hookexec",
+              "code": "return self._inner_hookexec(hook_name, methods, kwargs, firstresult)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 195,
+              "func": "_multicall",
+              "code": "raise exception"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 167,
+              "func": "_multicall",
+              "code": "teardown.throw(exception)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/logging.py",
+              "line": 865,
+              "func": "pytest_runtest_call",
+              "code": "yield"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 167,
+              "func": "_multicall",
+              "code": "teardown.throw(exception)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/capture.py",
+              "line": 900,
+              "func": "pytest_runtest_call",
+              "code": "return (yield)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 167,
+              "func": "_multicall",
+              "code": "teardown.throw(exception)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 64,
+              "func": "run_old_style_hookwrapper",
+              "code": "return result.get_result()"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_result.py",
+              "line": 103,
+              "func": "get_result",
+              "code": "raise exc.with_traceback(tb)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 49,
+              "func": "run_old_style_hookwrapper",
+              "code": "res = yield"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 167,
+              "func": "_multicall",
+              "code": "teardown.throw(exception)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/skipping.py",
+              "line": 268,
+              "func": "pytest_runtest_call",
+              "code": "return (yield)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 147,
+              "func": "_multicall",
+              "code": "res = hook_impl.function(*args)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/runner.py",
+              "line": 184,
+              "func": "pytest_runtest_call",
+              "code": "item.runtest()"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/python.py",
+              "line": 1707,
+              "func": "runtest",
+              "code": "self.ihook.pytest_pyfunc_call(pyfuncitem=self)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_caller.py",
+              "line": 197,
+              "func": "__call__",
+              "code": "return self._hookexec("
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_manager.py",
+              "line": 183,
+              "func": "_hookexec",
+              "code": "return self._inner_hookexec(hook_name, methods, kwargs, firstresult)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 195,
+              "func": "_multicall",
+              "code": "raise exception"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 147,
+              "func": "_multicall",
+              "code": "res = hook_impl.function(*args)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/python.py",
+              "line": 167,
+              "func": "pytest_pyfunc_call",
+              "code": "result = testfunction(**testargs)"
+            },
+            {
+              "file": "/tmp/claude-0/zoo/dateutil/.proofhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py/test_repro_24h_overflow.py",
+              "line": 13,
+              "func": "test_repro_24h_overflow",
+              "code": "pytest.fail('OverflowError escaped instead of ValueError')"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/outcomes.py",
+              "line": 162,
+              "func": "__call__",
+              "code": "raise Failed(msg=reason, pytrace=pytrace)"
+            }
+          ],
+          "cause": {
+            "type": "OverflowError",
+            "message": "date value out of range"
+          }
+        }
+      }
+    }
+  ]
+}

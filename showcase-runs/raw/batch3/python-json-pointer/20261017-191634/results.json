@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191634",
+  "diff": null,
+  "fixRun": true,
+  "repo": "python-json-pointer",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:16:34.439Z",
+  "ms": 29512,
+  "spend": {
+    "usd": 0.24127570000000004,
+    "tokensIn": 485986,
+    "tokensOut": 4193,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g02-tests-py",
+      "file": "tests.py",
+      "functions": [
+        "load_tests",
+        "SpecificationTests.test_round_trip",
+        "ComparisonTests.test_eq_hash",
+        "ComparisonTests.test_join",
+        "ComparisonTests.test_join_magic",
+        "ComparisonTests.test_join_preserves_control_flow_exceptions"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 27147,
+      "costUsd": 0.13467300000000001,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-jsonpointer-py",
+      "file": "jsonpointer.py",
+      "functions": [
+        "JsonPointer.from_parts",
+        "JsonPointer.to_last",
+        "JsonPointer.join",
+        "resolve_pointer",
+        "escape",
+        "pairwise"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 29398,
+      "costUsd": 0.10660270000000001,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

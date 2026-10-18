@@ -1,0 +1,2 @@
+I tested 8 properties across the six target functions and reported 0 bugs; all 8 passed, and `findings.json` contains `[]`. One caveat: the `TooManyTagsError` check inside `test_parse_tag_roundtrip` is broken and passes trivially, so `limit` rejection of oversized tag sets went untested. I did not fix it.
+

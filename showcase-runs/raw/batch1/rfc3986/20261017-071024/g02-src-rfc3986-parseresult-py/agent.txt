@@ -1,0 +1,12 @@
+I tested 11 properties and reported 1 bug: `ParseResultBytes.unsplit()` raises `AttributeError` on any URI without an authority, such as `b"/a"`. The repro in `test_repro_bytes_unsplit_no_authority.py` fails now for that reason.
+
+The same crash hits `ParseResultBytes.authority` on those inputs, which is where the error is raised (`parseresult.py:409`). `ParseResult.from_string("/a").unsplit()` works.
+
+I left two other failures out as not defensible:
+- **`split_authority("[")`:** it raises `ValueError`, and so does non-strict `ParseResult.from_string("//[")`. The standard library's `urlparse` also raises `ValueError` there.
+- **`split_authority("1@")`:** it returns host `None` where the strict parser gives `""`, a trivial difference between the lenient and strict paths.
+
+`findings.json` is in the run directory.
+
+Permission denials:
+Bash: {"command":"python -I -c \"\nimport sys; sys.path.insert(0,'src')\nfrom rfc3986.parseresult import *\nimport traceback\nfor u in ['','/a','a:b','?q']:\n    for f in (lambda u: ParseResultBytes.from_string(u).unsplit(), lambda u: ParseResult.from_string(u).encode().unsplit(), lambda u: ParseResultByt

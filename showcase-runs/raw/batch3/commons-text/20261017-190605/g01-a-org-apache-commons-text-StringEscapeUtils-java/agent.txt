@@ -1,0 +1,13 @@
+I tested 7 properties across the six functions and reported 0 bugs; all 7 passed and `findings.json` is `[]`.
+
+The properties:
+- **Round trips:** `escapeJava`, `escapeEcmaScript`, `escapeJson`, `escapeHtml4` and `escapeCsv` each return the original string after unescaping.
+- **XSI round trip:** `escapeXSI` also round-trips, once newlines are removed from the input, since the escaper drops them by design.
+- **ASCII-only output:** `escapeJava`, `escapeEcmaScript` and `escapeJson` only produce printable ASCII.
+
+Inputs had no unpaired surrogates and mixed ASCII with special characters and random Unicode.
+
+I only checked these properties, not other contracts such as idempotence or a reference implementation.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/commons-text/.proofhound/runs/20261017-190605/g01-a-org-apache-commons-text-StringEscapeUtils-java/ && cat > /tmp/claude-0/zoo3/commons-text/.proofhound/runs/20261017-190605/g01-a-org-apache-commons-text-StringEscapeUtils-java/PhPropsTest.java <<'EOF'\npackage

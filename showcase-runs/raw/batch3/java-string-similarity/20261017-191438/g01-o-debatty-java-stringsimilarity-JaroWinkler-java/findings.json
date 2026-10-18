@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Negative threshold applies the Winkler bonus instead of giving plain Jaro",
+    "function": "info.debatty.java.stringsimilarity.JaroWinkler.similarity",
+    "kind": "contract-violation",
+    "property": "with a negative threshold, similarity equals the plain Jaro similarity (no Winkler bonus)",
+    "property_test": "jaroLowerBound",
+    "repro_file": "ReproNegativeThresholdTest.java",
+    "input": "new JaroWinkler(-1).similarity(\"ab\", \"ac\")",
+    "expected": "2/3 (Jaro, no Winkler bonus)",
+    "actual": "0.7 (Winkler bonus applied, since j > threshold is always true)",
+    "evidence": "Constructor javadoc: 'Set threshold to a negative value to get the Jaro distance.' The code adds the bonus when j > threshold, so a negative threshold always adds it; Jaro needs threshold >= 1."
+  }
+]

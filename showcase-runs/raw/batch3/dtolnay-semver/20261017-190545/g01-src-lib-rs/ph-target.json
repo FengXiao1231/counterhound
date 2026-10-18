@@ -1,0 +1,5 @@
+{
+  "crateDir": ".",
+  "crate": "semver",
+  "libName": "semver"
+}

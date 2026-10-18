@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "xstrings",
+  "importPath": "github.com/huandu/xstrings"
+}

@@ -1,0 +1,12 @@
+I tested 6 properties and reported 3 bugs.
+
+I didn't run the three repro files on their own. Each one asserts the correct result for an input the property tests already showed failing.
+
+- **`{?a}` and `{;a}` with `a=0`:** `expand` gives `?a=` and `;a` instead of `?a=0` and `;a=0`, because the code treats 0 as empty.
+- **`partial` with an empty-string value:** `partial('a{x}b', {'x': ''})` leaves `a{x}b` unexpanded, while `expand` gives `ab`.
+- **Prefix modifier on an int:** `expand('{a:1}', {'a': 12})` raises `TypeError` instead of returning `1`. This is the weakest of the three, since the docs don't say how a prefix applies to ints.
+
+The `variables` property and the kwargs-override property passed.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191824/g01-uritemplate-api-py"}

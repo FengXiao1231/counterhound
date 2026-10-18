@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191006",
+  "diff": null,
+  "fixRun": true,
+  "repo": "shell-words",
+  "lang": "rust",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:10:06.772Z",
+  "ms": 39533,
+  "spend": {
+    "usd": 0.1374772,
+    "tokensIn": 314480,
+    "tokensOut": 2885,
+    "calls": 1
+  },
+  "groups": [
+    {
+      "group": "g01-src-lib-rs",
+      "file": "src/lib.rs",
+      "functions": [
+        "join",
+        "quote",
+        "split"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 39520,
+      "costUsd": 0.1374772,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 3,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

@@ -1,0 +1,274 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-071024",
+  "repo": "rfc3986",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:10:24.385Z",
+  "ms": 138072,
+  "spend": {
+    "usd": 0.8568625,
+    "tokensIn": 1636417,
+    "tokensOut": 19168,
+    "calls": 7
+  },
+  "groups": [
+    {
+      "group": "g01-src-rfc3986-builder-py",
+      "file": "src/rfc3986/builder.py",
+      "functions": [
+        "URIBuilder.add_path",
+        "URIBuilder.extend_path",
+        "URIBuilder.from_uri",
+        "URIBuilder.add_credentials",
+        "URIBuilder.add_query_from",
+        "URIBuilder.extend_query_with"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 47134,
+      "costUsd": 0.1571334,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g02-src-rfc3986-parseresult-py",
+      "file": "src/rfc3986/parseresult.py",
+      "functions": [
+        "ParseResultBytes.from_string",
+        "ParseResult.from_string",
+        "ParseResultBytes.unsplit",
+        "ParseResult.unsplit",
+        "ParseResult.encode",
+        "split_authority"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 59942,
+      "costUsd": 0.1935788,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g03-src-rfc3986-api-py",
+      "file": "src/rfc3986/api.py",
+      "functions": [
+        "normalize_uri",
+        "urlparse",
+        "is_valid_uri",
+        "uri_reference",
+        "iri_reference"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 86702,
+      "costUsd": 0.23914769999999994,
+      "reported": 2,
+      "verified": 2
+    }
+  ],
+  "counts": {
+    "modules": 3,
+    "functions": 17,
+    "reported": 4,
+    "verified": 4,
+    "duplicates": 0,
+    "confirmed": 4,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "extend_query_with silently drops existing query parameters with blank values",
+      "function": "rfc3986.builder.URIBuilder.extend_query_with",
+      "kind": "wrong-result",
+      "property": "extending a query keeps all existing key/value pairs, including those with empty values, and appends the new ones",
+      "property_test": "test_extend_query",
+      "repro_file": "test_repro_extend_query_blank.py",
+      "input": "URIBuilder(query='a=').extend_query_with([('b', 'c')])",
+      "expected": "query == 'a=&b=c'",
+      "actual": "query == 'b=c' (the existing 'a=' is lost); extending with [] turns 'a=' into ''",
+      "evidence": "Docstring: 'Extend the existing query string with the new query items.' Existing items are parsed with parse_qsl(self.query) without keep_blank_values=True, so blank-valued params are discarded; extension should only add, never remove.",
+      "group": "g01-src-rfc3986-builder-py",
+      "file": "src/rfc3986/builder.py",
+      "workdir": ".proofhound/runs/20261017-071024/g01-src-rfc3986-builder-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_extend_query_blank.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_extend_query_blank",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert 'b=c' == 'a=&b=c'\n  \n  - a=&b=c\n  + b=c"
+        },
+        "testName": "test_repro_extend_query_blank"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_extend_query(\n    # The test always failed when commented parts were varied together.\n    a=[(\n         '0',  # or any other generated value\n         '',\n     )],\n    b=[],  # or any other generated value\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "URIBuilder.extend_query_with drops existing query parameters that have blank values",
+        "reason": "extend_query_with parses the existing query with `parse_qsl(self.query or \"\")`. That call defaults to `keep_blank_values=False`, so `a=` is discarded, and extending with an empty list turns `a=` into an empty query. The docstring says it extends the existing query, and the examples show existing items being preserved. Losing data from a query that was already valid is not the intended behaviour. The tests I found don't cover blank values, so nothing suggests the drop is deliberate, and passing `keep_blank_values=True` is a one-line fix a maintainer would likely accept.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "reproSource": "from rfc3986.builder import URIBuilder\n\n\ndef test_repro_extend_query_blank():\n    b = URIBuilder(query=\"a=\").extend_query_with([(\"b\", \"c\")])\n    assert b.query == \"a=&b=c\"\n",
+      "bugDir": ".proofhound/runs/20261017-071024/bugs/PH-002-uribuilder-extend-query-with-drops-existing-quer"
+    },
+    {
+      "title": "ParseResultBytes.unsplit() crashes for any URI without an authority",
+      "function": "rfc3986.parseresult.ParseResultBytes.unsplit",
+      "kind": "crash",
+      "property": "unsplitting a parsed relative/authority-less URI (bytes) returns the URI bytes instead of raising",
+      "property_test": "test_bytes_unsplit_vs_str",
+      "repro_file": "test_repro_bytes_unsplit_no_authority.py",
+      "input": "ParseResultBytes.from_string(b\"/a\").unsplit()",
+      "expected": "b\"/a\" (as ParseResult.from_string(\"/a\").unsplit() returns \"/a\")",
+      "actual": "AttributeError: 'NoneType' object has no attribute 'encode' raised in ParseResultBytes.authority (parseresult.py:409), because reference.authority is None",
+      "evidence": "unsplit is documented as ':returns: The parsed URI reconstituted as a string / :rtype: bytes'; the str counterpart ParseResult.unsplit and geturl() work for the same input, and authority-less URIs such as '/a', 'a:b', '?q' and '' are valid RFC 3986 references that from_string accepts. ParseResultMixin declares authority as Optional.",
+      "group": "g02-src-rfc3986-parseresult-py",
+      "file": "src/rfc3986/parseresult.py",
+      "workdir": ".proofhound/runs/20261017-071024/g02-src-rfc3986-parseresult-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_bytes_unsplit_no_authority.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:AttributeError:src/rfc3986/parseresult.py:409",
+        "site": {
+          "file": "src/rfc3986/parseresult.py",
+          "line": 409,
+          "func": "authority",
+          "code": "return self.reference.authority.encode(self.encoding)"
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "AttributeError",
+          "message": "'NoneType' object has no attribute 'encode'"
+        },
+        "testName": "test_repro_bytes_unsplit_no_authority"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_bytes_unsplit_vs_str(\n    u='',\n    lazy=True,\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.93,
+        "severity": "medium",
+        "category": "crash",
+        "title": "ParseResultBytes.unsplit() raises AttributeError for URIs without an authority",
+        "reason": "I re-ran the repro and it fails as reported. `ParseResultBytes.authority` (parseresult.py:409) calls `self.reference.authority.encode(...)` with no None check, although `ParseResult.authority` and the mixin both declare the value Optional. `from_string` accepts authority-less references such as b'/a', and the str `unsplit` handles them. The default `lazy_normalize=True` path in `ParseResultBytes.unsplit` hits the crash on a plain relative path, which is a common input, so a maintainer would accept a small None-guard fix.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "from rfc3986.parseresult import ParseResultBytes\n\n\ndef test_repro_bytes_unsplit_no_authority():\n    pr = ParseResultBytes.from_string(b\"/a\")\n    assert pr.unsplit() == b\"/a\"\n",
+      "bugDir": ".proofhound/runs/20261017-071024/bugs/PH-001-parseresultbytes-unsplit-raises-attributeerror-f"
+    },
+    {
+      "title": "normalize_uri drops an empty authority (file:///x -> file:/x)",
+      "function": "rfc3986.api.normalize_uri",
+      "kind": "wrong-result",
+      "property": "normalizing a URI preserves its component structure; an empty-but-present authority stays '//'",
+      "property_test": "test_unsplit_roundtrip",
+      "repro_file": "test_repro_empty_authority_dropped.py",
+      "input": "file:///etc/hosts",
+      "expected": "file:///etc/hosts",
+      "actual": "file:/etc/hosts",
+      "evidence": "RFC 3986 section 5.3 recomposition: if authority is defined (even empty), append '//' + authority. Docstring says normalize_uri equals uri_reference(uri).normalize().unsplit(); normalization (6.2.2) must not change the URI's meaning. unsplit() uses truthiness of authority, so '//' is lost (also '//' -> '').",
+      "group": "g03-src-rfc3986-api-py",
+      "file": "src/rfc3986/api.py",
+      "workdir": ".proofhound/runs/20261017-071024/g03-src-rfc3986-api-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_empty_authority_dropped.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_empty_authority_dropped",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert 'file:/etc/hosts' == 'file:///etc/hosts'\n  \n  - file:///etc/hosts\n  ?      --\n  + file:/etc/hosts"
+        },
+        "testName": "test_repro_empty_authority_dropped"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_unsplit_roundtrip(\n    # The test always failed when commented parts were varied together.\n    u=(lambda s, a, p, q, f: (s + ':' if s else '') + ('//' + a if a is not None else '') + (('/' if a is not None and p and (not p.startswith('/')) else '') + p) + ('?' + q if q is not None else '') + ('#' + f if f is not None else ''))(\n        '',  # or any other generated value\n        '',\n        '',  # or any other generated value\n        None,  # or any other generated value\n        None,  # or any other generated value\n    ),\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.62,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "normalize_uri drops an empty-but-present authority (file:///path becomes file:/path)",
+        "reason": "normalize() rebuilds the authority with normalize_authority(), which returns '' for an empty authority. unsplit() then tests `if self.authority:`, so the '//' is dropped, and `file:///etc/hosts` becomes `file:/etc/hosts`. RFC 3986 5.3 says '//' is emitted whenever the authority is defined, even if empty, and normalization shouldn't change a URI's structure. I read the source and found no test or documentation saying the drop is intended. I could not run the code (Bash was denied), so this rests on reading the source and the proofhound run, which failed 3/3. The fix is delicate because it has to tell None from '' for authority across parsing, normalization and unsplit, which is why I'm only moderately confident a maintainer would take it.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-004",
+      "reproSource": "from rfc3986.api import normalize_uri\n\n\ndef test_repro_empty_authority_dropped():\n    # \"file:///etc/hosts\" has an empty (but present) authority; normalizing\n    # must not change the URI's structure.\n    assert normalize_uri(\"file:///etc/hosts\") == \"file:///etc/hosts\"\n",
+      "bugDir": ".proofhound/runs/20261017-071024/bugs/PH-004-normalize-uri-drops-an-empty-but-present-authori"
+    },
+    {
+      "title": "normalize_uri turns a '//'-leading path into an authority",
+      "function": "rfc3986.api.normalize_uri",
+      "kind": "wrong-result",
+      "property": "normalized URI re-parses with the same authority presence as the input",
+      "property_test": "test_normalize_preserves_authority_presence",
+      "repro_file": "test_repro_path_becomes_authority.py",
+      "input": "a:/.//b",
+      "expected": "a path of '//b' with no authority (e.g. 'a:/.//b' or 'a:/%2F...' style form); result must not re-parse with authority 'b'",
+      "actual": "'a://b', which parses as scheme 'a', authority 'b', no path",
+      "evidence": "RFC 3986 section 3.3: when no authority is present the path cannot begin with '//'; section 6.2.2 normalization must be semantics-preserving. remove_dot_segments produces '//b' and unsplit() concatenates it directly after 'a:'.",
+      "group": "g03-src-rfc3986-api-py",
+      "file": "src/rfc3986/api.py",
+      "workdir": ".proofhound/runs/20261017-071024/g03-src-rfc3986-api-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_path_becomes_authority.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_path_becomes_authority",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert 'b' is None\n +  where 'b' = URIReference(scheme='a', authority='b', path=None, query=None, fragment=None).authority\n +    where URIReference(scheme='a', authority='b', path=None, query=None, fragment=None) = uri_reference('a://b')"
+        },
+        "testName": "test_repro_path_becomes_authority"
+      },
+      "propertyCheck": {
+        "failed": false,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.7,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "normalize_uri turns a path beginning with '//' into an authority when the URI has no authority",
+        "reason": "'a:/.//b' is a valid URI: scheme 'a', no authority, path '/.//b'. Normalization runs remove_dot_segments to get '//b', and unsplit() then emits 'a:' followed by '//b'. That string re-parses with authority 'b' and no path, so normalization changed the URI's meaning, which RFC 3986 §6.2 forbids and §3.3 rules out for a no-authority path. This is a narrow edge case, and a fix is small: when there is no authority and the path starts with '//', keep a '/.' prefix as the WHATWG URL spec does, or skip dot-segment removal that would create the leading '//'. I couldn't run the repro myself because shell access was denied, so this rests on reading the source and on the harness's three failing runs.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-003",
+      "reproSource": "from rfc3986.api import normalize_uri, uri_reference\n\n\ndef test_repro_path_becomes_authority():\n    # path \"/.//b\" normalizes to \"//b\"; with no authority the result\n    # \"a://b\" re-parses with host \"b\" instead of path \"//b\".\n    n = normalize_uri(\"a:/.//b\")\n    assert uri_reference(n).authority is None\n",
+      "bugDir": ".proofhound/runs/20261017-071024/bugs/PH-003-normalize-uri-turns-a-path-beginning-with-into-a"
+    }
+  ]
+}

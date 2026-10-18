@@ -1,0 +1,12 @@
+I tested 8 properties and reported 2 bugs. Both have a repro file that fails now, and the properties that exposed them are in `ph_props.test.mjs`.
+
+- **Backslash before `;` or `#`:** the value `\;` comes back as `\`. `stringify` doesn't escape the backslash, so `parse` reads the `;` as the start of a comment.
+- **Lone single quote:** the value `'` comes back as an empty string. `stringify` leaves a one-character quote unquoted, but `parse` treats it as a quoted empty string.
+
+Two other properties also failed, and I judged both to be test or contract artifacts rather than bugs.
+
+- **Empty section:** `{a: {}}` is lost on round-trip because an empty section has no output.
+- **Array failure:** it was shrunk to `["'", ""]`, which looks like the lone-quote bug again. I didn't confirm that.
+
+The findings are in `findings.json`.
+

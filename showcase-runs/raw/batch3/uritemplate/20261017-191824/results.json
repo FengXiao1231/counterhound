@@ -1,0 +1,313 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191824",
+  "diff": null,
+  "fixRun": true,
+  "repo": "uritemplate",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:18:24.784Z",
+  "ms": 111028,
+  "spend": {
+    "usd": 0.7032037000000001,
+    "tokensIn": 1279849,
+    "tokensOut": 12202,
+    "calls": 7
+  },
+  "groups": [
+    {
+      "group": "g02-uritemplate-variable-py",
+      "file": "uritemplate/variable.py",
+      "functions": [
+        "Operator.quote",
+        "URIVariable.expand",
+        "Operator.expansion_separator",
+        "quote",
+        "URIVariable.parse",
+        "is_list_of_tuples"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 40589,
+      "costUsd": 0.1443577,
+      "reported": 2,
+      "verified": 2
+    },
+    {
+      "group": "g01-uritemplate-api-py",
+      "file": "uritemplate/api.py",
+      "functions": [
+        "expand",
+        "partial",
+        "variables"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 50037,
+      "costUsd": 0.15790490000000001,
+      "reported": 3,
+      "verified": 3
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 9,
+    "reported": 5,
+    "verified": 5,
+    "duplicates": 0,
+    "confirmed": 3,
+    "needsLook": 2,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Integer 0 expands as empty value in ? / & / ; expansions",
+      "function": "uritemplate.variable.URIVariable.expand",
+      "kind": "wrong-result",
+      "property": "a scalar int n expands to its decimal string in query and path-parameter expansion",
+      "property_test": "test_query_int_zero_and_ints",
+      "repro_file": "test_repro_zero.py",
+      "input": "URIVariable('?x').expand({'x': 0}); URIVariable(';x').expand({'x': 0})",
+      "expected": "'?x=0' and ';x=0'",
+      "actual": "'?x=' and ';x' (0 is treated as empty string by a truthiness check `if value:`)",
+      "evidence": "ScalarVariableValue includes int; RFC 6570 only treats the empty string as empty (3.2.7/3.2.8), 0 is defined and stringifies to '0'; other ints like 1 expand correctly.",
+      "group": "g02-uritemplate-variable-py",
+      "file": "uritemplate/variable.py",
+      "workdir": ".proofhound/runs/20261017-191824/g02-uritemplate-variable-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_zero.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_zero",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert '?x=' == '?x=0'\n  \n  - ?x=0\n  ?    -\n  + ?x="
+        },
+        "testName": "test_repro_zero"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_query_int_zero_and_ints(\n    n=0,\n)"
+      },
+      "review": {
+        "verdict": "unclear",
+        "confidence": 0,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "Integer 0 expands as empty value in ? / & / ; expansions",
+        "reason": "reviewer gave no reason",
+        "maintainerWouldFix": null
+      },
+      "status": "needs-look",
+      "reproSource": "from uritemplate.variable import URIVariable\n\n\ndef test_repro_zero():\n    assert URIVariable(\"?x\").expand({\"x\": 0})[\"?x\"] == \"?x=0\"\n    assert URIVariable(\";x\").expand({\"x\": 0})[\";x\"] == \";x=0\"\n",
+      "bugDir": ".proofhound/runs/20261017-191824/bugs/needs-look/LOOK-integer-0-expands-as-empty-value-in-expansions"
+    },
+    {
+      "title": "Reserved/fragment expansion skips encoding when value contains any percent-escape",
+      "function": "uritemplate.variable.Operator.quote",
+      "kind": "wrong-result",
+      "property": "output of {+var} contains no characters outside reserved/unreserved/pct-encoded",
+      "property_test": "test_reserved_quote_encodes_spaces",
+      "repro_file": "test_repro_reserved_space.py",
+      "input": "Operator.reserved.quote('a b%41')",
+      "expected": "'a%20b%41'",
+      "actual": "'a b%41' (value returned unchanged because unquote(value) != value)",
+      "evidence": "RFC 6570 3.2.3: reserved expansion passes through only pct-encoded triplets and reserved/unreserved characters; every other character (e.g. space) must be percent-encoded.",
+      "group": "g02-uritemplate-variable-py",
+      "file": "uritemplate/variable.py",
+      "workdir": ".proofhound/runs/20261017-191824/g02-uritemplate-variable-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_reserved_space.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_reserved_space",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert 'a b%41' == 'a%20b%41'\n  \n  - a%20b%41\n  + a b%41"
+        },
+        "testName": "test_repro_reserved_space"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_reserved_quote_encodes_spaces(\n    s=' %aa',\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.7,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "Reserved/fragment expansion leaves unsafe characters unencoded when the value contains any percent-escape",
+        "reason": "RFC 6570 \u00a73.2.3 lets `{+var}` and `{#var}` pass through only reserved characters, unreserved characters and existing pct-encoded triplets. `_only_quote_unquoted_characters` is all-or-nothing: if `unquote(value) != value` it returns the whole value untouched. So `'a b%41'` comes out with a raw space, which is not a valid URI, while `'a b'` correctly becomes `'a%20b'`. The heuristic is deliberate, and the spec fixtures only cover values with no escapes or with a bare `%`. It is still a real spec deviation, and a regex-based fix that quotes everything except valid `%XX` triplets is simple, though a maintainer might treat it as a low-priority edge case.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-003",
+      "fix": {
+        "status": "skipped",
+        "reason": "not attempted: --budget was used up"
+      },
+      "reproSource": "from uritemplate.variable import Operator\n\n\ndef test_repro_reserved_space():\n    assert Operator.reserved.quote(\"a b%41\") == \"a%20b%41\"\n",
+      "bugDir": ".proofhound/runs/20261017-191824/bugs/PH-003-reserved-fragment-expansion-leaves-unsafe-charac"
+    },
+    {
+      "title": "Integer 0 expands as empty in {?x} and {;x}",
+      "function": "uritemplate.api.expand",
+      "kind": "wrong-result",
+      "property": "expanding {?a} with a=0 yields ?a=0",
+      "property_test": "test_int_query",
+      "repro_file": "test_repro_zero_query.py",
+      "input": "expand('{?a}', {'a': 0})",
+      "expected": "'?a=0' (and ';a=0' for '{;a}')",
+      "actual": "'?a=' (and ';a')",
+      "evidence": "ScalarVariableValue includes int; RFC 6570 expands the string form of the value, '0' is non-empty. Code uses truthiness (`if value:`) in _query_expansion/_semi_path_expansion, so 0 is treated as empty; other operators give '0'.",
+      "group": "g01-uritemplate-api-py",
+      "file": "uritemplate/api.py",
+      "workdir": ".proofhound/runs/20261017-191824/g01-uritemplate-api-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_zero_query.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_zero_query",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert '?a=' == '?a=0'\n  \n  - ?a=0\n  ?    -\n  + ?a="
+        },
+        "testName": "test_repro_zero_query"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_int_query(\n    n='a',  # or any other generated value\n    v=0,\n)"
+      },
+      "review": {
+        "verdict": "unclear",
+        "confidence": 0,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "Integer 0 expands as empty in {?x} and {;x}",
+        "reason": "reviewer gave no reason",
+        "maintainerWouldFix": null
+      },
+      "status": "needs-look",
+      "reproSource": "from uritemplate.api import expand\n\n\ndef test_repro_zero_query():\n    assert expand(\"{?a}\", {\"a\": 0}) == \"?a=0\"\n    assert expand(\"{;a}\", {\"a\": 0}) == \";a=0\"\n",
+      "bugDir": ".proofhound/runs/20261017-191824/bugs/needs-look/LOOK-integer-0-expands-as-empty-in-x-and-x"
+    },
+    {
+      "title": "partial() leaves variable unexpanded when value is empty string",
+      "function": "uritemplate.api.partial",
+      "kind": "inconsistency",
+      "property": "partial with all variables supplied equals expand",
+      "property_test": "test_partial_full_equals_expand",
+      "repro_file": "test_repro_partial_empty.py",
+      "input": "partial('a{x}b', {'x': ''})",
+      "expected": "URITemplate('ab'), same as expand",
+      "actual": "URITemplate('a{x}b')",
+      "evidence": "partial docs: only missing params stay in the template; x was given. template._expand uses `expanded.get(...) or var`, conflating empty expansion with absent.",
+      "group": "g01-uritemplate-api-py",
+      "file": "uritemplate/api.py",
+      "workdir": ".proofhound/runs/20261017-191824/g01-uritemplate-api-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_partial_empty.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_partial_empty",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert 'a{x}b' == 'ab'\n  \n  - ab\n  + a{x}b"
+        },
+        "testName": "test_repro_partial_empty"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_partial_full_equals_expand(\n    n='a',  # or any other generated value\n    v='',\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "partial() keeps {var} in the template when the supplied value expands to an empty string",
+        "reason": "URITemplate._expand uses `expanded.get(match_group) or var` in replace_partial. That treats an empty expansion, which is what a supplied '' produces for `{x}`, the same as a variable that was never supplied. So `partial('a{x}b', {'x': ''})` returns `a{x}b` while `expand` returns `ab`. The docstring says only missing parameters should remain, and the fix is small: test whether the key is absent or the variable was supplied, instead of testing truthiness. The case is an edge one, but a maintainer would probably accept the fix.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "fix": {
+        "status": "skipped",
+        "reason": "not attempted: --budget was used up"
+      },
+      "reproSource": "from uritemplate.api import expand, partial\n\n\ndef test_repro_partial_empty():\n    assert str(partial(\"a{x}b\", {\"x\": \"\"})) == expand(\"a{x}b\", {\"x\": \"\"}) == \"ab\"\n",
+      "bugDir": ".proofhound/runs/20261017-191824/bugs/PH-002-partial-keeps-var-in-the-template-when-the-suppl"
+    },
+    {
+      "title": "Prefix modifier crashes on integer values",
+      "function": "uritemplate.api.expand",
+      "kind": "crash",
+      "property": "{a:N} on an int value truncates its string form without raising",
+      "property_test": "test_int_prefix",
+      "repro_file": "test_repro_int_prefix.py",
+      "input": "expand('{a:1}', {'a': 12})",
+      "expected": "'1'",
+      "actual": "TypeError: 'int' object is not subscriptable",
+      "evidence": "VariableValue type allows int; RFC 6570 prefix applies to the string form; value[:prefix] is applied without str() conversion in variable.py.",
+      "group": "g01-uritemplate-api-py",
+      "file": "uritemplate/api.py",
+      "workdir": ".proofhound/runs/20261017-191824/g01-uritemplate-api-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_int_prefix.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:TypeError:uritemplate/variable.py:450",
+        "site": {
+          "file": "uritemplate/variable.py",
+          "line": 450,
+          "func": "_string_expansion",
+          "code": "value = value[:prefix] if prefix else value"
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "TypeError",
+          "message": "'int' object is not subscriptable"
+        },
+        "testName": "test_repro_int_prefix"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_int_prefix(\n    # The test always failed when commented parts were varied together.\n    n='a',  # or any other generated value\n    v=10,  # or any other generated value\n    p=1,  # or any other generated value\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.88,
+        "severity": "low",
+        "category": "crash",
+        "title": "Prefix modifier (`{var:N}`) raises TypeError on int/float scalar values",
+        "reason": "`ScalarVariableValue` explicitly includes int, float and complex, and `Operator.quote` already converts non-strings with `str()` (variable.py:159). So `{a}` with `a=12` works, but `{a:1}` slices the raw int at variable.py:450 (the same pattern appears at lines 315, 368 and 417) and raises `TypeError: 'int' object is not subscriptable`. RFC 6570 applies the prefix to the string form, so the expected result `'1'` is correct. The existing tests only use string values, so nothing documents the crash as intended, and a maintainer would likely accept a small `str(value)[:prefix]` fix.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "skipped",
+        "reason": "not attempted: --budget was used up"
+      },
+      "reproSource": "from uritemplate.api import expand\n\n\ndef test_repro_int_prefix():\n    assert expand(\"{a:1}\", {\"a\": 12}) == \"1\"\n",
+      "bugDir": ".proofhound/runs/20261017-191824/bugs/PH-001-prefix-modifier-var-n-raises-typeerror-on-int-fl"
+    }
+  ]
+}

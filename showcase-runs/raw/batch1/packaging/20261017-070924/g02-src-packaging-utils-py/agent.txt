@@ -1,0 +1,2 @@
+I tested 11 properties across all five functions, and all passed, so I reported 0 bugs. `findings.json` contains `[]`.
+

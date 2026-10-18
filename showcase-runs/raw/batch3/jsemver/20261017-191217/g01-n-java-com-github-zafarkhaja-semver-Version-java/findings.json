@@ -1,0 +1,26 @@
+[
+  {
+    "title": "nextPreReleaseVersion() treats identifier \"0\" as non-numeric and appends instead of incrementing",
+    "function": "com.github.zafarkhaja.semver.Version.nextPreReleaseVersion",
+    "kind": "wrong-result",
+    "property": "with no ids, the last numeric identifier of the pre-release is incremented by one",
+    "property_test": "incrementLastNumericId",
+    "repro_file": "ReproZeroIdIncrementTest.java",
+    "input": "Version.parse(\"1.0.0-alpha.0\").nextPreReleaseVersion()",
+    "expected": "1.0.0-alpha.1",
+    "actual": "1.0.0-alpha.0.1",
+    "evidence": "Javadoc: 'the current pre-release version's last numeric identifier is incremented'. \"0\" is a valid numeric identifier per SemVer, but private isNumeric() returns false for any id starting with \"0\", including \"0\" itself."
+  },
+  {
+    "title": "compareToIgnoreBuildMetadata orders numeric identifier above alphanumeric identifier starting with '-'",
+    "function": "com.github.zafarkhaja.semver.Version.compareToIgnoreBuildMetadata",
+    "kind": "wrong-result",
+    "property": "a numeric pre-release identifier always has lower precedence than an alphanumeric one",
+    "property_test": "numericLowerThanAlnum",
+    "repro_file": "ReproNumericVsHyphenIdTest.java",
+    "input": "1.0.0-1 vs 1.0.0--a (also 1.0.0-0 vs 1.0.0--x)",
+    "expected": "1.0.0-1 < 1.0.0--a",
+    "actual": "1.0.0-1 compares greater than 1.0.0--a (ASCII string comparison, '-' < digits)",
+    "evidence": "Javadoc says the method adheres to the Specification's comparison rules; SemVer 2.0.0 item 11: 'Numeric identifiers always have lower precedence than non-numeric identifiers.' Identifiers may contain '-' ([0-9A-Za-z-]), but compareIdentifiers falls back to String.compareTo when one side is non-numeric."
+  }
+]

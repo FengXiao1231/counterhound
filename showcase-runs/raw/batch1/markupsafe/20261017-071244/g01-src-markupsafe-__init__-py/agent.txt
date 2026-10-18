@@ -1,0 +1,2 @@
+I tested 11 properties across `escape`, `Markup.escape`, `escape_silent`, `unescape`, `striptags` and `split`/`rsplit`/`splitlines`, and reported 0 bugs. All 11 passed, and `findings.json` is `[]`.
+

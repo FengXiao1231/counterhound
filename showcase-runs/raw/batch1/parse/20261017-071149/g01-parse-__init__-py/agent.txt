@@ -1,0 +1,12 @@
+I tested 12 properties and reported 1 bug.
+
+The bug: the `%z` pattern in `get_regex_for_datetime_format` has two capture groups that the parser doesn't count. Any field after a `{:...%z}` field then returns the wrong text. `parse('{:%Y-%m-%d %H:%M:%S%z}|{}', '2020-03-04 05:06:07+0200|abc')` gives `r[1] == '00'` instead of `'abc'`. The repro, `test_repro_tz_groups.py`, fails as expected.
+
+Two other tests failed, and neither is a separate bug:
+- **`test_width_d`:** my test was wrong, because the width in `{:Nd}` is a maximum in this parser.
+- **`test_dt_regex_groups`:** it only flagged the same `%z` pattern.
+
+A Bash call was denied partway through, so I wrote `findings.json` with the Write tool instead of the shell.
+
+Permission denials:
+Bash: {"command":"cat > .proofhound/runs/20261017-071149/g01-parse-__init__-py/findings.json <<'EOF'\n[{\"title\":\"%z datetime regex adds uncounted capture groups, shifting later fields' values\",\"function\":\"parse.get_regex_for_datetime_format\",\"kind\":\"wrong-result\",\"property\":\"fields followin

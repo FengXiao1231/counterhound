@@ -1,0 +1,12 @@
+I tested 6 properties and reported 1 bug.
+
+The bug is in the `JaroWinkler(double threshold)` constructor. Its javadoc says a negative threshold gives the Jaro distance. The code adds the Winkler bonus whenever the Jaro score is above the threshold, so a negative threshold always adds it. For example, `new JaroWinkler(-1).similarity("ab", "ac")` returns 0.7 instead of 2/3. The repro, `ReproNegativeThresholdTest`, fails with exactly that result. A threshold of 1 or more is what actually gives plain Jaro.
+
+The other properties passed. They were range [0, 1], symmetry, identical strings giving 1, `distance` equal to 1 − `similarity`, and `getThreshold` returning what was passed in (default 0.7).
+
+The bug's property test is `jaroLowerBound`, which compared against a negative-threshold instance, so it only fails because of this bug.
+
+My `mkdir` was denied, but the file writes created the work directory anyway. `findings.json` is in the run folder.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191438/g01-o-debatty-java-stringsimilarity-JaroWinkler-java"}

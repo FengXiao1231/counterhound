@@ -1,0 +1,10 @@
+I couldn't run any tests, so I tested 0 properties and reported 0 bugs. The Bash tool was denied (don't-ask mode), so `./.proofhound/ph-test` never ran.
+
+I read `Stream.java` and found no bug in the six target functions. That is a reading only; nothing was executed to confirm it. I wrote `findings.json` as `[]`.
+
+I also drafted two property tests (`toArray`/`iterator`/`currentOffset`, and the three `positiveLookahead*` methods) against a simple reference. That file was not saved, because the same denied command was creating it.
+
+If you allow Bash, I can rerun both properties.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191217/g02-va-com-github-zafarkhaja-semver-util-Stream-java && cat > .proofhound/runs/20261017-191217/g02-va-com-github-zafarkhaja-semver-util-Stream-java/PhPropsTest.java <<'EOF'\npackage com.github.zafarkhaja.semver.util;\n\nimport java.util.*;\nimpor

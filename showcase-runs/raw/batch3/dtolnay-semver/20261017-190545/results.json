@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-190545",
+  "diff": null,
+  "fixRun": true,
+  "repo": "dtolnay-semver",
+  "lang": "rust",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:05:45.474Z",
+  "ms": 87922,
+  "spend": {
+    "usd": 0.3249994,
+    "tokensIn": 683167,
+    "tokensOut": 11257,
+    "calls": 1
+  },
+  "groups": [
+    {
+      "group": "g01-src-lib-rs",
+      "file": "src/lib.rs",
+      "functions": [
+        "Version::parse",
+        "VersionReq::parse",
+        "Version::cmp_precedence",
+        "Comparator::parse",
+        "Version::new",
+        "VersionReq::matches"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 87889,
+      "costUsd": 0.3249994,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

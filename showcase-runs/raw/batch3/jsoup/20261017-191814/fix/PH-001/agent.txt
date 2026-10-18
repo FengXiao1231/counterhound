@@ -1,0 +1,1 @@
+I fixed `QueryParser`. Its constructor now trims the query with a new `trimQuery` helper, which keeps a trailing whitespace character when an odd number of backslashes precedes it, so `\ ` stays part of the identifier. `#a\ ` now matches the element with id `a `, and the repro test passes. I didn't run the project's existing tests or add a regression test.

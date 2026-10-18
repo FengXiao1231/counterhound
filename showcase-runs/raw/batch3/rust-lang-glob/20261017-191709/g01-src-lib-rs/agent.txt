@@ -1,0 +1,6 @@
+I tested 12 properties covering all six functions and reported 0 bugs. All 12 pass; the first two runs failed only because my tests generated invalid `**` patterns, which I then excluded.
+
+`findings.json` contains `[]`.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/rust-lang-glob/.proofhound/runs/20261017-191709/g01-src-lib-rs"}

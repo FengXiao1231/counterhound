@@ -1,0 +1,5 @@
+{
+  "crateDir": ".",
+  "crate": "shell-words",
+  "libName": "shell_words"
+}

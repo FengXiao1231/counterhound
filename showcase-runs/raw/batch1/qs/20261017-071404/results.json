@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-071404",
+  "repo": "qs",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:14:04.614Z",
+  "ms": 113690,
+  "spend": {
+    "usd": 0.8074127,
+    "tokensIn": 1372844,
+    "tokensOut": 25984,
+    "calls": 5
+  },
+  "groups": [
+    {
+      "group": "g03-lib-stringify-js",
+      "file": "lib/stringify.js",
+      "functions": [
+        "stringify"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 38448,
+      "costUsd": 0.1561593,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g01-lib-utils-js",
+      "file": "lib/utils.js",
+      "functions": [
+        "decode",
+        "encode",
+        "arrayToObject",
+        "toCoercible",
+        "merge",
+        "markOverflow"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 59150,
+      "costUsd": 0.20800480000000002,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-lib-parse-js",
+      "file": "lib/parse.js",
+      "functions": [
+        "parse"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 92162,
+      "costUsd": 0.31497619999999993,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 3,
+    "functions": 8,
+    "reported": 2,
+    "verified": 2,
+    "duplicates": 0,
+    "confirmed": 2,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "stringify() sorts the caller's filter array in place when `sort` is also given",
+      "function": "stringify (lib/stringify.js module.exports)",
+      "kind": "contract-violation",
+      "property": "stringify does not mutate its input options (the filter array) when sort is supplied",
+      "property_test": "filter array not mutated when sort given",
+      "repro_file": "repro_filter_mutation.test.mjs",
+      "input": "stringify({i:1,a:2}, {filter:['i','a'], sort:(a,b)=>a.localeCompare(b)})",
+      "expected": "Output 'a=2&i=1' and the caller's filter array remains ['i','a']",
+      "actual": "Output is sorted, but filter is mutated to ['a','i'] (objKeys = filter; objKeys.sort(...))",
+      "evidence": "Top-level code does `objKeys = filter; ... objKeys.sort(options.sort)`, sorting the user's array. Inner recursion sorts a fresh Object.keys copy, so only the filter path leaks the mutation; a serializer is expected not to modify its options, and reusing one filter array across calls is the documented usage.",
+      "group": "g03-lib-stringify-js",
+      "file": "lib/stringify.js",
+      "workdir": ".proofhound/runs/20261017-071404/g03-lib-stringify-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_filter_mutation.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_filter_mutation",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   'a',\n    'i',\n-   'a'\n  ]\n",
+          "example": null
+        },
+        "testName": "repro_filter_mutation"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Counterexample: [[\"b\",\"a\"]]"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.75,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "stringify() sorts the caller's filter array in place when a sort option is supplied",
+        "reason": "In lib/stringify.js, module.exports sets `objKeys = filter` (the caller's array) and then calls `objKeys.sort(options.sort)`. This reorders the array the caller passed in. The recursive path avoids this because it sorts a fresh `Object.keys` copy. The README documents `filter` as a reusable list of keys and never says it may be reordered, and a serializer silently mutating its options is a surprising side effect. The repro is correct and fails consistently, and the fix is trivial: use `filter.slice()` or copy before sorting. A maintainer would likely accept it, but it is a minor edge case with no documented guarantee, which is why the severity is low.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport stringify from '../../../../../lib/stringify.js';\n\ntest('repro_filter_mutation', () => {\n  const filter = ['i', 'a'];\n  const out = stringify({ i: 1, a: 2 }, { filter, sort: (a, b) => a.localeCompare(b) });\n  assert.equal(out, 'a=2&i=1');\n  assert.deepEqual(filter, ['i', 'a']);\n});\n",
+      "bugDir": ".proofhound/runs/20261017-071404/bugs/PH-001-stringify-sorts-the-caller-s-filter-array-in-pla"
+    },
+    {
+      "title": "parse() collapses comma-separated arrays into a string when interpretNumericEntities is used with iso-8859-1",
+      "function": "parse (lib/parse.js module.exports)",
+      "kind": "wrong-result",
+      "property": "with comma:true, 'a=b,c' parses to {a:['b','c']} regardless of whether interpretNumericEntities/charset are also set (the entity pass only rewrites values, it must not change their shape)",
+      "property_test": "comma + iso + interpretNumericEntities keeps array (ph_props2.test.mjs)",
+      "repro_file": "repro_comma_numeric_entities.test.mjs",
+      "input": "parse('a=b,c', { comma: true, charset: 'iso-8859-1', interpretNumericEntities: true })",
+      "expected": "{ a: ['b', 'c'] }",
+      "actual": "{ a: 'b,c' }",
+      "evidence": "parseValues splits the value into an array via parseArrayValue (comma:true), then `val = interpretNumericEntities(String(val))` at lib/parse.js:191 stringifies the array with Array#toString, rejoining it with ',' and returning a string. The README documents comma:true as parsing comma-separated values into arrays; without interpretNumericEntities the same input yields ['b','c'].",
+      "group": "g02-lib-parse-js",
+      "file": "lib/parse.js",
+      "workdir": ".proofhound/runs/20261017-071404/g02-lib-parse-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_comma_numeric_entities.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_comma_numeric_entities",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   a: 'b,c'\n-   a: [\n-     'b',\n-     'c'\n-   ]\n  }\n",
+          "example": null
+        },
+        "testName": "repro_comma_numeric_entities"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.72,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "interpretNumericEntities with comma:true in iso-8859-1 flattens the parsed array back into a comma-joined string",
+        "reason": "In lib/parse.js, `interpretNumericEntities(String(val))` runs on the array that `parseArrayValue` returns for comma:true. `String()` joins it with ',' and the result is a string, so `a=b,c` gives 'b,c' instead of ['b','c']. This is the only comma:true case where an option that should only rewrite values changes the result's shape, and the README promises arrays. One weakness: the existing test at test/parse.js:1292 asserts the joined output (`a[]=1,☺` gives `['1,☺']`). That test is titled 'does not crash', so it looks like it locked in the accident, but a fix would have to update it.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport parse from '../../../../../lib/parse.js';\n\ntest('repro_comma_numeric_entities', () => {\n  assert.deepEqual(\n    parse('a=b,c', { comma: true, charset: 'iso-8859-1', interpretNumericEntities: true }),\n    { a: ['b', 'c'] }\n  );\n});\n",
+      "bugDir": ".proofhound/runs/20261017-071404/bugs/PH-002-interpretnumericentities-with-comma-true-in-iso"
+    }
+  ]
+}

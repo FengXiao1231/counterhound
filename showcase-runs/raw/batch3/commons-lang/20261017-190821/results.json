@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-190821",
+  "diff": null,
+  "fixRun": true,
+  "repo": "commons-lang",
+  "lang": "java",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:08:21.432Z",
+  "ms": 100846,
+  "spend": {
+    "usd": 0.46872230000000004,
+    "tokensIn": 1103619,
+    "tokensOut": 12773,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01--org-apache-commons-lang3-StringEscapeUtils-java",
+      "file": "src/main/java/org/apache/commons/lang3/StringEscapeUtils.java",
+      "functions": [
+        "StringEscapeUtils.escapeCsv",
+        "StringEscapeUtils.escapeEcmaScript",
+        "StringEscapeUtils.escapeHtml3",
+        "StringEscapeUtils.escapeHtml4",
+        "StringEscapeUtils.escapeJava",
+        "StringEscapeUtils.escapeJson"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 32966,
+      "costUsd": 0.1451101,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-rg-apache-commons-lang3-time-FastDateFormat-java",
+      "file": "src/main/java/org/apache/commons/lang3/time/FastDateFormat.java",
+      "functions": [
+        "FastDateFormat.parse",
+        "FastDateFormat.format",
+        "FastDateFormat.parseObject",
+        "FastDateFormat.getDateTimeInstance",
+        "FastDateFormat.getDateInstance",
+        "FastDateFormat.getTimeInstance"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 89271,
+      "costUsd": 0.3236122,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

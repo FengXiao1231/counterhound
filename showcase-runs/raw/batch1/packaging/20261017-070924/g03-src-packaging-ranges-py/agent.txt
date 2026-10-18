@@ -1,0 +1,4 @@
+I tested 14 properties across the six target functions and reported 0 bugs; `findings.json` is `[]`.
+
+One property failed. `is_subset` disagrees with `(a - b).is_empty` when `a` is `full()` and `b` is `full(admit_arbitrary=False)`. I didn't report it. `is_subset` isn't one of my targets, and its docstring says an arbitrary-string admission is only a subset of another one.
+

@@ -1,0 +1,22 @@
+diff --git a/ph-err.txt b/ph-err.txt
+index 01c8e1f..64280c1 100644
+--- a/ph-err.txt
++++ b/ph-err.txt
+@@ -11,4 +11,3 @@ proofhound · Python · claude (sonnet) · 2 modules, 6 functions
+   bug (0.90) set_small_word_list() with default list changes SUBPHRASE behaviour (drops dash separators)
+ 
+   writing fixes for 1 bug…
+-  ▸ fixing PH-001 set_small_word_list() rebuilds SUBPHRASE without the dash separators used at import
+diff --git a/titlecase/__init__.py b/titlecase/__init__.py
+index fd24431..86bb01f 100755
+--- a/titlecase/__init__.py
++++ b/titlecase/__init__.py
+@@ -74,7 +74,7 @@ def set_small_word_list(small=SMALL):
+     SMALL_WORDS = regex.compile(r'^(%s)$' % small, regex.I)
+     SMALL_FIRST = regex.compile(r'^([%s]*)(%s)\b' % (PUNCT, small), regex.I)
+     SMALL_LAST = regex.compile(r'\b(%s)[%s]?$' % (small, PUNCT), regex.I)
+-    SUBPHRASE = regex.compile(r'([:.;?!][ ])(%s)' % small)
++    SUBPHRASE = regex.compile(r'([:.;?!\-–‒—―][ ])(%s)' % small)
+ 
+ 
+ def titlecase(text, callback=None, small_first_last=True, preserve_blank_lines=False, normalise_space_characters=False):

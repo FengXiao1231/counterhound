@@ -1,0 +1,8 @@
+I tested 9 properties across all six functions and reported 0 bugs; all 9 pass, and `findings.json` is `[]`.
+
+My first attempt to run the tests broke the single-command rule, and the harness denied it. I re-ran each test file as one `ph-test` command.
+
+One run also failed at first because my generator was wrong. It produced almost no valid versions, so I switched it to valid inputs and it passed.
+
+Permission denials:
+Bash: {"command":"cat > /tmp/claude-0/zoo2/semver/.proofhound/runs/20261017-170554/g01-version-go/ph_props_test.go <<'EOF'\npackage semver\n\nimport (\n\t\"encoding/json\"\n\t\"regexp\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nvar phOfficial = regexp.MustCompile(`^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(

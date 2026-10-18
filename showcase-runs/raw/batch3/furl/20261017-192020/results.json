@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-192020",
+  "diff": null,
+  "fixRun": true,
+  "repo": "furl",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:20:20.567Z",
+  "ms": 49928,
+  "spend": {
+    "usd": 0.2511111,
+    "tokensIn": 638163,
+    "tokensOut": 6172,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g02-furl-omdict1D-py",
+      "file": "furl/omdict1D.py",
+      "functions": [
+        "omdict1D.add"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 26902,
+      "costUsd": 0.08962060000000001,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-furl-furl-py",
+      "file": "furl/furl.py",
+      "functions": [
+        "idna_encode",
+        "idna_decode",
+        "Query.encode",
+        "Path.load",
+        "furl.load",
+        "remove_path_segments"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 49803,
+      "costUsd": 0.16149049999999998,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 7,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

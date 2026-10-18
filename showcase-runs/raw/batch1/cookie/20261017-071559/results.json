@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-071559",
+  "repo": "cookie",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:15:59.856Z",
+  "ms": 57725,
+  "spend": {
+    "usd": 0.197644,
+    "tokensIn": 342406,
+    "tokensOut": 6219,
+    "calls": 1
+  },
+  "groups": [
+    {
+      "group": "g01-src-index-ts",
+      "file": "src/index.ts",
+      "functions": [
+        "parseCookie",
+        "parseSetCookie"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 57712,
+      "costUsd": 0.197644,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 2,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "version",
+  "importPath": "github.com/hashicorp/go-version"
+}

@@ -1,0 +1,14 @@
+[
+  {
+    "title": "ToLowerCamel returns an uppercase first letter when input starts with a separator",
+    "function": "github.com/iancoleman/strcase.ToLowerCamel",
+    "kind": "wrong-result",
+    "property": "the result of ToLowerCamel never starts with an uppercase letter",
+    "property_test": "TestPhLowerCamelFirstLetterLower",
+    "repro_file": "repro_lowercamel_leading_sep_test.go",
+    "input": "_some_string",
+    "expected": "someString",
+    "actual": "SomeString",
+    "evidence": "ToLowerCamel is documented as converting to lowerCamelCase; the existing test shows a leading space is ignored (\" some string\" -> \"someString\"), but a leading '_', '-' or '.' sets capNext at i==0 and capitalizes the first letter."
+  }
+]

@@ -1,0 +1,4 @@
+I tested 5 properties and reported 1 bug: a cycle made only of arrays (`a = []; a.push(a)`) isn't detected, so `index` throws a RangeError instead of a TypeError, and `cycles: true` is ignored. Two other properties failed because of my tests, not the code, and I didn't report them. They failed on integer-like object keys, whose order JavaScript decides itself.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191839/g01-index-js && cd .proofhound/runs/20261017-191839/g01-index-js && cat > ph_props.test.mjs <<'E'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport index from '../../../../index.js';\n\

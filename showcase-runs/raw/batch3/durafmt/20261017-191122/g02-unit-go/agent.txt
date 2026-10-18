@@ -1,0 +1,10 @@
+I tested 4 properties across `Units.Units`, `UnitsCoder.Encode` and `UnitsCoder.Decode`, and all 4 passed, so I reported 0 bugs and wrote `findings.json` as `[]`.
+
+The properties were:
+- **Round trip:** `Decode(Encode(x)) == x` for several separator choices.
+- **Singular-only input:** the plural is the singular plus `s`.
+- **No panic:** `Decode` doesn't panic on arbitrary strings.
+- **Unit order:** `Units()` returns the eight units in the documented order.
+
+The round trip only holds when the unit names don't contain the separator strings, so I generated names without them.
+

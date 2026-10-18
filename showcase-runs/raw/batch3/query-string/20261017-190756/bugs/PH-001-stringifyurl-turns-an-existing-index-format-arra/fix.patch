@@ -1,0 +1,17 @@
+diff --git a/base.js b/base.js
+index 6fc590a..ee22055 100644
+--- a/base.js
++++ b/base.js
+@@ -447,6 +447,12 @@ export function parse(query, options) {
+ 	}
+ 
+ 	if (options.sort === false) {
++		for (const [key, value] of Object.entries(returnValue)) {
++			if (Boolean(value) && typeof value === 'object' && !Array.isArray(value)) {
++				returnValue[key] = keysSorter(value);
++			}
++		}
++
+ 		return returnValue;
+ 	}
+ 

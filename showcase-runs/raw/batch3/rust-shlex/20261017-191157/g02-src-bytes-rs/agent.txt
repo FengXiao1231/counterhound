@@ -1,0 +1,4 @@
+I tested 11 properties and reported 0 bugs. Ten passed. The one failure, `ph_borrowed_iff_unchanged`, was a mistake in my test: the empty word correctly quotes to `''`, which my test didn't allow for.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191157/g02-src-bytes-rs && cat > .proofhound/runs/20261017-191157/g02-src-bytes-rs/ph_props.rs <<'EOF'\nuse proptest::prelude::*;\nuse shlex::bytes::{Quoter, try_join, try_quote, split};\nuse std::borrow::Cow;\n\nfn word() -> impl Strategy<Value = Vec<u

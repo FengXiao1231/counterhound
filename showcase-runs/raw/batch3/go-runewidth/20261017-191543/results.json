@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191543",
+  "diff": null,
+  "fixRun": true,
+  "repo": "go-runewidth",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:15:43.475Z",
+  "ms": 47995,
+  "spend": {
+    "usd": 0.2485673,
+    "tokensIn": 481106,
+    "tokensOut": 6631,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g02-runewidth_appengine-go",
+      "file": "runewidth_appengine.go",
+      "functions": [
+        "IsEastAsian"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 14296,
+      "costUsd": 0.0665746,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-runewidth-go",
+      "file": "runewidth.go",
+      "functions": [
+        "Condition.TruncatePrefix",
+        "TruncatePrefix",
+        "Condition.TruncateLeft",
+        "TruncateLeft",
+        "Condition.Truncate",
+        "Condition.Wrap"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 47750,
+      "costUsd": 0.18199269999999998,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 7,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-190434",
+  "diff": null,
+  "fixRun": true,
+  "repo": "change-case",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:04:34.992Z",
+  "ms": 67541,
+  "spend": {
+    "usd": 0.37933870000000003,
+    "tokensIn": 801272,
+    "tokensOut": 7851,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g02-packages-swap-case-src-index-ts",
+      "file": "packages/swap-case/src/index.ts",
+      "functions": [
+        "swapCase"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 31067,
+      "costUsd": 0.1105929,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-packages-change-case-src-index-ts",
+      "file": "packages/change-case/src/index.ts",
+      "functions": [
+        "split",
+        "splitSeparateNumbers",
+        "noCase",
+        "pascalSnakeCase",
+        "camelCase",
+        "pascalCase"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 37008,
+      "costUsd": 0.1264644,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 7,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Capitalisation indexes by UTF-16 code unit, so words starting with astral letters are not capitalised",
+      "function": "pascalSnakeCase (via capitalCaseTransformFactory; also pascalCase/camelCase)",
+      "kind": "wrong-result",
+      "property": "the first letter of each word in pascalSnakeCase output is uppercase when the letter has an uppercase form",
+      "property_test": "pascalSnakeCase words capitalised (unicode letters)",
+      "repro_file": "repro_astral_capitalize.test.mjs",
+      "input": "pascalSnakeCase('\\u{10428}a', {locale:false})",
+      "expected": "'\\u{10400}a' (first letter uppercased)",
+      "actual": "'\\u{10428}a' (unchanged)",
+      "evidence": "split() uses \\p{L} with the u flag, so astral letters count as word letters, but capitalCaseTransformFactory does upper(word[0]) / word.slice(1), which cuts a surrogate pair in half; toUpperCase of a lone high surrogate is a no-op. Doc: 'Convert a string to pascal snake case (Foo_Bar)'.",
+      "group": "g01-packages-change-case-src-index-ts",
+      "file": "packages/change-case/src/index.ts",
+      "workdir": ".proofhound/runs/20261017-190434/g01-packages-change-case-src-index-ts",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_astral_capitalize.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_astral_capitalize",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly equal:\n\n'\ud801\udc28a' !== '\ud801\udc00a'\n",
+          "example": null
+        },
+        "testName": "repro_astral_capitalize"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Counterexample: [\"\ud801\udc28a\"]"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "Capitalisation splits surrogate pairs, so words starting with astral cased letters are not capitalised",
+        "reason": "The splitter uses \\p{L} with the u flag, so an astral letter such as U+10428 is a valid word character. capitalCaseTransformFactory and pascalCaseTransformFactory then take word[0] and word.slice(1), which cut the surrogate pair in half. toUpperCase on a lone surrogate does nothing, so the first letter stays lowercase and the documented 'Foo_Bar' capitalisation is not applied. The input is valid and the repro is correct. A fix is small (use the first code point, e.g. String.fromCodePoint(word.codePointAt(0)) or Array.from), though the affected scripts (Deseret, Osage, Adlam and similar) are rare.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/packages/change-case/src/index.ts b/packages/change-case/src/index.ts\nindex a84701f..3d6fd5d 100644\n--- a/packages/change-case/src/index.ts\n+++ b/packages/change-case/src/index.ts\n@@ -232,7 +232,10 @@ function capitalCaseTransformFactory(\n   lower: (input: string) => string,\n   upper: (input: string) => string,\n ) {\n-  return (word: string) => `${upper(word[0])}${lower(word.slice(1))}`;\n+  return (word: string) => {\n+    const char0 = String.fromCodePoint(word.codePointAt(0)!);\n+    return `${upper(char0)}${lower(word.slice(char0.length))}`;\n+  };\n }\n \n function pascalCaseTransformFactory(\n@@ -240,10 +243,10 @@ function pascalCaseTransformFactory(\n   upper: (input: string) => string,\n ) {\n   return (word: string, index: number) => {\n-    const char0 = word[0];\n+    const char0 = String.fromCodePoint(word.codePointAt(0)!);\n     const initial =\n       index > 0 && char0 >= \"0\" && char0 <= \"9\" ? \"_\" + char0 : upper(char0);\n-    return initial + lower(word.slice(1));\n+    return initial + lower(word.slice(char0.length));\n   };\n }\n \n",
+        "files": [
+          "packages/change-case/src/index.ts"
+        ],
+        "suite": "not run (no test command found; set \"testCommand\" in .proofhound/config.json)"
+      },
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { pascalSnakeCase } from '../../../../../packages/change-case/src/index.ts';\n\ntest('repro_astral_capitalize', () => {\n  // U+10428 DESERET SMALL LETTER LONG I; its uppercase is U+10400\n  assert.equal(pascalSnakeCase('\\u{10428}a', { locale: false }), '\\u{10400}a');\n});\n",
+      "bugDir": ".proofhound/runs/20261017-190434/bugs/PH-001-capitalisation-splits-surrogate-pairs-so-words-s"
+    }
+  ]
+}

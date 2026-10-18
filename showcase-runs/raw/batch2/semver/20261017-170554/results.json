@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170554",
+  "repo": "semver",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:05:54.915Z",
+  "ms": 62411,
+  "spend": {
+    "usd": 0.49053160000000007,
+    "tokensIn": 887859,
+    "tokensOut": 16230,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g02-constraints-go",
+      "file": "constraints.go",
+      "functions": [
+        "Constraints.Validate",
+        "Constraints.UnmarshalText",
+        "Constraints.MarshalText",
+        "NewConstraint",
+        "Constraints.Check"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 54387,
+      "costUsd": 0.22743739999999998,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-version-go",
+      "file": "version.go",
+      "functions": [
+        "StrictNewVersion",
+        "NewVersion",
+        "MustParse",
+        "Version.UnmarshalJSON",
+        "Version.UnmarshalText",
+        "Version.MarshalText"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 62140,
+      "costUsd": 0.26309420000000006,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 11,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

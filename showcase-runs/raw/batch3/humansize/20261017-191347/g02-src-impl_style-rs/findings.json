@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Negative one is pluralised: -1 formats as \"-1 Bytes\" while 1 formats as \"1 Byte\"",
+    "function": "humansize::ISizeFormatter::fmt (the body behind FormatSizeI::format_size_i; the impl_style feature is not enabled in the harness so the wrapper itself could not be called)",
+    "kind": "inconsistency",
+    "property": "formatting -v is the same as formatting v with a leading '-' (singular/plural unit choice depends only on magnitude)",
+    "property_test": "ph_long_singular_plural",
+    "repro_file": "repro_negative_one_plural.rs",
+    "input": "(-1i64).format_size_i(DECIMAL.long_units(true).space_after_value(true)), i.e. ISizeFormatter::new(-1i64, opts)",
+    "expected": "\"-1 Byte\" (singular, like \"1 Byte\")",
+    "actual": "\"-1 Bytes\"",
+    "evidence": "formatters.rs says 'Remove \"s\" from the scale if the size is 1.x' but the check f64_eq(ipart, 1.0) uses the signed integer part, so it never fires for -1.x. Same for -1 kB-scale values, e.g. -1000 long decimal gives \"-1 Kilobytes\" vs \"1 Kilobyte\". Negation symmetry is the natural contract of format_size_i, whose docs show 1_000_000 -> \"1 MB\" and -1_000_000 -> \"-1 MB\"."
+  }
+]

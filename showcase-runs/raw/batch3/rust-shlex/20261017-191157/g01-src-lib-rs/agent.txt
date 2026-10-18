@@ -1,0 +1,4 @@
+I tested 9 properties and reported 0 bugs: all 9 passed, and `findings.json` is `[]`. The properties cover `try_quote`, `try_join`, `Quoter::quote`, `Quoter::join`, `Quoter::allow_nul` and `split`.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/rust-shlex/.proofhound/runs/20261017-191157/g01-src-lib-rs && cat > /tmp/claude-0/zoo3/rust-shlex/.proofhound/runs/20261017-191157/g01-src-lib-rs/ph_props.rs <<'EOF'\nuse proptest::prelude::*;\nuse shlex::{split, try_join, try_quote, Quoter};\n\nfn s() -> impl

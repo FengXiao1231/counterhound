@@ -1,0 +1,14 @@
+[
+  {
+    "title": "from_f64_with_unit/from_f32_with_unit return 0 bytes for tiny positive sizes instead of rounding up",
+    "function": "byte_unit::Byte::from_f64_with_unit (also from_f32_with_unit)",
+    "kind": "inconsistency",
+    "property": "A positive size is rounded up to at least 1 byte, and from_f64_with_unit(x, Unit::B) equals from_f64(x)",
+    "property_test": "ph_tiny_positive_rounds_up_f64",
+    "repro_file": "repro_tiny_positive_rounds_to_zero.rs",
+    "input": "from_f64_with_unit(1e-29, Unit::B) (and from_f32_with_unit(1e-29, Unit::B))",
+    "expected": "Some(Byte(1)), as from_f64(1e-29) returns",
+    "actual": "Some(Byte(0))",
+    "evidence": "Docs: 'The calculated byte will be rounded up.' from_f64 documents 'The fractional part will be rounded up' and returns 1 for 1e-29. The Decimal conversion (Decimal::from_f64) silently flattens values below 1e-28 to zero before the ceil."
+  }
+]

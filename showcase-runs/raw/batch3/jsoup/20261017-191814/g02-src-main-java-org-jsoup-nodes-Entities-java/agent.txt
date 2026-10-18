@@ -1,0 +1,4 @@
+I tested 11 properties across all six listed functions; all passed, and I reported 0 bugs (`findings.json` is `[]`).
+
+Permission denials:
+Bash: {"command":"cd /tmp/claude-0/zoo3/jsoup; D=.proofhound/runs/20261017-191814/g02-src-main-java-org-jsoup-nodes-Entities-java; mkdir -p $D; cat > $D/PhPropsTest.java <<'EOF'\npackage org.jsoup.nodes;\n\nimport org.jsoup.nodes.Document.OutputSettings;\nimport org.junit.jupiter.api.Test;\nimport java.ni

@@ -1,0 +1,14 @@
+[
+  {
+    "title": "extend_query_with silently drops existing query parameters with blank values",
+    "function": "rfc3986.builder.URIBuilder.extend_query_with",
+    "kind": "wrong-result",
+    "property": "extending a query keeps all existing key/value pairs, including those with empty values, and appends the new ones",
+    "property_test": "test_extend_query",
+    "repro_file": "test_repro_extend_query_blank.py",
+    "input": "URIBuilder(query='a=').extend_query_with([('b', 'c')])",
+    "expected": "query == 'a=&b=c'",
+    "actual": "query == 'b=c' (the existing 'a=' is lost); extending with [] turns 'a=' into ''",
+    "evidence": "Docstring: 'Extend the existing query string with the new query items.' Existing items are parsed with parse_qsl(self.query) without keep_blank_values=True, so blank-valued params are discarded; extension should only add, never remove."
+  }
+]

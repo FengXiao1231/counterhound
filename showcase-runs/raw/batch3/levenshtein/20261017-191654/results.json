@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191654",
+  "diff": null,
+  "fixRun": true,
+  "repo": "levenshtein",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:16:54.108Z",
+  "ms": 101453,
+  "spend": {
+    "usd": 0.6238429,
+    "tokensIn": 1194752,
+    "tokensOut": 16793,
+    "calls": 5
+  },
+  "groups": [
+    {
+      "group": "g01-params-go",
+      "file": "params.go",
+      "functions": [
+        "Params.BonusScale",
+        "Params.MinScore",
+        "Params.MaxCost",
+        "Params.BonusThreshold",
+        "Params.BonusPrefix",
+        "Params.SubCost"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 30752,
+      "costUsd": 0.1288408,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g02-levenshtein-go",
+      "file": "levenshtein.go",
+      "functions": [
+        "Match",
+        "Similarity",
+        "Distance",
+        "Calculate"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 78659,
+      "costUsd": 0.2831035,
+      "reported": 2,
+      "verified": 2
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 10,
+    "reported": 3,
+    "verified": 3,
+    "duplicates": 0,
+    "confirmed": 3,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "BonusScale clamp is not enforced when BonusPrefix is raised afterwards; Match() exceeds 1",
+      "function": "Params.BonusScale",
+      "kind": "contract-violation",
+      "property": "after any sequence of BonusScale/BonusPrefix calls, Match() stays within 0..1 (scale never exceeds 1/BonusPrefix)",
+      "property_test": "TestPhMatchRange",
+      "repro_file": "repro_prefix_after_scale_test.go",
+      "input": "NewParams().BonusScale(0.25).BonusPrefix(10); Match(\"aaaaaaaaaaaaaaaaaaab\", \"aaaaaaaaaaaaaaaaaaac\", p)",
+      "expected": "Score <= 1",
+      "actual": "Match returns 1.075",
+      "evidence": "Doc: 'To guarantee that the similarity score remains in the interval 0..1, this scaling factor is not allowed to exceed 1 / BonusPrefix.' The clamp is only applied inside BonusScale, so a later BonusPrefix(v) (which does not re-clamp) breaks the invariant; Similarity range 0..1 is promised for Match.",
+      "group": "g01-params-go",
+      "file": "params.go",
+      "workdir": ".proofhound/runs/20261017-191654/g01-params-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_prefix_after_scale_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproPrefixAfterScale",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Match = 1.0750000000000002, want <= 1",
+          "example": null
+        },
+        "testName": "TestReproPrefixAfterScale"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: sc: 1, pr: 50, s1: \"aaaaa\", s2: \"aaaaaa\""
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "medium",
+        "category": "contract-violation",
+        "title": "Match() can return a score above 1 when BonusPrefix is raised after BonusScale",
+        "reason": "The BonusScale doc says the scale is \"not allowed to exceed 1 / BonusPrefix\" so that the score stays within 0..1. The clamp runs only inside BonusScale (params.go:136), and BonusPrefix (params.go:118) sets the value without re-checking. So `BonusScale(0.25).BonusPrefix(10)` gives prefix*scale = 2.5. Match then computes sim + pl*scale*(1-sim) = 0.95 + 10*0.25*0.05 = 1.075, which is real arithmetic and not a float artefact. The same state can also make the `1 - bonusPrefix*bonusScale` divisor in the minScore pre-computation (levenshtein.go:268) zero or negative. A maintainer would likely fix this by re-clamping in BonusPrefix or clamping at use time in Match.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "fix": {
+        "status": "skipped",
+        "reason": "not attempted: --budget was used up"
+      },
+      "reproSource": "package levenshtein\n\nimport \"testing\"\n\nfunc TestReproPrefixAfterScale(t *testing.T) {\n\tp := NewParams().BonusScale(0.25).BonusPrefix(10)\n\ts := Match(\"aaaaaaaaaaaaaaaaaaab\", \"aaaaaaaaaaaaaaaaaaac\", p)\n\tif s > 1 {\n\t\tt.Fatalf(\"Match = %v, want <= 1\", s)\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-191654/bugs/PH-002-match-can-return-a-score-above-1-when-bonusprefi"
+    },
+    {
+      "title": "Calculate with maxCost returns a within-budget distance that is far below the true distance",
+      "function": "github.com/agext/levenshtein.Calculate",
+      "kind": "wrong-result",
+      "property": "with maxCost>0, the result equals the exact distance if that is <= maxCost, otherwise it is a value > maxCost (a lower bound of the true distance)",
+      "property_test": "TestPhCalcMax",
+      "repro_file": "repro_maxcost_test.go",
+      "input": "Calculate(\"aaa\", \"bbbab\", maxCost=2, insCost=1, subCost=2, delCost=2); also Similarity(\"aaa\",\"bbbab\", InsCost(1).SubCost(2).DelCost(2).MinScore(0.75))",
+      "expected": "true distance is 6 > maxCost, so Calculate returns a value > 2 (e.g. 3); Similarity with MinScore 0.75 returns 0 (true score 0.25)",
+      "actual": "Calculate returns 2 (looks like an exact in-budget distance); Similarity with MinScore 0.75 returns 0.75 instead of 0 (without MinScore it returns 0.25)",
+      "evidence": "Docstring: 'If maxCost is non-zero, the calculation stops as soon as the distance is determined to be greater than maxCost. Therefore, any return value higher than maxCost is a lower bound for the actual distance.' Implied: a value <= maxCost is exact. Similarity/Match docs: scores lower than MinScore are returned as 0; here a 0.25 score is reported as 0.75.",
+      "group": "g02-levenshtein-go",
+      "file": "levenshtein.go",
+      "workdir": ".proofhound/runs/20261017-191654/g02-levenshtein-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_maxcost_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproMaxCostFalseWithinBudget",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Calculate with maxCost=2 returned 2, but actual distance is 6 (> maxCost)",
+          "example": null
+        },
+        "testName": "TestReproMaxCostFalseWithinBudget"
+      },
+      "propertyCheck": {
+        "failed": false,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.9,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "Calculate with maxCost>0 returns an in-budget distance (2) when the true distance is 6",
+        "reason": "The input is valid (non-negative costs, maxCost=2). By my hand calculation the true distance for \"aaa\"\u2192\"bbbab\" with ins=1, sub=2, del=2 is 6: two substitutions, one match and two insertions. The docs promise that only values above maxCost may be lower bounds, so a value \u2264 maxCost should be exact. The repro failed when I ran it, and Calculate returned 2, which looks like an exact in-budget distance. That makes Similarity with MinScore=0.75 return 0.75 instead of 0 (the true score is 0.25). The cause is probably the banded pruning in the maxCost path, which runs after the string swap, so the cost asymmetry (ins\u2260del) is involved. I did not trace the exact line. A maintainer would fix this because it silently gives wrong results.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "skipped",
+        "reason": "not attempted: --budget was used up"
+      },
+      "reproSource": "package levenshtein\n\nimport \"testing\"\n\n// Exact distance \"aaa\"->\"bbbab\" with ins=1, sub=2, del=2 is 6.\n// With maxCost=2, Calculate must return a value > 2 (a lower bound), not 2.\nfunc TestReproMaxCostFalseWithinBudget(t *testing.T) {\n\td, _, _ := Calculate([]rune(\"aaa\"), []rune(\"bbbab\"), 2, 1, 2, 2)\n\tif d <= 2 {\n\t\tt.Fatalf(\"Calculate with maxCost=2 returned %d, but actual distance is 6 (> maxCost)\", d)\n\t}\n\tif got := Similarity(\"aaa\", \"bbbab\", NewParams().InsCost(1).SubCost(2).DelCost(2).MinScore(0.75)); got != 0 {\n\t\tt.Fatalf(\"Similarity with MinScore=0.75 = %v, want 0 (true score 0.25)\", got)\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-191654/bugs/PH-001-calculate-with-maxcost-0-returns-an-in-budget-di"
+    },
+    {
+      "title": "Similarity/Match return NaN when the maximum possible distance is 0 due to zero costs",
+      "function": "github.com/agext/levenshtein.Match",
+      "kind": "contract-violation",
+      "property": "Similarity and Match always return a score in 0..1 for valid (non-negative) costs",
+      "property_test": "TestPhSimilarityRange",
+      "repro_file": "repro_nan_test.go",
+      "input": "Similarity(\"\", \"a\", NewParams().InsCost(0)) and Match with the same params",
+      "expected": "a score in the range 0..1",
+      "actual": "NaN (0/0, since maxDist is 0 and dist is 0)",
+      "evidence": "Docs: 'The score is in the range of 0..1'; costs 'must be zero or positive' so 0 is explicitly allowed; the code comment shows the author intends to avoid divByZero issues but only guards the both-empty case.",
+      "group": "g02-levenshtein-go",
+      "file": "levenshtein.go",
+      "workdir": ".proofhound/runs/20261017-191654/g02-levenshtein-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_nan_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproZeroCostNaN",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "score for \"\" vs \"a\" with InsCost(0) = NaN, want within 0..1",
+          "example": null
+        },
+        "testName": "TestReproZeroCostNaN"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: a: []int32{}, b: []int32{97}, i: 0, s: 0, d: 0, m: false"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.85,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "Similarity/Match return NaN when maxDist is 0 because of zero edit costs",
+        "reason": "InsCost(0) is documented as valid (\"must be zero or positive\"), and Match is documented to return a score in 0..1. For (\"\", \"a\") with InsCost(0), l1=0 and l2=1, so maxDist = 0*delCost + 1*0 = 0 and dist = 0. Line 276 then computes 1 - 0/0, which is NaN. The only guard is the both-empty shortcut at line 230, and its comment says it exists to avoid divide-by-zero. The same case can arise with other zero-cost configurations. A maintainer would likely accept a small fix that returns 1, or a defined value, when maxDist == 0.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-003",
+      "fix": {
+        "status": "skipped",
+        "reason": "not attempted: --budget was used up"
+      },
+      "reproSource": "package levenshtein\n\nimport (\n\t\"math\"\n\t\"testing\"\n)\n\nfunc TestReproZeroCostNaN(t *testing.T) {\n\tp := NewParams().InsCost(0)\n\tfor _, v := range []float64{Similarity(\"\", \"a\", p), Match(\"\", \"a\", p)} {\n\t\tif math.IsNaN(v) || v < 0 || v > 1 {\n\t\t\tt.Fatalf(\"score for \\\"\\\" vs \\\"a\\\" with InsCost(0) = %v, want within 0..1\", v)\n\t\t}\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-191654/bugs/PH-003-similarity-match-return-nan-when-maxdist-is-0-be"
+    }
+  ]
+}

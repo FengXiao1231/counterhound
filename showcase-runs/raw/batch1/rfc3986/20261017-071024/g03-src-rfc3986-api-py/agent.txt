@@ -1,0 +1,9 @@
+I tested 9 properties across the five functions and reported 2 bugs. Both repro files fail for the right reason.
+
+- **`normalize_uri` drops an empty authority:** `file:///etc/hosts` normalizes to `file:/etc/hosts`, and `//` becomes an empty string. The cause is in `unsplit()`, which checks whether the authority is truthy, so an empty-but-present authority loses its `//`. The repro is `test_repro_empty_authority_dropped.py`.
+- **`normalize_uri` turns a path into an authority:** `a:/.//b` normalizes to `a://b`, which re-parses with host `b` and no path. Dot-segment removal leaves the path as `//b`, and `unsplit()` joins it straight after `a:`. The repro is `test_repro_path_becomes_authority.py`.
+
+Both findings are in `findings.json`. I ran the repro for the empty-authority bug together with the one for the path bug, and ran the second repro alone afterwards. Both fail with the output above.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo/rfc3986/.proofhound/runs/20261017-071024/g03-src-rfc3986-api-py && cat > /tmp/claude-0/zoo/rfc3986/.proofhound/runs/20261017-071024/g03-src-rfc3986-api-py/test_ph_props.py <<'EOF'\nimport warnings\nfrom hypothesis import given, assume, settings, strategies as s

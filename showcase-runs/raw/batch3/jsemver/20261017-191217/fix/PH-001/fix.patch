@@ -1,0 +1,23 @@
+diff --git a/ph-err.txt b/ph-err.txt
+index ee35df6..a150c03 100644
+--- a/ph-err.txt
++++ b/ph-err.txt
+@@ -13,5 +13,3 @@ proofhound · Java · claude (sonnet) · 2 modules, 12 functions
+   bug (0.93) compareToIgnoreBuildMetadata orders numeric identifier above alphanumeric identifier starting with '-'
+ 
+   writing fixes for 2 bugs…
+-  ▸ fixing PH-001 nextPreReleaseVersion() appends ".1" instead of incrementing when the last pre-release identifier is "0"
+-  ▸ fixing PH-002 compareToIgnoreBuildMetadata ranks numeric pre-release identifiers above alphanumeric ones that start with '-'
+diff --git a/src/main/java/com/github/zafarkhaja/semver/Version.java b/src/main/java/com/github/zafarkhaja/semver/Version.java
+index 0da587c..59301e9 100644
+--- a/src/main/java/com/github/zafarkhaja/semver/Version.java
++++ b/src/main/java/com/github/zafarkhaja/semver/Version.java
+@@ -1338,7 +1338,7 @@ public class Version implements Comparable<Version>, Serializable {
+ 
+     private static boolean isNumeric(String id) {
+         // filters out <digits>
+-        if (id.startsWith("0")) {
++        if (id.startsWith("0") && !id.equals("0")) {
+             return false;
+         }
+         return id.chars().allMatch(Character::isDigit);

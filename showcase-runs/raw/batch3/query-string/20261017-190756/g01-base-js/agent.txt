@@ -1,0 +1,10 @@
+I tested 8 properties and reported 1 bug: `stringifyUrl` turns an existing index-format array in the URL's query into `a=[object Object]`.
+
+For `stringifyUrl({url: 'https://foo.bar?a[0]=x&a[1]=y', query: {}}, {arrayFormat: 'index', encode: false})`, the repro file `repro_index_nosort.test.mjs` fails with exactly that output. The cause is that `stringifyUrl` parses the existing query with `sort: false`, and `parse` only turns index-keyed objects into arrays when sorting is on.
+
+Both failures in the latest `ph_props.test.mjs` run are the same bug. The "round-trip arrays for each arrayFormat" failure is a `sort: false` index-format case that my property should have excluded, so I did not report it separately. The other new property, "stringifyUrl preserves existing index-format array in url", fails because of the bug itself.
+
+`findings.json` holds the one entry. I did not modify any project file.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-190756/g01-base-js && grep -n \"parseFragmentIdentifier\\|skipNull\\|arrayFormat\" readme.md | head -50"}

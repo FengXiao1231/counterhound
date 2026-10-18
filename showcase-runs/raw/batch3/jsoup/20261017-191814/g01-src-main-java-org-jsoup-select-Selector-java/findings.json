@@ -1,0 +1,12 @@
+[{
+  "title": "Escaped trailing space in identifier is lost because the query is trimmed",
+  "function": "org.jsoup.select.Selector.select",
+  "kind": "wrong-result",
+  "property": "a selector built as '#' + escapeCssIdentifier(id) matches the element with that id",
+  "property_test": "selectById",
+  "repro_file": "ReproTrailingSpaceTest.java",
+  "input": "element with id \"a \"; query \"#a\\ \" (from escapeCssIdentifier(\"a \"))",
+  "expected": "1 element matched (an escaped space '\\ ' is part of the identifier per CSS syntax)",
+  "actual": "0 elements: the trailing escaped space is stripped when the query is trimmed, so the id parsed is 'a' followed by a dangling escape",
+  "evidence": "escapeCssIdentifier is documented to escape characters 'that would otherwise not be valid in a selector' (CSSOM serialize-an-identifier), so its output should be usable in a selector; it emits '\\ ' for space, which select() then mishandles at the end of the query"
+}]

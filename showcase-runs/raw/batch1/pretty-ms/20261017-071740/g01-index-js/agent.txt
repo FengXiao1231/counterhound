@@ -1,0 +1,19 @@
+I tested 11 properties on `prettyMilliseconds` and reported 0 bugs. All 11 passed.
+
+The properties covered:
+- agreement with a reference implementation for default options
+- bigint and number giving the same output for integers
+- negation only adding a minus sign
+- no crash and no `NaN` in the output
+- `unitCount` limits
+- colon-notation fields
+- the sum of the colon-notation fields matching the input
+- verbose and short forms showing the same numbers
+- `hideYearAndDays`
+- days correctness
+- `formatSubMilliseconds` reconstruction
+
+I also read through the options (such as `hideSeconds` with `colonNotation` and `subSecondsAsDecimals`) by hand. I found nothing I could defend as a bug. `findings.json` is `[]`.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo/pretty-ms/.proofhound/runs/20261017-071740/g01-index-js; cd /tmp/claude-0/zoo/pretty-ms/.proofhound/runs/20261017-071740/g01-index-js; cat > probe.mjs <<'EOF'\nimport p from '../../../../index.js';\nconst c=[[0,{}],[1,{subSecondsAsDecimals:true}],[50,{subSecond

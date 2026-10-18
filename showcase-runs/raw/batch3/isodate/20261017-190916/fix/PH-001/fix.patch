@@ -1,0 +1,24 @@
+diff --git a/ph-err.txt b/ph-err.txt
+index 691c82f..4fffb19 100644
+--- a/ph-err.txt
++++ b/ph-err.txt
+@@ -11,4 +11,3 @@ proofhound · Python · claude (sonnet) · 2 modules, 6 functions
+   bug (0.90) parse_time raises ValueError for hh.hhhh with many trailing 9s (microsecond rounds to 1000000)
+ 
+   writing fixes for 1 bug…
+-  ▸ fixing PH-001 parse_time raises ValueError for hour fractions with many trailing 9s (microsecond rounds up to 1000000)
+diff --git a/src/isodate/isotime.py b/src/isodate/isotime.py
+index 78b4de2..18c72b0 100644
+--- a/src/isodate/isotime.py
++++ b/src/isodate/isotime.py
+@@ -129,7 +129,9 @@ def parse_time(timestring: str) -> time:
+                 microsecond, second, minute = Decimal(0), Decimal(0), Decimal(0)
+             hour = Decimal(groups["hour"])
+             minute = (hour - int(hour)) * 60
+-            second = Decimal((minute - int(minute)) * 60)
++            second = Decimal((minute - int(minute)) * 60).quantize(
++                Decimal(".000001"), rounding=ROUND_FLOOR
++            )
+             microsecond = (second - int(second)) * int(1e6)
+             return time(
+                 int(hour),

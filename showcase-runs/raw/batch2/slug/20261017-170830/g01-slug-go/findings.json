@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Make() with EnableSmartTruncate=false and default MaxLength=0 returns empty slug",
+    "function": "github.com/gosimple/slug.MakeLang",
+    "kind": "wrong-result",
+    "property": "With MaxLength unset (0), slugs are not shortened, so a simple lowercase word is returned unchanged regardless of EnableSmartTruncate",
+    "property_test": "TestPhNonSmartDefaultMax",
+    "repro_file": "repro_nonsmart_zero_maxlength_test.go",
+    "input": "EnableSmartTruncate=false, MaxLength=0, Make(\"a\")",
+    "expected": "\"a\"",
+    "actual": "\"\" (slug[:0] since len(slug) >= MaxLength is true)",
+    "evidence": "Doc on MaxLength: 'By default slugs aren't shortened.' The non-smart branch `len(slug) >= MaxLength` does not guard MaxLength > 0 (unlike the smart branch)."
+  },
+  {
+    "title": "Make() with MaxLength can return slug ending in underscore, failing IsSlug",
+    "function": "github.com/gosimple/slug.MakeLang",
+    "kind": "contract-violation",
+    "property": "All output of Make(text) passes IsSlug (when non-empty)",
+    "property_test": "TestPhMakeMaxLength",
+    "repro_file": "repro_truncate_trailing_underscore_test.go",
+    "input": "MaxLength=2, Make(\"0_0\")",
+    "expected": "a slug without trailing '_' (e.g. \"0\") that passes IsSlug",
+    "actual": "\"0_\", IsSlug returns false",
+    "evidence": "IsSlug doc: 'All output from slug.Make(text) should pass this test' and slugs may not end with '-' or '_'. smartTruncate cuts text[:MaxLength] without re-trimming '_' / '-'."
+  }
+]

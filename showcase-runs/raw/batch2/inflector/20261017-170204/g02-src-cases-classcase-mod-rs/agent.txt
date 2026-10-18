@@ -1,0 +1,14 @@
+I wrote 6 properties but could not run any of them, so I reported 0 bugs. `findings.json` is `[]`.
+
+The crate does not compile with this toolchain. Several modules, including `tablecase`, `pascalcase` and `titlecase`, have `#![deny(warnings)]`, and the redundant `.clone()` calls trip the compiler's lint. The harness reported "0 passed, 1 failed", and I can't edit project files or change compiler flags.
+
+The properties are in `ph_props.rs` in the work directory. They cover:
+- no panic on arbitrary input
+- idempotence of `to_class_case`
+- `is_class_case(to_class_case(x))` being true
+- no separators left in the output
+- first letter not lowercase
+- first word capitalised
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-170204/g02-src-cases-classcase-mod-rs"}

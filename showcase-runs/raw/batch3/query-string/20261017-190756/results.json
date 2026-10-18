@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-190756",
+  "diff": null,
+  "fixRun": true,
+  "repo": "query-string",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:07:56.093Z",
+  "ms": 110829,
+  "spend": {
+    "usd": 0.3539995,
+    "tokensIn": 733434,
+    "tokensOut": 7092,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-base-js",
+      "file": "base.js",
+      "functions": [
+        "parseUrl",
+        "stringifyUrl",
+        "parse",
+        "stringify",
+        "extract",
+        "pick"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 41647,
+      "costUsd": 0.1868089,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "stringifyUrl corrupts existing index-format array in the URL's query ('a=[object Object]')",
+      "function": "stringifyUrl",
+      "kind": "wrong-result",
+      "property": "stringifyUrl({url: u, query: {}}, {arrayFormat:'index'}) leaves an existing query like a[0]=x&a[1]=y unchanged",
+      "property_test": "stringifyUrl preserves existing index-format array in url",
+      "repro_file": "repro_index_nosort.test.mjs",
+      "input": "stringifyUrl({url: 'https://foo.bar?a[0]=x&a[1]=y', query: {}}, {arrayFormat: 'index', encode: false})",
+      "expected": "'https://foo.bar?a[0]=x&a[1]=y'",
+      "actual": "'https://foo.bar?a=[object Object]'",
+      "evidence": "stringifyUrl parses the existing query with {sort:false, ...options}; in parse(), index-format arrays are only converted from index-keyed objects to arrays by keysSorter, which is skipped when sort === false, so an object is returned and stringified as [object Object]. The README documents arrayFormat 'index' parsing to arrays, and an existing test ('stringifyUrl uses parsing options when parsing existing query from url') shows the intent that array formats work for existing URL queries. Likewise parse(q,{arrayFormat:'index',sort:false}) returns an object instead of an array.",
+      "group": "g01-base-js",
+      "file": "base.js",
+      "workdir": ".proofhound/runs/20261017-190756/g01-base-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_index_nosort.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_index_nosort: stringifyUrl keeps existing index-format array in url",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 'https://foo.bar?a=[object Object]'\n- 'https://foo.bar?a[0]=x&a[1]=y'\n                    ^\n",
+          "example": null
+        },
+        "testName": "repro_index_nosort: stringifyUrl keeps existing index-format array in url"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Counterexample: [[\"0\"]]"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.85,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "stringifyUrl turns an existing index-format array in the URL query into 'a=[object Object]'",
+        "reason": "The index parser in `parse()` collects values into an object keyed by index (`accumulator[key] = {}`). Only `keysSorter` turns that object into an array, and it is skipped when `sort === false`. `stringifyUrl` always parses the existing query with `{sort:false, ...options}` (base.js:573), so with `arrayFormat:'index'` the query keeps the plain object and `stringify` writes it as `[object Object]`. A URL such as `?a[0]=x&a[1]=y` is valid input for the index format, and the existing-query parsing options are meant to work for array formats. Silently corrupting the URL is not intended behaviour, and a maintainer would likely accept a fix, such as converting the index objects to arrays even when sort is false.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/base.js b/base.js\nindex 6fc590a..ee22055 100644\n--- a/base.js\n+++ b/base.js\n@@ -447,6 +447,12 @@ export function parse(query, options) {\n \t}\n \n \tif (options.sort === false) {\n+\t\tfor (const [key, value] of Object.entries(returnValue)) {\n+\t\t\tif (Boolean(value) && typeof value === 'object' && !Array.isArray(value)) {\n+\t\t\t\treturnValue[key] = keysSorter(value);\n+\t\t\t}\n+\t\t}\n+\n \t\treturn returnValue;\n \t}\n \n",
+        "files": [
+          "base.js"
+        ],
+        "suite": "passed (npm test --silent)"
+      },
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport {stringifyUrl} from '../../../../../base.js';\n\ntest('repro_index_nosort: stringifyUrl keeps existing index-format array in url', () => {\n\tassert.equal(\n\t\tstringifyUrl({url: 'https://foo.bar?a[0]=x&a[1]=y', query: {}}, {arrayFormat: 'index', encode: false}),\n\t\t'https://foo.bar?a[0]=x&a[1]=y',\n\t);\n});\n",
+      "bugDir": ".proofhound/runs/20261017-190756/bugs/PH-001-stringifyurl-turns-an-existing-index-format-arra"
+    }
+  ]
+}

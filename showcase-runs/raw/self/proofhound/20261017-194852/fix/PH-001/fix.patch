@@ -1,0 +1,30 @@
+diff --git a/src/diff.js b/src/diff.js
+index 2951233..b0c7de8 100644
+--- a/src/diff.js
++++ b/src/diff.js
+@@ -25,14 +25,21 @@ export function changedLines(repo, base) {
+ export function parseDiff(text) {
+   const out = new Map();
+   let file = null;
++  let oldLeft = 0, newLeft = 0; // hunk body lines still to consume, so '+++ x' content isn't read as a header
+   for (const line of text.split('\n')) {
+     let m;
+-    if ((m = line.match(/^\+\+\+ (?:b\/)?(.*)$/))) {
++    if (oldLeft > 0 && line[0] === '-') {
++      oldLeft--;
++    } else if (newLeft > 0 && line[0] === '+') {
++      newLeft--;
++    } else if ((m = line.match(/^\+\+\+ (?:b\/)?(.*)$/))) {
+       file = m[1] === '/dev/null' ? null : m[1];
+       if (file && !out.has(file)) out.set(file, []);
+-    } else if (file && (m = line.match(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/))) {
+-      const start = +m[1];
+-      const count = m[2] === undefined ? 1 : +m[2];
++    } else if (file && (m = line.match(/^@@ -\d+(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/))) {
++      const start = +m[2];
++      const count = m[3] === undefined ? 1 : +m[3];
++      oldLeft = m[1] === undefined ? 1 : +m[1];
++      newLeft = count;
+       // a pure deletion (count 0) still changes the function around it
+       out.get(file).push(count === 0 ? [start, start + 1] : [start, start + count - 1]);
+     }

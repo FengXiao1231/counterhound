@@ -1,0 +1,25 @@
+diff --git a/humanfriendly/__init__.py b/humanfriendly/__init__.py
+index 4c0a333..90f9aee 100644
+--- a/humanfriendly/__init__.py
++++ b/humanfriendly/__init__.py
+@@ -452,7 +452,10 @@ def format_timespan(num_seconds, detailed=False, max_units=3):
+             # Only include relevant units in the result.
+             if count not in (0, '0'):
+                 result.append(pluralize(count, unit['singular'], unit['plural']))
+-        if len(result) == 1:
++        if not result:
++            # All unit counts are zero (or rounded to zero).
++            return pluralize(0, 'second')
++        elif len(result) == 1:
+             # A single count/unit combination.
+             return result[0]
+         else:
+diff --git a/ph-err.txt b/ph-err.txt
+index 9b936b2..e4b3e1b 100644
+--- a/ph-err.txt
++++ b/ph-err.txt
+@@ -11,4 +11,3 @@ proofhound · Python · claude (sonnet) · 2 modules, 12 functions
+   bug (0.85) format_timespan(0, detailed=True) returns an empty string
+ 
+   writing fixes for 1 bug…
+-  ▸ fixing PH-001 format_timespan(0, detailed=True) returns an empty string instead of '0 seconds'

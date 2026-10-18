@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "wordwrap",
+  "importPath": "github.com/mitchellh/go-wordwrap"
+}

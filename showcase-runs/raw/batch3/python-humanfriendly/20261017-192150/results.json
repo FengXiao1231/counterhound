@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-192150",
+  "diff": null,
+  "fixRun": true,
+  "repo": "python-humanfriendly",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:21:50.771Z",
+  "ms": 69733,
+  "spend": {
+    "usd": 0.40609020000000007,
+    "tokensIn": 638719,
+    "tokensOut": 7546,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g02-humanfriendly-usage-py",
+      "file": "humanfriendly/usage.py",
+      "functions": [
+        "format_usage",
+        "parse_usage",
+        "render_usage",
+        "inject_usage",
+        "render_paragraph",
+        "replace_special_tokens"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 31950,
+      "costUsd": 0.1361854,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-humanfriendly-__init__-py",
+      "file": "humanfriendly/__init__.py",
+      "functions": [
+        "format_size",
+        "parse_size",
+        "format_length",
+        "parse_length",
+        "format_timespan",
+        "parse_timespan"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 36584,
+      "costUsd": 0.1459498,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "format_timespan(0, detailed=True) returns an empty string",
+      "function": "humanfriendly.format_timespan",
+      "kind": "wrong-result",
+      "property": "formatting a valid zero timespan yields a non-empty human readable string (and parse_timespan of its parts gives back 0)",
+      "property_test": "test_timespan_float_detailed",
+      "repro_file": "test_repro_timespan_zero_detailed.py",
+      "input": "format_timespan(0, detailed=True)",
+      "expected": "'0 seconds' (as format_timespan(0) gives)",
+      "actual": "'' (empty string), because all unit counts are zero and concatenate([]) is ''",
+      "evidence": "Docstring: format_timespan(0) -> '0 seconds'; returns 'The formatted timespan as a string'. detailed only changes how milliseconds are represented, so zero should still render as a quantity.",
+      "group": "g01-humanfriendly-__init__-py",
+      "file": "humanfriendly/__init__.py",
+      "workdir": ".proofhound/runs/20261017-192150/g01-humanfriendly-__init__-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_timespan_zero_detailed.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_timespan_zero_detailed",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert '' != ''\n +  where '' = format_timespan(0, detailed=True)"
+        },
+        "testName": "test_repro_timespan_zero_detailed"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_timespan_float_detailed(\n    x=0.0,\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.85,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "format_timespan(0, detailed=True) returns an empty string instead of '0 seconds'",
+        "reason": "The input is valid, because coerce_seconds accepts 0 and the docstring says format_timespan(0) gives '0 seconds'. With detailed=True the slow path skips every zero-count unit, so `result` is empty and `concatenate([])` returns ''. The docstring says `detailed` only changes how milliseconds are shown, and no test or doc says an empty result is intended. The tests cover only non-zero values with detailed=True, so the empty string looks like an unhandled edge case, not a deliberate choice. A small fix is easy: return pluralize(0, 'second') when `result` is empty. Severity is low because it is a rare edge case.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/humanfriendly/__init__.py b/humanfriendly/__init__.py\nindex 4c0a333..90f9aee 100644\n--- a/humanfriendly/__init__.py\n+++ b/humanfriendly/__init__.py\n@@ -452,7 +452,10 @@ def format_timespan(num_seconds, detailed=False, max_units=3):\n             # Only include relevant units in the result.\n             if count not in (0, '0'):\n                 result.append(pluralize(count, unit['singular'], unit['plural']))\n-        if len(result) == 1:\n+        if not result:\n+            # All unit counts are zero (or rounded to zero).\n+            return pluralize(0, 'second')\n+        elif len(result) == 1:\n             # A single count/unit combination.\n             return result[0]\n         else:\n",
+        "files": [
+          "humanfriendly/__init__.py"
+        ],
+        "suite": "not compared (the suite already fails without the fix: python3 -m pytest -q -x -p no:cacheprovider --no-header)"
+      },
+      "reproSource": "from humanfriendly import format_timespan\n\n\ndef test_repro_timespan_zero_detailed():\n    assert format_timespan(0) == '0 seconds'\n    assert format_timespan(0, detailed=True) != ''\n",
+      "bugDir": ".proofhound/runs/20261017-192150/bugs/PH-001-format-timespan-0-detailed-true-returns-an-empty"
+    }
+  ]
+}

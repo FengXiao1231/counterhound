@@ -1,0 +1,1 @@
+I changed the seed check in `src/utils/random.ts` from a truthiness test to `str !== undefined`. An empty-string seed now gives a deterministic sequence, and only an omitted seed is random. The repro test passes. I didn't run any other tests.

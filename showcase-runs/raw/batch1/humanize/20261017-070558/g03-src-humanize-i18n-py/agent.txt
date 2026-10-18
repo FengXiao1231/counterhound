@@ -1,0 +1,6 @@
+I tested 6 properties and reported 1 bug, which is borderline: `activate()` ignores `path` once the locale is cached, so `activate("fr_FR", dirA)` followed by `activate("fr_FR", emptyDir)` returns the first catalogue instead of raising `FileNotFoundError`. The repro fails for that reason (`DID NOT RAISE FileNotFoundError`). The runner labels that "a problem in the test", which is just how it words any pytest `Failed`.
+
+The sandbox had no compiled `.mo` files and no generated `humanize._version`. So the tests stub both: empty catalogues in a temp directory and a fake `_version` module.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo/humanize/.proofhound/runs/20261017-070558/g03-src-humanize-i18n-py && cat > /tmp/claude-0/zoo/humanize/.proofhound/runs/20261017-070558/g03-src-humanize-i18n-py/test_ph_props.py <<'EOF'\nimport os, tempfile\nfrom hypothesis import given, settings, strategies as

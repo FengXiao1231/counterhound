@@ -1,0 +1,4 @@
+I tested 13 properties and reported 0 bugs. `findings.json` is an empty array.
+
+Twelve properties passed. The thirteenth, a grid-width check on wide characters, couldn't run because `wcwidth` isn't installed, so that property is unchecked.
+

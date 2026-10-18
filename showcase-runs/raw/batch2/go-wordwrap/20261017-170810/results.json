@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170810",
+  "repo": "go-wordwrap",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:08:10.366Z",
+  "ms": 49139,
+  "spend": {
+    "usd": 0.17752610000000002,
+    "tokensIn": 276775,
+    "tokensOut": 4913,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-wordwrap-go",
+      "file": "wordwrap.go",
+      "functions": [
+        "WrapString"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 33786,
+      "costUsd": 0.124046,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 1,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "WrapString with lim=1 never wraps single-character words",
+      "function": "github.com/mitchellh/go-wordwrap.WrapString",
+      "kind": "wrong-result",
+      "property": "in the output, any line containing more than one word is no wider than lim when every word fits within lim",
+      "property_test": "TestPhLineWidth",
+      "repro_file": "repro_lim1_nowrap_test.go",
+      "input": "WrapString(\"a b\", 1)",
+      "expected": "\"a\\nb\" (each one-character word fits the limit on its own line)",
+      "actual": "\"a b\" (a 3-wide line with lim=1)",
+      "evidence": "Doc: 'WrapString wraps the given string within lim width in characters'; only words longer than lim are described as pathological. The condition `wordBufLen < lim` at line 64 is false for a one-character word when lim == 1, so the break is skipped even though the word fits on a fresh line.",
+      "group": "g01-wordwrap-go",
+      "file": "wordwrap.go",
+      "workdir": ".proofhound/runs/20261017-170810/g01-wordwrap-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_lim1_nowrap_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproLim1NoWrap",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "WrapString(\"a b\", 1) = \"a b\", want \"a\\nb\"",
+          "example": null
+        },
+        "testName": "TestReproLim1NoWrap"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: s: \"a\\ta\", lim: 0x1"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.6,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "WrapString with lim=1 never breaks between single-character words",
+        "reason": "The guard `wordBufLen < lim` at line 64 exists to avoid breaking a word that already can't fit. When lim==1, the first character of every word has wordBufLen==1, so the guard is always false and no break is ever emitted. As a result, \"a b\" stays on one line even though each word fits on its own. For lim>=2 the first character of a word always satisfies `wordBufLen < lim`, so only lim==1 is affected. The docstring only excuses overruns for words longer than the limit, and that does not apply here. This is a real off-by-one in the guard, but lim=1 is a degenerate input and the fix is trivial, so severity is low.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "package wordwrap\n\nimport \"testing\"\n\nfunc TestReproLim1NoWrap(t *testing.T) {\n\tgot := WrapString(\"a b\", 1)\n\tif want := \"a\\nb\"; got != want {\n\t\tt.Fatalf(\"WrapString(%q, 1) = %q, want %q\", \"a b\", got, want)\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-170810/bugs/PH-001-wrapstring-with-lim-1-never-breaks-between-singl"
+    }
+  ]
+}

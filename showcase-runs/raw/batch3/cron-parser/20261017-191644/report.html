@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofhound · cron-parser</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}h1 span{color:var(--accent)}h2{font-size:18px;margin:40px 0 12px}
+.meta{color:var(--dim);font-size:13px}.meta code{font-size:12px}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+.funnel{margin:20px 0 8px;display:grid;gap:6px}.step{position:relative;height:30px}
+.bar{position:absolute;inset:0 auto 0 0;background:var(--bar1);border-radius:6px}.bar[data-i="3"]{background:var(--bar3)}
+.lab{position:relative;padding:5px 10px;font-size:13px;white-space:nowrap}.bar[data-i="3"]+.lab{color:#fff}
+.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:14px 0}
+.bug.needs-look{border-left-color:var(--warn)}
+.bug header{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.bug h3{margin:0;font-size:17px;flex:1 1 300px}
+.id{font:600 12px ui-monospace,monospace;color:var(--accent)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--dim)}
+.badge.ok{color:var(--ok);border-color:currentColor}.sev-high{color:var(--accent);border-color:currentColor}.sev-medium{color:var(--warn);border-color:currentColor}
+.where{margin:6px 0 10px;color:var(--dim);font-size:13px;word-break:break-all}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0 0 8px}dt{color:var(--dim);font-size:13px}dd{margin:0;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.copy{margin-left:8px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer}
+.err{color:var(--accent);margin:4px 0}.dim{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:500}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center}
+.tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+footer{margin-top:48px;color:var(--dim);font-size:12.5px}
+@media (max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style></head><body><main>
+<h1>proof<span>hound</span> report</h1>
+<div class="meta">cron-parser · javascript · claude (sonnet) · 1 modules, 1 functions · 1m36s · $0.22 · 10/17/2026, 7:16:44 PM</div>
+<div class="funnel">
+    <div class="step"><div class="bar" style="width:100%" data-i="0"></div>
+    <div class="lab"><b>1</b> reported by the hunter</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="1"></div>
+    <div class="lab"><b>1</b> reproduced deterministically</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="2"></div>
+    <div class="lab"><b>1</b> unique</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="3"></div>
+    <div class="lab"><b>1</b> confirmed by review</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="4"></div>
+    <div class="lab"><b>1</b> fixed, with a verified patch</div></div></div>
+<p class="meta">Every bug below failed the same way in 3 fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
+
+<h2>1 confirmed bug</h2>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-001</span>
+    <h3>seededRandom(&#39;&#39;) treats an empty-string seed as omitted and returns a non-deterministic generator</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.60</span>
+      <span class="badge ok">failed 3/3</span>
+      <span class="badge ok">fix verified</span>
+    </span>
+  </header>
+  <p class="where"><code>seededRandom</code> · <code>src/utils/random.ts</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>seededRandom(&#39;&#39;) called twice</code></dd>
+    <dt>Expected</dt><dd>Both generators yield the same sequence, since a seed string was provided (only an omitted seed should be random)</dd>
+    <dt>Actual</dt><dd>&#39;&#39; is falsy, so `str ? ... : Math.random()` picks a random seed and the sequences differ</dd>
+    <dt>Property</dt><dd>two generators created with the same provided seed string produce identical sequences</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>import test from &#39;node:test&#39;;
+import assert from &#39;node:assert/strict&#39;;
+import { seededRandom } from &#39;../../../../../src/utils/random.ts&#39;;
+
+test(&#39;repro_empty_seed&#39;, () =&gt; {
+  const a = seededRandom(&#39;&#39;);
+  const b = seededRandom(&#39;&#39;);
+  assert.deepEqual([a(), a(), a()], [b(), b(), b()]);
+});</code></pre>
+  <p class="err"><code>AssertionError: Expected values to be strictly deep-equal:</code></p></details>
+  <details><summary>Suggested fix: the repro passes with it; project tests passed (npm test --silent) <button class="copy" data-copy>copy</button></summary><pre><code>diff --git a/src/utils/random.ts b/src/utils/random.ts
+index acde34e..8479605 100644
+--- a/src/utils/random.ts
++++ b/src/utils/random.ts
+@@ -37,6 +37,6 @@ function mulberry32(seed: number) {
+  * @returns {PRNG} A random number generator correctly seeded
+  */
+ export function seededRandom(str?: string): PRNG {
+-  const seed = str ? xfnv1a(str)() : Math.floor(Math.random() * 10_000_000_000);
++  const seed = str !== undefined ? xfnv1a(str)() : Math.floor(Math.random() * 10_000_000_000);
+   return mulberry32(seed);
+ }</code></pre></details>
+  
+  <details><summary>Why this is a bug</summary><p>Docstring: &#39;When not provided, the seed is randomly generated&#39;; param type is `str?: string`, and &#39;&#39; is a provided string. Every other string seed is deterministic; the check should be `str === undefined`.</p><p><b>Independent review:</b> The docstring says the seed is random only &#39;when not provided&#39;, and the parameter is typed `str?: string`. The check `str ? ... : Math.random()` is a truthiness test, so a provided &#39;&#39; is treated like undefined. Every other string seed gives a deterministic sequence, and `hashSeed: &#39;&#39;` passed through CronExpressionParser.parse silently loses reproducibility. A maintainer would probably accept a one-line `str === undefined` fix, but &#39;&#39; is an edge-case seed and nothing in the tests or README promises how it behaves, so severity is low.</p>
+  
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191644/bugs/PH-001-seededrandom-treats-an-empty-string-seed-as-omit/BUG.md</code></p></details>
+</article>
+
+
+
+<h2>Filtered out (0)</h2>
+<p class="dim">Nothing was filtered out.</p>
+
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
+<tr><td><code>src/utils/random.ts</code></td><td>seededRandom</td><td>1</td><td>1</td><td>25s</td></tr>
+</table>
+<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));
+</script>
+</body></html>

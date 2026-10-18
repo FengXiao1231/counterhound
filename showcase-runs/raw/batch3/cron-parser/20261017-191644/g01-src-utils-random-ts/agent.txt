@@ -1,0 +1,6 @@
+I tested 6 properties and reported 1 bug: `seededRandom('')` treats the empty string as "no seed" and returns a different sequence on each call.
+
+The repro file fails as expected. It is a debatable call: the docstring says the seed is random "when not provided", and an empty string is still a provided string.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191644/g01-src-utils-random-ts"}

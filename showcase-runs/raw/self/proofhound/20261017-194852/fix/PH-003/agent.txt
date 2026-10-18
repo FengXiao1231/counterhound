@@ -1,0 +1,1 @@
+I fixed `fmtMs` in `src/util.js` so it rounds the total to whole seconds before splitting into minutes and seconds. That means 119500 now gives `2m00s` and 59600 gives `1m00s`, and seconds can no longer reach 60. The repro passes; I didn't run any other tests.

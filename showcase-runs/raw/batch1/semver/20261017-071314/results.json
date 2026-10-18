@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-071314",
+  "repo": "semver",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:13:14.459Z",
+  "ms": 45911,
+  "spend": {
+    "usd": 0.4101203,
+    "tokensIn": 847749,
+    "tokensOut": 12129,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-functions-diff-js",
+      "file": "functions/diff.js",
+      "functions": [
+        "diff"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 24550,
+      "costUsd": 0.0854612,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g03-functions-inc-js",
+      "file": "functions/inc.js",
+      "functions": [
+        "inc"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 43177,
+      "costUsd": 0.15533139999999998,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-functions-coerce-js",
+      "file": "functions/coerce.js",
+      "functions": [
+        "coerce"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 45872,
+      "costUsd": 0.16932770000000005,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 3,
+    "functions": 3,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

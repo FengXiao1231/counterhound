@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-071309",
+  "repo": "inflect",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:13:09.823Z",
+  "ms": 241806,
+  "spend": {
+    "usd": 0.4400412,
+    "tokensIn": 1616279,
+    "tokensOut": 11056,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-inflect-__init__-py",
+      "file": "inflect/__init__.py",
+      "functions": [
+        "engine.singular_noun",
+        "joinstem",
+        "bysize",
+        "engine.plural_adj",
+        "engine.plural_noun",
+        "engine.plural_verb"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 209006,
+      "costUsd": 0.3853355,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "plural_noun crashes with IndexError on title-cased 'X Of A Y' compounds",
+      "function": "inflect.engine.plural_noun",
+      "kind": "crash",
+      "property": "plural_noun never raises on a valid non-empty word/phrase, including when the phrase is capitalised",
+      "property_test": "test_multiword_upper_classical",
+      "repro_file": "test_repro_title_case_dual_compound.py",
+      "input": "engine().plural_noun('Son Of A Gun')",
+      "expected": "'Sons Of Guns' (lowercase 'son of a gun' gives 'sons of guns')",
+      "actual": "IndexError: list index out of range in engine.postprocess (inflect/__init__.py:2376)",
+      "evidence": "plural_noun accepts any Word; lowercase 'son of a gun' -> 'sons of guns' is tested in tests/test_pwd.py. The dual-compound branch of _plnoun drops the 'a', so the result has fewer words than the input, and postprocess's per-word capitalisation loop indexes result[index] for each original word, which overruns when the original word 'A' is capitalised.",
+      "group": "g01-inflect-__init__-py",
+      "file": "inflect/__init__.py",
+      "workdir": ".proofhound/runs/20261017-071309/g01-inflect-__init__-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_title_case_dual_compound.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:IndexError:inflect/__init__.py:2376",
+        "site": {
+          "file": "inflect/__init__.py",
+          "line": 2376,
+          "func": "postprocess",
+          "code": "result[index] = result[index].capitalize()"
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "IndexError",
+          "message": "list index out of range"
+        },
+        "testName": "test_repro_title_case_dual_compound"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.9,
+        "severity": "medium",
+        "category": "crash",
+        "title": "plural_noun raises IndexError on title-cased 'Son Of A Gun' because postprocess indexes past a shorter result",
+        "reason": "The lowercase 'son of a gun' works and is tested, giving 'sons of guns', and 'Son Of A Gun' is an ordinary non-empty phrase, so it is a valid input. The dual-compound branch drops the 'a', so `result` has 3 words while `orig` has 4. `postprocess`'s capitalisation loop indexes `result[index]` by the original word count and overruns on the last word, which I reproduced as an IndexError at `inflect/__init__.py:2376`. The loop is meant to carry capitalisation over to the result, so it should be bounds-safe. A maintainer would accept a fix such as guarding the index or aligning words.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "import inflect\n\n\ndef test_repro_title_case_dual_compound():\n    p = inflect.engine()\n    assert p.plural_noun(\"son of a gun\") == \"sons of guns\"\n    # Capitalised version of the same phrase must not crash\n    assert p.plural_noun(\"Son Of A Gun\") == \"Sons Of Guns\"\n",
+      "bugDir": ".proofhound/runs/20261017-071309/bugs/PH-001-plural-noun-raises-indexerror-on-title-cased-son"
+    }
+  ]
+}

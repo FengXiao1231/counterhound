@@ -1,0 +1,8 @@
+I tested 4 properties on `Unit::from_str`. All 4 passed, so I reported 0 bugs and wrote `[]` to `findings.json`.
+
+The properties covered:
+- Every known unit parses in any letter case, in both short and long forms.
+- `b` parses to bytes in either case.
+- Parsing never panics on arbitrary input, and the error message always formats.
+- Unknown strings, including multi-byte Unicode, return an error, and exactly the known units parse.
+

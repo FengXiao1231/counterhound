@@ -1,0 +1,4 @@
+I tested 3 properties (String/Parse round-trip, Parse against a big-integer reference with overflow, and no-crash/error-value checks); all passed, and I reported 0 bugs.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-170700/g01-datasize-go && cat > .proofhound/runs/20261017-170700/g01-datasize-go/ph_props_test.go <<'EOF'\npackage datasize\n\nimport (\n\t\"math/big\"\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc TestPhRoundTrip(t *testing.T) {\

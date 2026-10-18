@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191839",
+  "diff": null,
+  "fixRun": true,
+  "repo": "fast-json-stable-stringify",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:18:39.609Z",
+  "ms": 66080,
+  "spend": {
+    "usd": 0.2496891,
+    "tokensIn": 426378,
+    "tokensOut": 5876,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-index-js",
+      "file": "index.js",
+      "functions": [
+        "index"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 29552,
+      "costUsd": 0.1132937,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 1,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Cycles made only of arrays are not detected (RangeError / cycles option ignored)",
+      "function": "index (module.exports)",
+      "kind": "contract-violation",
+      "property": "A circular structure either throws TypeError('Converting circular structure to JSON') or, with opts.cycles true, yields '__cycle__' in place of the cycle",
+      "property_test": "circular array throws TypeError or yields __cycle__",
+      "repro_file": "repro_array_cycle.test.mjs",
+      "input": "const a = []; a.push(a); index(a) and index(a, {cycles:true})",
+      "expected": "index(a) throws TypeError; index(a, {cycles:true}) returns '[\"__cycle__\"]'",
+      "actual": "RangeError: Maximum call stack size exceeded in both cases",
+      "evidence": "README documents the cycles option (cycle detection returns '__cycle__', otherwise TypeError as in JSON.stringify). Code only records objects in `seen` after the Array.isArray branch returns, so arrays are never tracked.",
+      "group": "g01-index-js",
+      "file": "index.js",
+      "workdir": ".proofhound/runs/20261017-191839/g01-index-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_array_cycle.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_array_cycle",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "The error is expected to be an instance of \"TypeError\". Received \"RangeError\"\n\nError message:\n\nMaximum call stack size exceeded",
+          "example": null
+        },
+        "testName": "repro_array_cycle"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.72,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "Cycles consisting only of arrays are not detected and cause a RangeError (stack overflow)",
+        "reason": "index.js returns from the Array.isArray branch (lines 29-36) before `seen` is checked or updated (lines 40-45), so an array that contains itself recurses until the stack overflows. Cycles that pass through an object are detected, either throwing TypeError or returning '__cycle__' when `opts.cycles` is true. The README documents `cycles`, and the library mirrors JSON.stringify, which throws TypeError for this input, so the pure-array case is inconsistent and ignores `cycles`. The README wording ('circular property') and the exact expected output '[\"__cycle__\"]' are the reporter's extrapolation, and it is an edge case that throws either way, which is why severity is low. A small fix (track arrays in `seen`) would be accepted.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/index.js b/index.js\nindex c44e6a4..8a4bd91 100644\n--- a/index.js\n+++ b/index.js\n@@ -26,23 +26,24 @@ module.exports = function (data, opts) {\n         if (typeof node !== 'object') return JSON.stringify(node);\n \n         var i, out;\n+        if (node === null) return 'null';\n+\n+        if (seen.indexOf(node) !== -1) {\n+            if (cycles) return JSON.stringify('__cycle__');\n+            throw new TypeError('Converting circular structure to JSON');\n+        }\n+\n+        var seenIndex = seen.push(node) - 1;\n         if (Array.isArray(node)) {\n             out = '[';\n             for (i = 0; i < node.length; i++) {\n                 if (i) out += ',';\n                 out += stringify(node[i]) || 'null';\n             }\n+            seen.splice(seenIndex, 1);\n             return out + ']';\n         }\n \n-        if (node === null) return 'null';\n-\n-        if (seen.indexOf(node) !== -1) {\n-            if (cycles) return JSON.stringify('__cycle__');\n-            throw new TypeError('Converting circular structure to JSON');\n-        }\n-\n-        var seenIndex = seen.push(node) - 1;\n         var keys = Object.keys(node).sort(cmp && cmp(node));\n         out = '';\n         for (i = 0; i < keys.length; i++) {\n",
+        "files": [
+          "index.js"
+        ],
+        "suite": "passed (npm test --silent)"
+      },
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport index from '../../../../../index.js';\n\ntest('repro_array_cycle', () => {\n  const a = []; a.push(a);\n  assert.throws(() => index(a), TypeError);\n  assert.equal(index(a, { cycles: true }), '[\"__cycle__\"]');\n});\n",
+      "bugDir": ".proofhound/runs/20261017-191839/bugs/PH-001-cycles-consisting-only-of-arrays-are-not-detecte"
+    }
+  ]
+}

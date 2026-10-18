@@ -1,0 +1,11 @@
+I tested 5 properties on `omdict1D.add` and reported 0 bugs. All 5 passed, and `findings.json` is `[]`.
+
+The properties checked:
+- List values are added as separate items.
+- A scalar value is stored as a single item.
+- Two `add` calls on the same key concatenate their values.
+- Tuples are treated like lists.
+- `add` returns the dict itself, and an empty list adds no key.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-192020/g02-furl-omdict1D-py; cat > .proofhound/runs/20261017-192020/g02-furl-omdict1D-py/test_ph_props.py <<'E'\nfrom hypothesis import given, strategies as st\nfrom furl.omdict1D import omdict1D\nkeys = st.one_of(st.integers(), st.text())\nvals = st.on

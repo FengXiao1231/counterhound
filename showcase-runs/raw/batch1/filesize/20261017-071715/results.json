@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-071715",
+  "repo": "filesize",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:17:15.082Z",
+  "ms": 70712,
+  "spend": {
+    "usd": 0.32246250000000004,
+    "tokensIn": 648282,
+    "tokensOut": 6603,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-src-helpers-js",
+      "file": "src/helpers.js",
+      "functions": [
+        "formatOutput",
+        "getBaseConfiguration",
+        "applyRounding",
+        "calculateBigIntExponent",
+        "calculateExponent",
+        "resolveSymbol"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 57592,
+      "costUsd": 0.24728710000000004,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "getBaseConfiguration resolves Object.prototype keys as standards, crashing filesize() for standard: 'constructor'",
+      "function": "getBaseConfiguration",
+      "kind": "crash",
+      "property": "any standard string other than si/iec/jedec falls back to the base-driven default configuration",
+      "property_test": "base config for unknown standard falls back by base",
+      "repro_file": "repro_proto_standard.test.mjs",
+      "input": "getBaseConfiguration('constructor', -1)",
+      "expected": "{ isDecimal: true, ceil: 1000, actualStandard: 'jedec' } (the default fallback used for any unknown standard)",
+      "actual": "returns the inherited Object function (truthy lookup on a plain object literal); filesize(1000, {standard:'constructor'}) throws TypeError: Cannot read properties of undefined (reading 'bytes') in resolveSymbol",
+      "evidence": "STANDARD_CONFIGS is a plain object, so `STANDARD_CONFIGS[standard]` finds inherited keys (constructor, toString, __proto__, hasOwnProperty). The function's code path explicitly falls back to base/default for unrecognised standards (e.g. 'foo' works), so a string like 'constructor' should behave the same instead of crashing; AGENTS.md also lists prototype-related access as a forbidden pattern.",
+      "group": "g01-src-helpers-js",
+      "file": "src/helpers.js",
+      "workdir": ".proofhound/runs/20261017-071715/g01-src-helpers-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_proto_standard.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_proto_standard",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [Function: Object]\n- {\n-   actualStandard: 'jedec',\n-   ceil: 1000,\n-   isDecimal: true\n- }\n",
+          "example": null
+        },
+        "testName": "repro_proto_standard"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "crash",
+        "title": "getBaseConfiguration treats inherited Object.prototype keys (e.g. 'constructor') as known standards",
+        "reason": "STANDARD_CONFIGS is a plain object literal, so `STANDARD_CONFIGS[standard]` is truthy for inherited keys such as 'constructor', 'toString' and '__proto__'. The function then returns that inherited value instead of falling through to the base override or default, which it does for any other unknown string like 'foo'. The result destructures to undefined fields, and `filesize(1000, {standard:'constructor'})` throws a TypeError in resolveSymbol instead of formatting normally. The input is a string, which is the documented type for `standard`. The fix is trivial (`Object.hasOwn`, or a null-prototype object or Map) and in line with the project's prototype-pollution rule. It is unlikely in practice, so severity is low.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { getBaseConfiguration } from '../../../../../src/helpers.js';\n\ntest('repro_proto_standard', () => {\n  assert.deepEqual(getBaseConfiguration('constructor', -1), { isDecimal: true, ceil: 1000, actualStandard: 'jedec' });\n});\n",
+      "bugDir": ".proofhound/runs/20261017-071715/bugs/PH-001-getbaseconfiguration-treats-inherited-object-pro"
+    }
+  ]
+}

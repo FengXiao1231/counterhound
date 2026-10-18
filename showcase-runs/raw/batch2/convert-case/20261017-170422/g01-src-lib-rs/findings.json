@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Delimiter splitting depends on which other boundaries are enabled (byte fast path ignores grapheme clusters)",
+    "function": "convert_case::StateConverter::set_boundaries / to_case (via boundary::split)",
+    "kind": "inconsistency",
+    "property": "adding a boundary that cannot match anywhere in the input does not change the conversion result",
+    "property_test": "ph_fast_vs_general_path",
+    "repro_file": "repro_fast_vs_general_path.rs",
+    "input": "\" \\u{301}\".set_boundaries(&[Space]).to_case(Snake) vs .set_boundaries(&[Space, LowerUpper])",
+    "expected": "same result for both; the doc says splitting is by graphemes, where ' '+U+0301 is a single non-space grapheme, so no split occurs (result \" \\u{301}\" -> \"_\\u{301}\" not produced)",
+    "actual": "[Space] only: \"_\\u{301}\" (split inside the grapheme cluster, byte-level fast path); with an extra irrelevant boundary: \" \\u{301}\" (grapheme path, no split)",
+    "evidence": "boundary::split has a byte-level fast path when all boundaries are Space/Hyphen/Underscore and a grapheme-cluster path otherwise; the General path comment says it needs graphemes, and Boundary::len docs count graphemes. The same string and same effective delimiters give different words depending on unrelated boundaries."
+  }
+]

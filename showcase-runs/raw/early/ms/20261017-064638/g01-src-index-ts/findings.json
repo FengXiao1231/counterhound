@@ -1,0 +1,14 @@
+[
+  {
+    "title": "format() rounds negative half values toward zero, asymmetric with positives (and yields '-1 seconds')",
+    "function": "format",
+    "kind": "inconsistency",
+    "property": "format(-n) === '-' + format(n) for positive n",
+    "property_test": "format sign symmetry at half boundaries",
+    "repro_file": "repro_negative_half_rounding.test.mjs",
+    "input": "format(-1500) and format(-1500, {long:true})",
+    "expected": "'-2s' and '-2 seconds' (mirroring format(1500) === '2s')",
+    "actual": "'-1s'; long form gives '-1 seconds' (plural suffix chosen from |ms| >= 1.5*unit, but number rounded by Math.round to -1)",
+    "evidence": "Math.round(-1.5) === -1 whereas Math.round(1.5) === 2; the plural() helper uses msAbs for pluralization, so it intends symmetric handling of negatives, yet yields ungrammatical '-1 seconds' vs '2 seconds' for the positive."
+  }
+]

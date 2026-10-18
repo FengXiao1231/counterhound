@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191644",
+  "diff": null,
+  "fixRun": true,
+  "repo": "cron-parser",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:16:44.019Z",
+  "ms": 95675,
+  "spend": {
+    "usd": 0.21816050000000003,
+    "tokensIn": 424446,
+    "tokensOut": 3389,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-src-utils-random-ts",
+      "file": "src/utils/random.ts",
+      "functions": [
+        "seededRandom"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 25295,
+      "costUsd": 0.09923230000000001,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 1,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "seededRandom('') ignores the provided empty-string seed and is non-deterministic",
+      "function": "seededRandom",
+      "kind": "contract-violation",
+      "property": "two generators created with the same provided seed string produce identical sequences",
+      "property_test": "empty string seed is deterministic",
+      "repro_file": "repro_empty_seed.test.mjs",
+      "input": "seededRandom('') called twice",
+      "expected": "Both generators yield the same sequence, since a seed string was provided (only an omitted seed should be random)",
+      "actual": "'' is falsy, so `str ? ... : Math.random()` picks a random seed and the sequences differ",
+      "evidence": "Docstring: 'When not provided, the seed is randomly generated'; param type is `str?: string`, and '' is a provided string. Every other string seed is deterministic; the check should be `str === undefined`.",
+      "group": "g01-src-utils-random-ts",
+      "file": "src/utils/random.ts",
+      "workdir": ".proofhound/runs/20261017-191644/g01-src-utils-random-ts",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_empty_seed.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_empty_seed",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  [\n+   0.7592925324570388,\n+   0.6135911718010902,\n+   0.520047286292538\n-   0.41576094878837466,\n-   0.6879978338256478,\n-   0.7817385296802968\n  ]\n",
+          "example": null
+        },
+        "testName": "repro_empty_seed"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.6,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "seededRandom('') treats an empty-string seed as omitted and returns a non-deterministic generator",
+        "reason": "The docstring says the seed is random only 'when not provided', and the parameter is typed `str?: string`. The check `str ? ... : Math.random()` is a truthiness test, so a provided '' is treated like undefined. Every other string seed gives a deterministic sequence, and `hashSeed: ''` passed through CronExpressionParser.parse silently loses reproducibility. A maintainer would probably accept a one-line `str === undefined` fix, but '' is an edge-case seed and nothing in the tests or README promises how it behaves, so severity is low.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/src/utils/random.ts b/src/utils/random.ts\nindex acde34e..8479605 100644\n--- a/src/utils/random.ts\n+++ b/src/utils/random.ts\n@@ -37,6 +37,6 @@ function mulberry32(seed: number) {\n  * @returns {PRNG} A random number generator correctly seeded\n  */\n export function seededRandom(str?: string): PRNG {\n-  const seed = str ? xfnv1a(str)() : Math.floor(Math.random() * 10_000_000_000);\n+  const seed = str !== undefined ? xfnv1a(str)() : Math.floor(Math.random() * 10_000_000_000);\n   return mulberry32(seed);\n }\n",
+        "files": [
+          "src/utils/random.ts"
+        ],
+        "suite": "passed (npm test --silent)"
+      },
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { seededRandom } from '../../../../../src/utils/random.ts';\n\ntest('repro_empty_seed', () => {\n  const a = seededRandom('');\n  const b = seededRandom('');\n  assert.deepEqual([a(), a(), a()], [b(), b(), b()]);\n});\n",
+      "bugDir": ".proofhound/runs/20261017-191644/bugs/PH-001-seededrandom-treats-an-empty-string-seed-as-omit"
+    }
+  ]
+}

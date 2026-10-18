@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191438",
+  "diff": null,
+  "fixRun": true,
+  "repo": "java-string-similarity",
+  "lang": "java",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:14:38.459Z",
+  "ms": 135053,
+  "spend": {
+    "usd": 0.38451519999999995,
+    "tokensIn": 839069,
+    "tokensOut": 7943,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g02-a-stringsimilarity-LongestCommonSubsequence-java",
+      "file": "src/main/java/info/debatty/java/stringsimilarity/LongestCommonSubsequence.java",
+      "functions": [
+        "LongestCommonSubsequence.distance",
+        "LongestCommonSubsequence.length"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 20870,
+      "costUsd": 0.0949207,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-o-debatty-java-stringsimilarity-JaroWinkler-java",
+      "file": "src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java",
+      "functions": [
+        "JaroWinkler.similarity",
+        "JaroWinkler.distance",
+        "JaroWinkler.getThreshold"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 39277,
+      "costUsd": 0.1255287,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 5,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Negative threshold applies the Winkler bonus instead of giving plain Jaro",
+      "function": "info.debatty.java.stringsimilarity.JaroWinkler.similarity",
+      "kind": "contract-violation",
+      "property": "with a negative threshold, similarity equals the plain Jaro similarity (no Winkler bonus)",
+      "property_test": "jaroLowerBound",
+      "repro_file": "ReproNegativeThresholdTest.java",
+      "input": "new JaroWinkler(-1).similarity(\"ab\", \"ac\")",
+      "expected": "2/3 (Jaro, no Winkler bonus)",
+      "actual": "0.7 (Winkler bonus applied, since j > threshold is always true)",
+      "evidence": "Constructor javadoc: 'Set threshold to a negative value to get the Jaro distance.' The code adds the bonus when j > threshold, so a negative threshold always adds it; Jaro needs threshold >= 1.",
+      "group": "g01-o-debatty-java-stringsimilarity-JaroWinkler-java",
+      "file": "src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java",
+      "workdir": ".proofhound/runs/20261017-191438/g01-o-debatty-java-stringsimilarity-JaroWinkler-java",
+      "verification": {
+        "verified": true,
+        "reproFile": "ReproNegativeThresholdTest.java",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:negativeThresholdGivesJaro",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "expected: <0.6666666666666666> but was: <0.7000000178813934>",
+          "example": null
+        },
+        "testName": "negativeThresholdGivesJaro"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: {a, aaaaaaaaaa}"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.85,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "JaroWinkler(negative threshold) still applies the Winkler bonus, contradicting the constructor javadoc",
+        "reason": "The constructor javadoc says 'Set threshold to a negative value to get the Jaro distance.' But `similarity` adds the bonus whenever `j > threshold`, and j is never negative, so a negative threshold applies the bonus on every non-zero match. For (\"ab\",\"ac\") the plain Jaro value is 2/3 and the code returns about 0.7. The repro uses the API correctly, and the 1e-9 tolerance is not the issue: the result differs by 0.033, with only a small float-precision error on top. A maintainer would fix either the code (a negative threshold disables the bonus) or the javadoc.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java b/src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java\nindex 267cbb4..cdafb18 100644\n--- a/src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java\n+++ b/src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java\n@@ -75,7 +75,7 @@ public class JaroWinkler\n         }\n \n         int[] mtp = matches(s1, s2);\n-        float m = mtp[0];\n+        double m = mtp[0];\n         if (m == 0) {\n             return 0f;\n         }\n@@ -83,7 +83,7 @@ public class JaroWinkler\n                 / THREE;\n         double jw = j;\n \n-        if (j > getThreshold()) {\n+        if (getThreshold() >= 0 && j > getThreshold()) {\n             jw = j + Math.min(JW_COEF, 1.0 / mtp[THREE]) * mtp[2] * (1 - j);\n         }\n         return jw;\n",
+        "files": [
+          "src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java"
+        ],
+        "suite": "passed (mvn -q -B test)"
+      },
+      "reproSource": "package info.debatty.java.stringsimilarity;\n\nimport org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.*;\n\nclass ReproNegativeThresholdTest {\n    @Test\n    void negativeThresholdGivesJaro() {\n        // Jaro(\"ab\",\"ac\") = (1/2 + 1/2 + 1) / 3 = 2/3\n        assertEquals(2.0 / 3.0, new JaroWinkler(-1).similarity(\"ab\", \"ac\"), 1e-9);\n    }\n}\n",
+      "bugDir": ".proofhound/runs/20261017-191438/bugs/PH-001-jarowinkler-negative-threshold-still-applies-the"
+    }
+  ]
+}

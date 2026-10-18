@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Value containing backslash followed by ';' or '#' does not round-trip",
+    "function": "ini.stringify / ini.parse",
+    "kind": "wrong-result",
+    "property": "parse(stringify(obj)) deep-equals obj for string values",
+    "property_test": "roundtrip string values only",
+    "repro_file": "repro_backslash_semicolon.test.mjs",
+    "input": "{a: '\\\\;'} (a backslash followed by a semicolon)",
+    "expected": "parse(stringify({a:'\\\\;'})) -> {a:'\\\\;'}",
+    "actual": "{a:'\\\\'} (the ';' is treated as a comment start)",
+    "evidence": "stringify escapes ';' and '#' with a backslash but does not escape a preceding backslash, so the output 'a=\\\\;' is read by parse as an escaped backslash followed by an unescaped comment marker. encode/decode are a documented inverse pair, and safe() exists to make values round-trippable."
+  },
+  {
+    "title": "Single-quote character value parses as empty string",
+    "function": "ini.parse (unsafe/isQuoted)",
+    "kind": "wrong-result",
+    "property": "unsafe(safe(s)) === s / parse(stringify(obj)) deep-equals obj",
+    "property_test": "safe/unsafe roundtrip",
+    "repro_file": "repro_single_quote_char.test.mjs",
+    "input": "{a: \"'\"}",
+    "expected": "{a: \"'\"}",
+    "actual": "{a: ''}",
+    "evidence": "safe() guards its quote check with val.length > 1, so a lone \"'\" is emitted unquoted, but unsafe()'s isQuoted has no length check: a single quote both starts and ends with \"'\", so slice(1,-1) yields ''. The two halves are inconsistent."
+  }
+]

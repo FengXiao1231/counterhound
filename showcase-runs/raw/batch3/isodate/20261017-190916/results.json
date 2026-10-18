@@ -1,0 +1,122 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-190916",
+  "diff": null,
+  "fixRun": true,
+  "repo": "isodate",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:09:16.987Z",
+  "ms": 74416,
+  "spend": {
+    "usd": 0.3746191,
+    "tokensIn": 695265,
+    "tokensOut": 8249,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g02-src-isodate-isotime-py",
+      "file": "src/isodate/isotime.py",
+      "functions": [
+        "parse_time",
+        "time_isoformat",
+        "build_time_regexps"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 39130,
+      "costUsd": 0.12909900000000002,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g01-src-isodate-isodates-py",
+      "file": "src/isodate/isodates.py",
+      "functions": [
+        "build_date_regexps",
+        "parse_date",
+        "date_isoformat"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 39380,
+      "costUsd": 0.12788249999999998,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 6,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "parse_time raises ValueError for hh.hhhh with many trailing 9s (microsecond rounds to 1000000)",
+      "function": "isodate.isotime.parse_time",
+      "kind": "crash",
+      "property": "any syntactically valid 'hh.hhh...' time string parses to a time or raises ISO8601Error, never a raw ValueError from time()",
+      "property_test": "test_hour_fraction_nines",
+      "repro_file": "test_repro_hour_fraction_rounding.py",
+      "input": "parse_time('00.9999999999999') (also '10.99999999999999')",
+      "expected": "A datetime.time just before the next hour (e.g. 00:59:59.999999), as the seconds/minutes branches do via ROUND_FLOOR",
+      "actual": "ValueError: microsecond must be in 0..999999 (isotime.py:134)",
+      "evidence": "Docstring lists 'hh.hhTZD' with arbitrary decimal fraction as supported; the regex accepts any number of digits. The hour-fraction branch skips the ROUND_FLOOR quantize used by the minute/second branches and then calls to_integral() (rounding), so microsecond can become 1000000.",
+      "group": "g02-src-isodate-isotime-py",
+      "file": "src/isodate/isotime.py",
+      "workdir": ".proofhound/runs/20261017-190916/g02-src-isodate-isotime-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_hour_fraction_rounding.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:ValueError:src/isodate/isotime.py:134",
+        "site": {
+          "file": "src/isodate/isotime.py",
+          "line": 134,
+          "func": "parse_time",
+          "code": "return time("
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "ValueError",
+          "message": "microsecond must be in 0..999999"
+        },
+        "testName": "test_repro_hour_fraction_rounding"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.9,
+        "severity": "low",
+        "category": "crash",
+        "title": "parse_time raises ValueError for hour fractions with many trailing 9s (microsecond rounds up to 1000000)",
+        "reason": "'10.99999999999999' matches the documented 'hh.hh' format, where the regex allows any number of fraction digits. In the hour-only branch (isotime.py:129-140), the seconds are never floored to 6 places like the second and minute branches do with ROUND_FLOOR. Instead, `microsecond.to_integral()` rounds up to 1000000, and `time()` raises a raw ValueError rather than returning 10:59:59.999999 or an ISO8601Error. A maintainer would accept a small fix that quantizes with ROUND_FLOOR, matching the sibling branches. The inputs are unusual, so impact is low.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/src/isodate/isotime.py b/src/isodate/isotime.py\nindex 78b4de2..18c72b0 100644\n--- a/src/isodate/isotime.py\n+++ b/src/isodate/isotime.py\n@@ -129,7 +129,9 @@ def parse_time(timestring: str) -> time:\n                 microsecond, second, minute = Decimal(0), Decimal(0), Decimal(0)\n             hour = Decimal(groups[\"hour\"])\n             minute = (hour - int(hour)) * 60\n-            second = Decimal((minute - int(minute)) * 60)\n+            second = Decimal((minute - int(minute)) * 60).quantize(\n+                Decimal(\".000001\"), rounding=ROUND_FLOOR\n+            )\n             microsecond = (second - int(second)) * int(1e6)\n             return time(\n                 int(hour),\n",
+        "files": [
+          "src/isodate/isotime.py"
+        ],
+        "suite": "passed (python3 -m pytest -q -x -p no:cacheprovider --no-header)"
+      },
+      "reproSource": "from isodate.isotime import parse_time\n\n\ndef test_repro_hour_fraction_rounding():\n    # 10.99999999999999 hours is just under 11:00:00; must not raise\n    t = parse_time(\"10.99999999999999\")\n    assert t.hour in (10, 11)\n",
+      "bugDir": ".proofhound/runs/20261017-190916/bugs/PH-001-parse-time-raises-valueerror-for-hour-fractions"
+    }
+  ]
+}

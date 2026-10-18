@@ -1,0 +1,26 @@
+[
+  {
+    "title": "normalize_uri drops an empty authority (file:///x -> file:/x)",
+    "function": "rfc3986.api.normalize_uri",
+    "kind": "wrong-result",
+    "property": "normalizing a URI preserves its component structure; an empty-but-present authority stays '//'",
+    "property_test": "test_unsplit_roundtrip",
+    "repro_file": "test_repro_empty_authority_dropped.py",
+    "input": "file:///etc/hosts",
+    "expected": "file:///etc/hosts",
+    "actual": "file:/etc/hosts",
+    "evidence": "RFC 3986 section 5.3 recomposition: if authority is defined (even empty), append '//' + authority. Docstring says normalize_uri equals uri_reference(uri).normalize().unsplit(); normalization (6.2.2) must not change the URI's meaning. unsplit() uses truthiness of authority, so '//' is lost (also '//' -> '')."
+  },
+  {
+    "title": "normalize_uri turns a '//'-leading path into an authority",
+    "function": "rfc3986.api.normalize_uri",
+    "kind": "wrong-result",
+    "property": "normalized URI re-parses with the same authority presence as the input",
+    "property_test": "test_normalize_preserves_authority_presence",
+    "repro_file": "test_repro_path_becomes_authority.py",
+    "input": "a:/.//b",
+    "expected": "a path of '//b' with no authority (e.g. 'a:/.//b' or 'a:/%2F...' style form); result must not re-parse with authority 'b'",
+    "actual": "'a://b', which parses as scheme 'a', authority 'b', no path",
+    "evidence": "RFC 3986 section 3.3: when no authority is present the path cannot begin with '//'; section 6.2.2 normalization must be semantics-preserving. remove_dot_segments produces '//b' and unsplit() concatenates it directly after 'a:'."
+  }
+]

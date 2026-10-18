@@ -1,0 +1,10 @@
+I tested 12 properties and reported 1 bug.
+
+The bug: `from_f64_with_unit` and `from_f32_with_unit` return 0 bytes for a tiny positive size such as `1e-29`. The docs say the result is rounded up, and `from_f64(1e-29)` correctly returns 1. The repro file fails on both functions. The other 11 properties pass.
+
+Files are in `.proofhound/runs/20261017-192924/g02-src-byte-mod-rs/`:
+- `findings.json`
+- `repro_tiny_positive_rounds_to_zero.rs`
+
+Permission denials:
+Bash: {"command":"cd /tmp/claude-0/zoo3/byte-unit; D=.proofhound/runs/20261017-192924/g02-src-byte-mod-rs; cat > $D/ph_props.rs <<'EOF'\nuse byte_unit::{byte::Byte, Unit};\nuse proptest::prelude::*;\n\nfn big(b: Byte) -> u128 { b.as_u64() as u128 }\n\nproptest! {\n    #[test]\n    fn ph_u128_bounds(n in a

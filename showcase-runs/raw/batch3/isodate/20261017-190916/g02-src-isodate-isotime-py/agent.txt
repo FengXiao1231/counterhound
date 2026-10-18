@@ -1,0 +1,10 @@
+I tested 8 properties and reported 1 bug. The repro file fails with the same `ValueError` before any fix.
+
+- **Bug:** `parse_time('00.9999999999999')` raises a raw `ValueError: microsecond must be in 0..999999`. The same happens for `'10.99999999999999'`. The hour-fraction branch rounds the microseconds, which can reach 1000000. The minute and second branches floor instead, so they don't hit this.
+- **Passing tests:** the other 7 properties passed.
+- **Not tested:** I wrote no properties for `time_isoformat` beyond a round-trip through `parse_time`, and none for `build_time_regexps`.
+- **Files:** `test_ph_props.py` holds 6 properties and `test_ph_more.py` holds the failing one. The bug is in `findings.json`, with its repro in `test_repro_hour_fraction_rounding.py`, all in the run directory.
+- **Setup:** the `mkdir` call was denied, but the directory got created when I wrote the first file.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-190916/g02-src-isodate-isotime-py"}

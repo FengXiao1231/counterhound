@@ -1,0 +1,21 @@
+diff --git a/ph-err.txt b/ph-err.txt
+index 948e96a..60b509e 100644
+--- a/ph-err.txt
++++ b/ph-err.txt
+@@ -9,4 +9,3 @@ proofhound · JavaScript/TypeScript · claude (sonnet) · 1 module, 1 functions
+   bug (0.60) seededRandom('') ignores the provided empty-string seed and is non-deterministic
+ 
+   writing fixes for 1 bug…
+-  ▸ fixing PH-001 seededRandom('') treats an empty-string seed as omitted and returns a non-deterministic generator
+diff --git a/src/utils/random.ts b/src/utils/random.ts
+index acde34e..8479605 100644
+--- a/src/utils/random.ts
++++ b/src/utils/random.ts
+@@ -37,6 +37,6 @@ function mulberry32(seed: number) {
+  * @returns {PRNG} A random number generator correctly seeded
+  */
+ export function seededRandom(str?: string): PRNG {
+-  const seed = str ? xfnv1a(str)() : Math.floor(Math.random() * 10_000_000_000);
++  const seed = str !== undefined ? xfnv1a(str)() : Math.floor(Math.random() * 10_000_000_000);
+   return mulberry32(seed);
+ }

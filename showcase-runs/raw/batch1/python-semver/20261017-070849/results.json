@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-070849",
+  "repo": "python-semver",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:08:49.003Z",
+  "ms": 106874,
+  "spend": {
+    "usd": 0.2917505,
+    "tokensIn": 465493,
+    "tokensOut": 7194,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-src-semver-version-py",
+      "file": "src/semver/version.py",
+      "functions": [
+        "Version.next_version",
+        "Version.parse",
+        "Version.bump_prerelease",
+        "Version.bump_build",
+        "Version.match",
+        "Version.is_compatible"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 79781,
+      "costUsd": 0.20455350000000003,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "next_version('prerelease', token) returns an older version when the token differs and sorts lower",
+      "function": "semver.version.Version.next_version",
+      "kind": "wrong-result",
+      "property": "next_version(...) is strictly greater than the original version (natural order preserved)",
+      "property_test": "test_next_prerelease_alpha_tokens",
+      "repro_file": "test_repro_next_version_lower.py",
+      "input": "Version.parse('1.0.0-rc.1').next_version('prerelease', 'alpha')",
+      "expected": "a version greater than 1.0.0-rc.1",
+      "actual": "1.0.0-alpha.1, which is lower than 1.0.0-rc.1",
+      "evidence": "Docstring: 'Determines next version, preserving natural order.' The 'next' version must not sort before the current one; the branch at version.py:561-565 replaces the prerelease by '<token>.1' without checking order.",
+      "group": "g01-src-semver-version-py",
+      "file": "src/semver/version.py",
+      "workdir": ".proofhound/runs/20261017-070849/g01-src-semver-version-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_next_version_lower.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_next_version_lower",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "1.0.0-alpha.1 is not newer than 1.0.0-rc.1\nassert Version(major=1, minor=0, patch=0, prerelease='alpha.1', build=None) > Version(major=1, minor=0, patch=0, prerelease='rc.1', build=None)"
+        },
+        "testName": "test_repro_next_version_lower"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "not_a_bug",
+        "confidence": 0.7,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "next_version('prerelease', token) can return a lower version when switching to a lower-sorting token",
+        "reason": "The caller explicitly asks for a different prerelease token, and the code deliberately restarts the sequence at '<token>.1' (the branch at version.py:561-565). Existing tests encode this: `test_next_version_matches_literal_prerelease_token_family` expects '1.2.3-alphaXbeta9' with token 'alpha.beta' to give '1.2.3-alpha.beta.1', which sorts lower, and `test_issue_484_different_token` also restarts at '.1' when the token changes. The docstring's 'preserving natural order' refers to the patch-bump behaviour for non-prerelease versions (0.1.4 -> 0.1.5-rc.1), not to a guarantee that the result is greater for every token. No documentation promises strict monotonicity, so the report's expected behaviour is the reporter's assumption. The case is arguably surprising, so a maintainer might accept a docs note, but a behaviour change is unlikely.",
+        "maintainerWouldFix": false
+      },
+      "status": "rejected"
+    }
+  ]
+}

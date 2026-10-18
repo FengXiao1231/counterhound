@@ -1,0 +1,6 @@
+I tested 12 properties across the five functions and reported 0 bugs, so `findings.json` is `[]`. All 12 passed on the final runs.
+
+The test files import `humanize.time` with a stub `humanize._version` module injected, because that file is generated at build time and missing from this checkout.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-070558/g02-src-humanize-time-py"}

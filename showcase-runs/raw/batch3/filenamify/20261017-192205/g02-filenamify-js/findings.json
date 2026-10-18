@@ -1,0 +1,14 @@
+[
+  {
+    "title": "filenamify output is not NFC-normalized when the replacement is non-NFC (not idempotent)",
+    "function": "filenamify",
+    "kind": "inconsistency",
+    "property": "filenamify(filenamify(x, o), o) equals filenamify(x, o); output is always NFC",
+    "property_test": "idempotent with options",
+    "repro_file": "repro_replacement_not_nfc.test.mjs",
+    "input": "filenamify('a/b', {replacement: 'e\\u0301'})",
+    "expected": "Output normalized to NFC ('aéb' with U+00E9), so re-applying filenamify returns the same string",
+    "actual": "Returns 'ae\\u0301b' (decomposed); filenamify of that returns 'a\\u00E9b', a different string",
+    "evidence": "Source comment: 'Normalize to NFC first to stabilize byte representation and length calculations across platforms.' The input is NFC-normalized but the replacement is inserted afterwards without normalization, so the stated stabilization goal is not met."
+  }
+]

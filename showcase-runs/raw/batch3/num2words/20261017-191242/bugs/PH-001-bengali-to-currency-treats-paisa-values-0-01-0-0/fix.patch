@@ -1,0 +1,13 @@
+diff --git a/num2words/lang_BN.py b/num2words/lang_BN.py
+index ef86ed7..9d145e0 100644
+--- a/num2words/lang_BN.py
++++ b/num2words/lang_BN.py
+@@ -75,7 +75,7 @@ class Num2Word_BN:
+ 
+         # this is need, when we parse to decimal it removes trailing 0 .
+         if paisa_str:
+-            paisa_str = str(int(paisa_str) * 100)[:2]
++            paisa_str = (paisa_str + '00')[:2]
+         return int(number), int(paisa_str)
+ 
+     def _is_smaller_than_max_number(self, number):

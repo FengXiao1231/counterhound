@@ -1,0 +1,15 @@
+diff --git a/index.js b/index.js
+index fd0a010..9c02e04 100644
+--- a/index.js
++++ b/index.js
+@@ -429,8 +429,8 @@ function formatPathSegment(segment, isFirst, startsOutput, preferDotForIndices)
+ 	const useDotForIndex = !isFirst && (preferDotForIndices || startsOutput);
+ 
+ 	if (typeof segment === 'number') {
+-		// Non-integer or negative numbers are treated as string keys.
+-		if (!Number.isInteger(segment) || segment < 0) {
++		// Non-integer, negative, or exponent-notation (>= 1e21) numbers are treated as string keys.
++		if (!Number.isInteger(segment) || segment < 0 || segment >= 1e21) {
+ 			const escaped = escapePath(String(segment));
+ 			return isFirst ? escaped : `.${escaped}`;
+ 		}

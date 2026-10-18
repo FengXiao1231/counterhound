@@ -1,0 +1,22 @@
+diff --git a/ph-err.txt b/ph-err.txt
+index b8b3a88..264f65b 100644
+--- a/ph-err.txt
++++ b/ph-err.txt
+@@ -11,4 +11,3 @@ proofhound · Rust · claude (sonnet) · 2 modules, 8 functions
+   bug (0.72) Negative one is pluralised: -1 formats as "-1 Bytes" while 1 formats as "1 Byte"
+ 
+   writing fixes for 1 bug…
+-  ▸ fixing PH-001 Singular unit not chosen for negative sizes with magnitude 1.x (-1 formats as "-1 Bytes")
+diff --git a/src/formatters.rs b/src/formatters.rs
+index 09619aa..3d75bee 100644
+--- a/src/formatters.rs
++++ b/src/formatters.rs
+@@ -50,7 +50,7 @@ impl<T: ToF64, O: AsRef<FormatSizeOptions>> core::fmt::Display for ISizeFormatte
+ 
+         // Remove "s" from the scale if the size is 1.x
+         let (fpart, ipart) = modf(size);
+-        if f64_eq(ipart, 1.0)
++        if f64_eq(fabs(ipart), 1.0)
+             && (opts.long_units || (opts.base_unit == BaseUnit::Bit && scale_idx == 0))
+         {
+             scale = &scale[0..scale.len() - 1];

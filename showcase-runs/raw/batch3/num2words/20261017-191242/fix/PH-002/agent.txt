@@ -1,0 +1,5 @@
+I fixed the leading-zero bug in `to_cardinal` in `num2words/lang_BN.py`. It now counts the leading zeros of the fractional digits itself and puts them back before the digit-by-digit reading. So 1.05 reads "এক দশমিক শূন্য পাঁচ", and 1.005 and similar inputs are fixed the same way. `parse_number` and `to_currency` are unchanged.
+
+The repro passes. In `tests/test_bn.py`, 21 tests pass and `test_parse_number` fails. I didn't change `parse_number`, and the failing assertion is a Decimal-precision mismatch (28 digits returned, 43 expected). That points to a failure that was already there, but I didn't run the test against the original code to confirm.
+Permission denials:
+Bash: {"command":"cd num2words && python - <<'E'\ns=open('lang_BN.py',encoding='utf8').read()\ns=s.replace(\"\"\"'0'\n        return int(number), dosomik_str\"\"\",\"\"\"0\n        return int(number), int(dosomik_str)\"\"\")\ns=s.replace(\"\"\"        if int(decimal_part) > 0:\n            dosomik_word = 

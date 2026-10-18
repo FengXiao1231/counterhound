@@ -1,0 +1,13 @@
+I tested about 25 properties across the six functions and reported 1 bug.
+
+The bug: `plural_noun('Son Of A Gun')` raises `IndexError` in `postprocess`. The lowercase `'son of a gun'` correctly gives `'sons of guns'`. The plural branch for "X of a Y" phrases drops the "a", so the result has one word fewer than the input. The capitalisation loop in `postprocess` then indexes past the end when the original "A" is capitalised.
+
+The repro (`test_repro_title_case_dual_compound.py`) fails now with that error. The same crash showed up through `test_multiword_upper_classical`, which is why `findings.json` names that test as the failing property.
+
+The other failures were mistakes in my own tests or intended behaviour:
+- **Gender values:** I passed `'m'`, `'f'`, `'n'` and `'t'`, but `_sinoun` only accepts the full names such as `"masculine"`.
+- **Empty string:** `plural_noun("")` is rejected by the `Word` type check, which is documented.
+- **Capital "I":** it deliberately isn't re-cased in `postprocess`.
+
+I did not run a separate property test for `joinstem`'s `cutpoint=None` or `words=None` defaults beyond the generated cases, which all passed.
+

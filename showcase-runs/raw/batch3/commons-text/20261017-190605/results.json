@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-190605",
+  "diff": null,
+  "fixRun": true,
+  "repo": "commons-text",
+  "lang": "java",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:06:05.707Z",
+  "ms": 107946,
+  "spend": {
+    "usd": 0.4554769,
+    "tokensIn": 1057419,
+    "tokensOut": 10566,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-a-org-apache-commons-text-StringEscapeUtils-java",
+      "file": "src/main/java/org/apache/commons/text/StringEscapeUtils.java",
+      "functions": [
+        "StringEscapeUtils.escapeCsv",
+        "StringEscapeUtils.escapeEcmaScript",
+        "StringEscapeUtils.escapeHtml4",
+        "StringEscapeUtils.escapeJava",
+        "StringEscapeUtils.escapeJson",
+        "StringEscapeUtils.escapeXSI"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 43836,
+      "costUsd": 0.17954940000000003,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-che-commons-text-lookup-StringLookupFactory-java",
+      "file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
+      "functions": [
+        "StringLookupFactory.base64DecoderStringLookup",
+        "StringLookupFactory.base64EncoderStringLookup",
+        "StringLookupFactory.urlDecoderStringLookup",
+        "StringLookupFactory.urlEncoderStringLookup",
+        "StringLookupFactory.xmlDecoderStringLookup",
+        "StringLookupFactory.xmlEncoderStringLookup"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 56286,
+      "costUsd": 0.2068836,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 1,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Base64 encoder/decoder lookups use ISO-8859-1, corrupting non-Latin-1 text",
+      "function": "org.apache.commons.text.lookup.StringLookupFactory.base64EncoderStringLookup",
+      "kind": "wrong-result",
+      "property": "decoding the base64 encoding of a string gives back the original string",
+      "property_test": "base64RoundTripUnicode",
+      "repro_file": "ReproBase64Utf8Test.java",
+      "input": "\"\\u20ac\" (euro sign) encoded then decoded",
+      "expected": "\"\\u20ac\" (round trip preserved; UTF-8 is the library convention, as in the URL lookups)",
+      "actual": "\"?\" because the encoder uses getBytes(ISO_8859_1), which replaces unmappable chars with '?'",
+      "evidence": "INSTANCE_BASE64_ENCODER/DECODER in StringLookupFactory use StandardCharsets.ISO_8859_1; the sibling URL lookups document and use UTF-8, and the encoder silently loses data for any char above U+00FF.",
+      "group": "g02-che-commons-text-lookup-StringLookupFactory-java",
+      "file": "src/main/java/org/apache/commons/text/lookup/StringLookupFactory.java",
+      "workdir": ".proofhound/runs/20261017-190605/g02-che-commons-text-lookup-StringLookupFactory-java",
+      "verification": {
+        "verified": true,
+        "reproFile": "ReproBase64Utf8Test.java",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:roundTripNonLatin1",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "expected: <€> but was: <?>",
+          "example": null
+        },
+        "testName": "roundTripNonLatin1"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: Ā"
+      },
+      "review": {
+        "verdict": "not_a_bug",
+        "confidence": 0.65,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "Base64 encoder/decoder lookups use ISO-8859-1 and lose characters above U+00FF",
+        "reason": "The encoder and decoder both use ISO-8859-1 on purpose, so they round-trip any Latin-1 string and the base64 of an ASCII string is the same under either charset. Nothing in the Javadoc, the tests or the interpolator docs promises UTF-8 or a round trip for arbitrary Unicode. Switching to UTF-8 would change the encoded output for existing characters such as 'é', and decoding already-published base64 would change too, so a maintainer would be unlikely to accept it without a new opt-in charset. The '?' loss for '€' is a real limitation but a documented-by-code design choice, not a defect against a stated contract.",
+        "maintainerWouldFix": false
+      },
+      "status": "rejected"
+    }
+  ]
+}

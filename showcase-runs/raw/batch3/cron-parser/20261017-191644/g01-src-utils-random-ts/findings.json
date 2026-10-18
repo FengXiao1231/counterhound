@@ -1,0 +1,14 @@
+[
+  {
+    "title": "seededRandom('') ignores the provided empty-string seed and is non-deterministic",
+    "function": "seededRandom",
+    "kind": "contract-violation",
+    "property": "two generators created with the same provided seed string produce identical sequences",
+    "property_test": "empty string seed is deterministic",
+    "repro_file": "repro_empty_seed.test.mjs",
+    "input": "seededRandom('') called twice",
+    "expected": "Both generators yield the same sequence, since a seed string was provided (only an omitted seed should be random)",
+    "actual": "'' is falsy, so `str ? ... : Math.random()` picks a random seed and the sequences differ",
+    "evidence": "Docstring: 'When not provided, the seed is randomly generated'; param type is `str?: string`, and '' is a provided string. Every other string seed is deterministic; the check should be `str === undefined`."
+  }
+]

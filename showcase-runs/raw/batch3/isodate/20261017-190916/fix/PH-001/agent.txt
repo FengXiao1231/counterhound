@@ -1,0 +1,1 @@
+I fixed the hour-fraction branch of `parse_time` in `src/isodate/isotime.py`. It now floors the seconds to six decimal places with `ROUND_FLOOR`, as the minute and second branches already do. Inputs like `00.9999999999999` therefore give 00:59:59.999999 instead of a microsecond of 1000000. The repro test passes; I didn't run the project's other tests or add a regression test.

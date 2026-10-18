@@ -1,0 +1,137 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-070803",
+  "repo": "toolz",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:08:03.854Z",
+  "ms": 74671,
+  "spend": {
+    "usd": 0.4205631,
+    "tokensIn": 843926,
+    "tokensOut": 8370,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g01-toolz-itertoolz-py",
+      "file": "toolz/itertoolz.py",
+      "functions": [
+        "groupby",
+        "partition",
+        "sliding_window",
+        "partition_all",
+        "topk",
+        "unique"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 35001,
+      "costUsd": 0.11663509999999999,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g03-toolz-functoolz-py",
+      "file": "toolz/functoolz.py",
+      "functions": [
+        "memoize",
+        "do",
+        "flip",
+        "pipe",
+        "complement",
+        "is_arity"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 36306,
+      "costUsd": 0.1125775,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g02-toolz-dicttoolz-py",
+      "file": "toolz/dicttoolz.py",
+      "functions": [
+        "merge_with",
+        "update_in",
+        "dissoc",
+        "itemfilter",
+        "keymap",
+        "valmap"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 61636,
+      "costUsd": 0.13124780000000003,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 3,
+    "functions": 18,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "memoize of a unary function raises IndexError when called with a keyword argument",
+      "function": "toolz.functoolz.memoize",
+      "kind": "crash",
+      "property": "a memoized function can be called in every way the original can, and returns the same result",
+      "property_test": "test_memoize_unary_kwarg",
+      "repro_file": "test_repro_memoize_unary_kwarg.py",
+      "input": "def f(a): return a + 1; memoize(f)(a=0)",
+      "expected": "1, same as f(a=0)",
+      "actual": "IndexError: tuple index out of range at toolz/functoolz.py:444 (key returns args[0] but args is empty)",
+      "evidence": "memoize wraps arbitrary functions (docstring: 'Cache a function's result'), and its docs discuss kwargs handling; f(a=0) is valid for the original. The default key for unary functions unconditionally uses args[0], ignoring that the sole parameter may be passed by keyword.",
+      "group": "g03-toolz-functoolz-py",
+      "file": "toolz/functoolz.py",
+      "workdir": ".proofhound/runs/20261017-070803/g03-toolz-functoolz-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_memoize_unary_kwarg.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:IndexError:toolz/functoolz.py:444",
+        "site": {
+          "file": "toolz/functoolz.py",
+          "line": 444,
+          "func": "key",
+          "code": "return args[0]"
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "IndexError",
+          "message": "tuple index out of range"
+        },
+        "testName": "test_repro_memoize_unary_kwarg"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_memoize_unary_kwarg(\n    x=0,  # or any other generated value\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "crash",
+        "title": "memoize of a unary function raises IndexError when its sole argument is passed by keyword",
+        "reason": "The default key for unary functions is `args[0]`. `memoize` applies it to any function where `is_arity(1, func)` is true, such as `def f(a)`, which can legally be called as `f(a=0)`. In that case `args` is empty and the wrapper raises IndexError, while the original function works. The existing tests only cover unary functions called positionally, and nothing documents that keyword calls are unsupported. A fix is cheap: fall back to the generic key when `args` is empty.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "from toolz.functoolz import memoize\n\n\ndef test_repro_memoize_unary_kwarg():\n    def f(a):\n        return a + 1\n\n    assert f(a=0) == 1\n    assert memoize(f)(a=0) == 1\n",
+      "bugDir": ".proofhound/runs/20261017-070803/bugs/PH-001-memoize-of-a-unary-function-raises-indexerror-wh"
+    }
+  ]
+}

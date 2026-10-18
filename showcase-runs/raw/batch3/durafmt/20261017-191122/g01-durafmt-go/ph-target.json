@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "durafmt",
+  "importPath": "github.com/hako/durafmt"
+}

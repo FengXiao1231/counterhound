@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Cycles made only of arrays are not detected (RangeError / cycles option ignored)",
+    "function": "index (module.exports)",
+    "kind": "contract-violation",
+    "property": "A circular structure either throws TypeError('Converting circular structure to JSON') or, with opts.cycles true, yields '__cycle__' in place of the cycle",
+    "property_test": "circular array throws TypeError or yields __cycle__",
+    "repro_file": "repro_array_cycle.test.mjs",
+    "input": "const a = []; a.push(a); index(a) and index(a, {cycles:true})",
+    "expected": "index(a) throws TypeError; index(a, {cycles:true}) returns '[\"__cycle__\"]'",
+    "actual": "RangeError: Maximum call stack size exceeded in both cases",
+    "evidence": "README documents the cycles option (cycle detection returns '__cycle__', otherwise TypeError as in JSON.stringify). Code only records objects in `seen` after the Array.isArray branch returns, so arrays are never tracked."
+  }
+]

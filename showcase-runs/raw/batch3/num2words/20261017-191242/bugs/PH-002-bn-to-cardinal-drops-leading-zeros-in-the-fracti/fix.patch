@@ -1,0 +1,20 @@
+diff --git a/num2words/lang_BN.py b/num2words/lang_BN.py
+index ef86ed7..699da86 100644
+--- a/num2words/lang_BN.py
++++ b/num2words/lang_BN.py
+@@ -157,10 +157,15 @@ class Num2Word_BN:
+ 
+         dosomik_word = None
+         number = self.str_to_number(number)
++        fraction = str(number - int(number)).split('.')[1:]
+         number, decimal_part = self.parse_number(number)
+         self._is_smaller_than_max_number(number)
+ 
+         if decimal_part > 0:
++            # parse_number drops the fraction's leading zeros, restore them.
++            fraction = ''.join(fraction)
++            leading_zeros = len(fraction) - len(fraction.lstrip('0'))
++            decimal_part = '0' * leading_zeros + str(decimal_part)
+             dosomik_word = f' দশমিক{self._dosomik_to_bengali_word(decimal_part)}'  # noqa: E501
+ 
+         words = self._number_to_bengali_word(number)

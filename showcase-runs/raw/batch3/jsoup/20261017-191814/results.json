@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191814",
+  "diff": null,
+  "fixRun": true,
+  "repo": "jsoup",
+  "lang": "java",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:18:14.728Z",
+  "ms": 211574,
+  "spend": {
+    "usd": 0.5522325,
+    "tokensIn": 1189360,
+    "tokensOut": 14703,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g02-src-main-java-org-jsoup-nodes-Entities-java",
+      "file": "src/main/java/org/jsoup/nodes/Entities.java",
+      "functions": [
+        "Entities.escape",
+        "Entities.isBaseNamedEntity",
+        "Entities.unescape",
+        "Entities.findPrefix",
+        "Entities.isNamedEntity",
+        "Entities.codepointsForName"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 48241,
+      "costUsd": 0.20234319999999997,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-src-main-java-org-jsoup-select-Selector-java",
+      "file": "src/main/java/org/jsoup/select/Selector.java",
+      "functions": [
+        "Selector.escapeCssIdentifier",
+        "Selector.unescapeCssIdentifier",
+        "Selector.evaluatorOf",
+        "Selector.selectStream",
+        "Selector.select"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 68005,
+      "costUsd": 0.2023174,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 11,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Escaped trailing space in identifier is lost because the query is trimmed",
+      "function": "org.jsoup.select.Selector.select",
+      "kind": "wrong-result",
+      "property": "a selector built as '#' + escapeCssIdentifier(id) matches the element with that id",
+      "property_test": "selectById",
+      "repro_file": "ReproTrailingSpaceTest.java",
+      "input": "element with id \"a \"; query \"#a\\ \" (from escapeCssIdentifier(\"a \"))",
+      "expected": "1 element matched (an escaped space '\\ ' is part of the identifier per CSS syntax)",
+      "actual": "0 elements: the trailing escaped space is stripped when the query is trimmed, so the id parsed is 'a' followed by a dangling escape",
+      "evidence": "escapeCssIdentifier is documented to escape characters 'that would otherwise not be valid in a selector' (CSSOM serialize-an-identifier), so its output should be usable in a selector; it emits '\\ ' for space, which select() then mishandles at the end of the query",
+      "group": "g01-src-main-java-org-jsoup-select-Selector-java",
+      "file": "src/main/java/org/jsoup/select/Selector.java",
+      "workdir": ".proofhound/runs/20261017-191814/g01-src-main-java-org-jsoup-select-Selector-java",
+      "verification": {
+        "verified": true,
+        "reproFile": "ReproTrailingSpaceTest.java",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:escapedTrailingSpaceSurvivesSelect",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "expected: <1> but was: <0>",
+          "example": null
+        },
+        "testName": "escapedTrailingSpaceSurvivesSelect"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: "
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "Selector parsing drops an escaped trailing space because the query is trimmed first",
+        "reason": "`QueryParser` calls `trimAsciiWhitespace(query)` before tokenizing, so the `\\ ` that `Selector.escapeCssIdentifier(\"a \")` emits loses its space and leaves a dangling backslash. The public `escapeCssIdentifier` is documented to produce text valid in a selector, and CSS treats an escaped trailing space as part of the identifier. A maintainer would likely accept a small fix: only trim a trailing whitespace character when it is not preceded by an unescaped backslash. The case is narrow, since it needs an identifier that ends in whitespace.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/src/main/java/org/jsoup/select/QueryParser.java b/src/main/java/org/jsoup/select/QueryParser.java\nindex b791474..0c08e6c 100644\n--- a/src/main/java/org/jsoup/select/QueryParser.java\n+++ b/src/main/java/org/jsoup/select/QueryParser.java\n@@ -22,6 +22,7 @@ import java.util.regex.Matcher;\n import java.util.regex.Pattern;\n \n import static org.jsoup.internal.Normalizer.asciiLowerCase;\n+import static org.jsoup.internal.StringUtil.isWhitespace;\n import static org.jsoup.internal.StringUtil.trimAsciiWhitespace;\n import static org.jsoup.select.StructuralEvaluator.ImmediateParentRun;\n \n@@ -43,11 +44,24 @@ public class QueryParser implements AutoCloseable {\n      */\n     private QueryParser(String query) {\n         Validate.notEmpty(query);\n-        query = trimAsciiWhitespace(query);\n+        query = trimQuery(query);\n         this.query = query;\n         this.tq = new TokenQueue(query);\n     }\n \n+    // Trims ASCII whitespace, but keeps trailing whitespace that is escaped by a backslash (part of an identifier).\n+    private static String trimQuery(String query) {\n+        int start = 0, end = query.length();\n+        while (start < end && isWhitespace(query.charAt(start))) start++;\n+        while (end > start && isWhitespace(query.charAt(end - 1))) {\n+            int slashes = 0;\n+            for (int i = end - 2; i >= start && query.charAt(i) == '\\\\'; i--) slashes++;\n+            if (slashes % 2 == 1) break; // escaped whitespace\n+            end--;\n+        }\n+        return query.substring(start, end);\n+    }\n+\n     /**\n      Parse a CSS query into an Evaluator. If you are evaluating the same query repeatedly, it may be more efficient to\n      parse it once and reuse the Evaluator.\n",
+        "files": [
+          "src/main/java/org/jsoup/select/QueryParser.java"
+        ],
+        "suite": "passed (mvn -q -B test)"
+      },
+      "reproSource": "package org.jsoup.select;\nimport org.junit.jupiter.api.Test;\nimport org.jsoup.nodes.*;\nimport static org.junit.jupiter.api.Assertions.*;\n\nclass ReproTrailingSpaceTest {\n    @Test void escapedTrailingSpaceSurvivesSelect() {\n        Element d = new Element(\"div\");\n        d.appendElement(\"p\").attr(\"id\", \"a \");\n        String q = \"#\" + Selector.escapeCssIdentifier(\"a \");\n        assertEquals(\"#a\\\\ \", q);\n        assertEquals(1, Selector.select(q, d).size());\n    }\n}\n",
+      "bugDir": ".proofhound/runs/20261017-191814/bugs/PH-001-selector-parsing-drops-an-escaped-trailing-space"
+    }
+  ]
+}

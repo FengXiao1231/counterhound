@@ -1,0 +1,4 @@
+I tested 9 properties and reported 0 bugs; all 9 passed, and `findings.json` is `[]`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191448/g02-pathspec-pattern-py && cat > .proofhound/runs/20261017-191448/g02-pathspec-pattern-py/test_ph_props.py <<'E'\nimport re\nfrom hypothesis import given, assume, strategies as st\nfrom pathspec.pattern import RegexPattern, Pattern\n\ndef valid(s

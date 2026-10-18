@@ -1,0 +1,1 @@
+I fixed the capitalisation in `packages/change-case/src/index.ts`. `capitalCaseTransformFactory` and `pascalCaseTransformFactory` now take the first code point of each word, not `word[0]`, so a surrogate pair is no longer split. The repro now passes. I didn't run the project's other tests or add a regression test.

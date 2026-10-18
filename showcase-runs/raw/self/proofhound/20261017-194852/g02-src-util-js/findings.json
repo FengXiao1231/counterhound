@@ -1,0 +1,38 @@
+[
+  {
+    "title": "extractJSON returns inner object instead of enclosing array when wrapped in prose",
+    "function": "extractJSON",
+    "kind": "wrong-result",
+    "property": "a JSON value embedded in prose is extracted intact",
+    "property_test": "extractJSON round trip in prose/fence",
+    "repro_file": "repro_extractjson_array_of_objects.test.mjs",
+    "input": "Result: [{\"a\":1},{\"b\":2}]",
+    "expected": "[{a:1},{b:2}]",
+    "actual": "{a:1} (the first object; '{' is searched before '[' regardless of position)",
+    "evidence": "Docstring: 'Find the first JSON object/array in text'. The array starts before the object, so it is first; an array of objects is a common agent output."
+  },
+  {
+    "title": "fmtMs rounds seconds up to 60 producing '60s' / '1m60s'",
+    "function": "fmtMs",
+    "kind": "wrong-result",
+    "property": "formatted seconds component is always < 60",
+    "property_test": "fmtMs never prints 60s or NNmSS with SS>=60",
+    "repro_file": "repro_fmtms_rounding.test.mjs",
+    "input": "119500 (also 59600)",
+    "expected": "'2m00s' (and '1m00s' for 59600)",
+    "actual": "'1m60s' (and '60s')",
+    "evidence": "Time formats NmSS must have seconds in 00-59; Math.round(s % 60) and toFixed(0) can reach 60 without carrying."
+  },
+  {
+    "title": "relPath treats child paths whose name starts with '..' as outside the root",
+    "function": "relPath",
+    "kind": "wrong-result",
+    "property": "a path inside root yields a relative path",
+    "property_test": "relPath of child inside root is relative",
+    "repro_file": "repro_relpath_dotdot_name.test.mjs",
+    "input": "relPath('/root', '/root/..foo/a.js')",
+    "expected": "'..foo/a.js'",
+    "actual": "'/root/..foo/a.js' (absolute path returned)",
+    "evidence": "r.startsWith('..') is meant to detect parent traversal, but also matches legitimate names like '..foo' or '...'; it should check r === '..' or startsWith('..' + sep)."
+  }
+]

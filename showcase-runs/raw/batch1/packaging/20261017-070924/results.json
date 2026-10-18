@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-070924",
+  "repo": "packaging",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:09:24.147Z",
+  "ms": 58056,
+  "spend": {
+    "usd": 0.45199500000000004,
+    "tokensIn": 801566,
+    "tokensOut": 9658,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-src-packaging-tags-py",
+      "file": "src/packaging/tags.py",
+      "functions": [
+        "parse_tag",
+        "ios_platforms",
+        "create_compatible_tags_selector",
+        "interpreter_version",
+        "android_platforms",
+        "pure_python_tags"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 34950,
+      "costUsd": 0.13733740000000003,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-src-packaging-utils-py",
+      "file": "src/packaging/utils.py",
+      "functions": [
+        "canonicalize_name",
+        "is_normalized_name",
+        "canonicalize_version",
+        "parse_sdist_filename",
+        "parse_wheel_filename"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 36474,
+      "costUsd": 0.1199905,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g03-src-packaging-ranges-py",
+      "file": "src/packaging/ranges.py",
+      "functions": [
+        "VersionRange.singleton",
+        "VersionRange.difference",
+        "VersionRange.is_disjoint",
+        "VersionRange.intersection",
+        "VersionRange.union",
+        "VersionRange.full"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 57758,
+      "costUsd": 0.19466709999999998,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 3,
+    "functions": 17,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

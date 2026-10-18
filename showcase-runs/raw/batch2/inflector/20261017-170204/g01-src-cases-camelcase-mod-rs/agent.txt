@@ -1,0 +1,16 @@
+I wrote 6 properties but could not run any of them, so I reported 0 bugs. The `inflector` crate doesn't compile on this toolchain, and `findings.json` is an empty array.
+
+The build fails because several modules use `#![deny(warnings)]`. The current compiler's `clone_on_ref_ptr`-style lint on `.clone()` of a `&str` therefore becomes a hard error. It fires in `tablecase/mod.rs:129` and `pascalcase/mod.rs:162`, and `camelcase`'s `is_camel_case` has the same `.clone()` pattern at line 171. Fixing it means editing project files, which the rules forbid. I also couldn't pass `--cap-lints` or `RUSTFLAGS` through `ph-test`, so I stopped rather than work around it.
+
+The 6 properties are in `ph_props.rs` in the run directory:
+- `to_camel_case` is idempotent on ASCII input.
+- `to_camel_case` is idempotent on arbitrary Unicode input.
+- `is_camel_case(to_camel_case(s))` is always true.
+- The output contains no separators.
+- The output never starts with an uppercase letter.
+- The alphanumeric characters are preserved, ignoring case.
+
+If you can run the harness with lints capped (for example `RUSTFLAGS=--cap-lints=warn`) or on an older toolchain, the same file should run unchanged.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-170204/g01-src-cases-camelcase-mod-rs && cat > .proofhound/runs/20261017-170204/g01-src-cases-camelcase-mod-rs/ph_props.rs <<'EOF'\nuse inflector::cases::camelcase::{to_camel_case, is_camel_case};\nuse proptest::prelude::*;\n\nproptest! {\n    #[test]\n

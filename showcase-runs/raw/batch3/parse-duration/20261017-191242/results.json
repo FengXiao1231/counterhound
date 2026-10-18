@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191242",
+  "diff": null,
+  "fixRun": true,
+  "repo": "parse-duration",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:12:42.575Z",
+  "ms": 56682,
+  "spend": {
+    "usd": 0.20863140000000002,
+    "tokensIn": 369357,
+    "tokensOut": 5679,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-index-js",
+      "file": "index.js",
+      "functions": [
+        "parse"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 40927,
+      "costUsd": 0.14953900000000003,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 1,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 1,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "parse() ignores a minus sign when the input has leading noise text",
+      "function": "parse",
+      "kind": "inconsistency",
+      "property": "a duration written with a minus sign parses as negative, even when preceded by noise text that parse otherwise tolerates",
+      "property_test": "negative sign applies with noise prefix",
+      "repro_file": "repro_negative_after_noise.test.mjs",
+      "input": "parse('duration: -1h')",
+      "expected": "-3600000 (negative, like parse('-1h'))",
+      "actual": "3600000 (sign silently dropped, because only str.trimStart()[0] === '-' is checked)",
+      "evidence": "README advertises noisy input ('duration: 1h:20min' is parsed) and negatives ('-1hr 40mins' => -1*h - 40*m). The sign is detected only at the first character of the whole string (index.js line 56), so the two documented features do not combine: the number is parsed from the noisy string but its sign is lost, giving a result with the wrong sign and no error.",
+      "group": "g01-index-js",
+      "file": "index.js",
+      "workdir": ".proofhound/runs/20261017-191242/g01-index-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_negative_after_noise.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_negative_after_noise",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly equal:\n+ actual - expected\n\n+ 3600000\n- -3600000\n",
+          "example": null
+        },
+        "testName": "repro_negative_after_noise"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Counterexample: [1,\"h\",\"duration: \"]"
+      },
+      "review": {
+        "verdict": "not_a_bug",
+        "confidence": 0.7,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "Minus sign is only recognised at the start of the string, not after leading text",
+        "reason": "The code deliberately treats a negative as a leading '-' on the whole string (index.js:56), and the tests only cover that form ('-1hr 40mins', ' -1hr 40mins', '  -1h'). The README promises tolerance of noise text, not a sign that is detected after it. Treating any '-' inside noise as a sign would misread hyphenated text such as 'foo-bar 1h', ranges like '5-10min' and 'a - b'. The report assumes a combination of features that is not promised, and a maintainer is unlikely to accept a fix.",
+        "maintainerWouldFix": false
+      },
+      "status": "rejected"
+    }
+  ]
+}

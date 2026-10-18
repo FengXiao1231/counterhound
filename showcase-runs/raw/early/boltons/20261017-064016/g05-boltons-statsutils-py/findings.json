@@ -1,0 +1,10 @@
+[{"title": "format_histogram on empty Stats raises ZeroDivisionError",
+"function": "boltons.statsutils.format_histogram_counts",
+"kind": "crash",
+"property": "format_histogram does not crash on an empty dataset, which Stats supports (default value)",
+"property_test": "test_empty",
+"repro_file": "test_repro_empty_hist.py",
+"input": "Stats([]).format_histogram()",
+"expected": "a string (or a clear documented error)",
+"actual": "ZeroDivisionError: float division by zero at line_k = float(bar_cols) / count_max (count_max == 0)",
+"evidence": "Stats has a `default` for empty data and get_quantile/describe handle empty data; get_histogram_counts explicitly handles empty data by returning [(0.0, 0)] (_get_bin_bounds returns [0.0]), but format_histogram_counts divides by the max count, which is 0."}]

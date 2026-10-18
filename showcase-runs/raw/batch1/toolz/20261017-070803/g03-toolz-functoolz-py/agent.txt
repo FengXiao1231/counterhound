@@ -1,0 +1,4 @@
+I tested 6 properties across the six functions and reported 1 bug: `memoize` of a unary function raises `IndexError` when called with a keyword argument, e.g. `memoize(f)(a=0)` where `def f(a)`. The repro file fails for that reason.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-070803/g03-toolz-functoolz-py"}

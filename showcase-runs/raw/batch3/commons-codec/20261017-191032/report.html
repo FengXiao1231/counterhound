@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofhound · commons-codec</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}h1 span{color:var(--accent)}h2{font-size:18px;margin:40px 0 12px}
+.meta{color:var(--dim);font-size:13px}.meta code{font-size:12px}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+.funnel{margin:20px 0 8px;display:grid;gap:6px}.step{position:relative;height:30px}
+.bar{position:absolute;inset:0 auto 0 0;background:var(--bar1);border-radius:6px}.bar[data-i="3"]{background:var(--bar3)}
+.lab{position:relative;padding:5px 10px;font-size:13px;white-space:nowrap}.bar[data-i="3"]+.lab{color:#fff}
+.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:14px 0}
+.bug.needs-look{border-left-color:var(--warn)}
+.bug header{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.bug h3{margin:0;font-size:17px;flex:1 1 300px}
+.id{font:600 12px ui-monospace,monospace;color:var(--accent)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--dim)}
+.badge.ok{color:var(--ok);border-color:currentColor}.sev-high{color:var(--accent);border-color:currentColor}.sev-medium{color:var(--warn);border-color:currentColor}
+.where{margin:6px 0 10px;color:var(--dim);font-size:13px;word-break:break-all}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0 0 8px}dt{color:var(--dim);font-size:13px}dd{margin:0;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.copy{margin-left:8px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer}
+.err{color:var(--accent);margin:4px 0}.dim{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:500}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center}
+.tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+footer{margin-top:48px;color:var(--dim);font-size:12.5px}
+@media (max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style></head><body><main>
+<h1>proof<span>hound</span> report</h1>
+<div class="meta">commons-codec · java · claude (sonnet) · 2 modules, 12 functions · 1m40s · $0.50 · 10/17/2026, 7:10:32 PM</div>
+<div class="funnel">
+    <div class="step"><div class="bar" style="width:100%" data-i="0"></div>
+    <div class="lab"><b>1</b> reported by the hunter</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="1"></div>
+    <div class="lab"><b>1</b> reproduced deterministically</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="2"></div>
+    <div class="lab"><b>1</b> unique</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="3"></div>
+    <div class="lab"><b>1</b> confirmed by review</div></div>
+    <div class="step"><div class="bar" style="width:4%" data-i="4"></div>
+    <div class="lab"><b>0</b> fixed, with a verified patch</div></div></div>
+<p class="meta">Every bug below failed the same way in 3 fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
+
+<h2>1 confirmed bug</h2>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-001</span>
+    <h3>Strict-mode QuotedPrintableCodec can emit encoded lines longer than 76 characters</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.82</span>
+      <span class="badge ok">failed 3/3</span>
+      
+    </span>
+  </header>
+  <p class="where"><code>org.apache.commons.codec.net.QuotedPrintableCodec.encodeQuotedPrintable</code> · <code>src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>74 bytes: &#39;a&#39; x70, 0x00, 0x00, &#39;a&#39;, &#39;a&#39;; QuotedPrintableCodec(true).encode</code></dd>
+    <dt>Expected</dt><dd>every line &lt;= 76 characters</dd>
+    <dt>Actual</dt><dd>first line is 70 &#39;a&#39; + &#39;=00=00&#39; + &#39;=&#39; = 77 characters; the soft break after the third-from-last octet is emitted without checking that the encoded octet fits</dd>
+    <dt>Property</dt><dd>in strict mode (full RFC 1521 ruleset) every encoded line, including the trailing &#39;=&#39; of a soft break, is at most 76 characters</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>package org.apache.commons.codec.net;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+class ReproStrictLineLengthTest {
+    @Test
+    void lineWithSoftBreakMustNotExceed76() {
+        byte[] in = new byte[74];
+        Arrays.fill(in, (byte) &#39;a&#39;);
+        in[70] = 0;
+        in[71] = 0;
+        String out = new String(new QuotedPrintableCodec(true).encode(in), StandardCharsets.US_ASCII);
+        for (String line : out.split(&quot;\r\n&quot;, -1)) {
+            assertTrue(line.length() &lt;= 76, &quot;line length &quot; + line.length() + &quot;: &quot; + line);
+        }
+    }
+}</code></pre>
+  <p class="err"><code>AssertionError: line length 77: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=00=00= ==&gt; expected: &lt;true&gt; but was: &lt;false&gt;</code></p></details>
+  
+  <p class="dim">No fix: not attempted: --budget was used up</p>
+  <details><summary>Why this is a bug</summary><p>strict mode &#39;implements the full ruleset&#39; of RFC 1521, whose rule #5 limits encoded lines to 76 characters; the code defines SAFE_LENGTH=73 to guarantee this but the third-from-last octet handling (pos += 3 then soft break when pos &gt; SAFE_LENGTH-2) overshoots it</p><p><b>Independent review:</b> Strict mode is documented as implementing the full RFC 1521 ruleset, including rule #5 (lines of at most 76 characters including the trailing &#39;=&#39;). Tracing the source: after 70 &#39;a&#39; and the first 0x00 at index 70, pos is 74. The third-from-last octet (0x00 at index 71) is then encoded unconditionally, giving pos 77, and the soft-break check `pos &gt; SAFE_LENGTH-2` appends &#39;=&#39;, so the line has 77 characters. The same overshoot is reachable in the main loop: `pos &lt; SAFE_LENGTH` allows an encoded 3-byte write from pos 72, so a later encoded octet followed by &#39;=&#39; can reach 78. A fix is to break before writing an encoded octet that would not fit. A maintainer would likely accept that, though the severity is low because few callers use strict mode with binary input.</p>
+  <p><b>QuickTheories shrank it to:</b> <code>Failing test case: [32, 32, 32, 13, 32, 13, 13, 32, 32, 32, 32, 32, 32, 32, 13, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 32, 13, 32, 32, 13, 13, 13, 32, 32, 32, 32, 32, 32, 32, 32, 13, 32, 32, 13, 13, 32, 32, 13, 32, 32, 32]</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191032/bugs/PH-001-strict-mode-quotedprintablecodec-can-emit-encode/BUG.md</code></p></details>
+</article>
+
+
+
+<h2>Filtered out (0)</h2>
+<p class="dim">Nothing was filtered out.</p>
+
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
+<tr><td><code>src/main/java/org/apache/commons/codec/binary/Hex.java</code></td><td>Hex.decodeHex, Hex.decode, Hex.encode, Hex.encodeHex, Hex.encodeHexString, Hex.toString</td><td>0</td><td>0</td><td>41s</td></tr><tr><td><code>src/main/java/org/apache/commons/codec/net/QuotedPrintableCodec.java</code></td><td>QuotedPrintableCodec.decodeQuotedPrintable, QuotedPrintableCodec.encodeQuotedPrintable, QuotedPrintableCodec.decode, QuotedPrintableCodec.encode, QuotedPrintableCodec.getCharset, QuotedPrintableCodec.getDefaultCharset</td><td>1</td><td>1</td><td>1m05s</td></tr>
+</table>
+<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));
+</script>
+</body></html>

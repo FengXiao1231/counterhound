@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "strcase",
+  "importPath": "github.com/iancoleman/strcase"
+}

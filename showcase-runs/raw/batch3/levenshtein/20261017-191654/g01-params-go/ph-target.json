@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "levenshtein",
+  "importPath": "github.com/agext/levenshtein"
+}

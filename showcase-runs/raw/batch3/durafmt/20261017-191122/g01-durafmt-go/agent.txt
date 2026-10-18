@@ -1,0 +1,4 @@
+I tested 5 properties and reported 1 bug: `Format` negates `d.duration` in place for negative durations. A second call returns `"-"` instead of `"-1 microsecond"`, and `Duration()` flips sign. The repro file fails as expected, and the finding is in `findings.json`.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/durafmt/.proofhound/runs/20261017-191122/g01-durafmt-go && cat > /tmp/claude-0/zoo3/durafmt/.proofhound/runs/20261017-191122/g01-durafmt-go/ph_props_test.go <<'EOF'\npackage durafmt\n\nimport (\n\t\"testing\"\n\t\"time\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc 

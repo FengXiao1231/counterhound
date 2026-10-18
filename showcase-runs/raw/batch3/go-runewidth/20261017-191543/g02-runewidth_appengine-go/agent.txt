@@ -1,0 +1,4 @@
+I tested 1 property (`IsEastAsian` gives the same answer on repeated calls) and reported 0 bugs. The test passed.
+
+`IsEastAsian` is a constant `return false`, so there was nothing else to test. The appengine build has no access to the locale, which makes `false` a deliberate answer rather than a defect. `findings.json` is `[]`.
+

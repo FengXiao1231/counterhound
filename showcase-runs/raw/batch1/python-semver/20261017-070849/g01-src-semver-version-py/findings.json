@@ -1,0 +1,14 @@
+[
+  {
+    "title": "next_version('prerelease', token) returns an older version when the token differs and sorts lower",
+    "function": "semver.version.Version.next_version",
+    "kind": "wrong-result",
+    "property": "next_version(...) is strictly greater than the original version (natural order preserved)",
+    "property_test": "test_next_prerelease_alpha_tokens",
+    "repro_file": "test_repro_next_version_lower.py",
+    "input": "Version.parse('1.0.0-rc.1').next_version('prerelease', 'alpha')",
+    "expected": "a version greater than 1.0.0-rc.1",
+    "actual": "1.0.0-alpha.1, which is lower than 1.0.0-rc.1",
+    "evidence": "Docstring: 'Determines next version, preserving natural order.' The 'next' version must not sort before the current one; the branch at version.py:561-565 replaces the prerelease by '<token>.1' without checking order."
+  }
+]

@@ -1,0 +1,1 @@
+I changed `isNumeric` in `Version.java` so that a lone `"0"` counts as a numeric identifier. Leading-zero forms like `"01"` are still excluded. `1.0.0-alpha.0` now increments to `1.0.0-alpha.1`, and `compareIdentifiers` now compares `"0"` numerically as well. The repro test passes. I did not run the project's other tests.

@@ -1,0 +1,3 @@
+I fixed it in `parse()` in `base.js`. When `sort` is `false`, it now converts any index-keyed object values into arrays instead of returning them as plain objects. So `stringifyUrl` and `parse(q, {arrayFormat: 'index', sort: false})` both give arrays for `a[0]=x&a[1]=y`.
+
+The repro now passes. I couldn't confirm the existing suite: `./.proofhound/ph-test test/parse.js` reports a failure that it attributes to the test file rather than the project code. I didn't run any other test file, and I didn't add a regression test.

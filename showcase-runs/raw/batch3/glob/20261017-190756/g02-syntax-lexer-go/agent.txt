@@ -1,0 +1,17 @@
+I tested 6 properties and reported 1 bug. After each `Next()` call inside a character class, `Lexer.Offset()` is already past the whole class instead of right after the returned token. For `[a-c]` it returns 5 after the `[`, where the doc says 1. `Offset` isn't one of your three target functions, but it is documented in the same file. The repro file `repro_offset_test.go` fails as expected.
+
+The other properties all passed:
+- **`IsSpecial`:** it matches exactly the set `* ? \ [ ] { }`.
+- **Quote round-trip:** escaping the special bytes of any string and lexing it gives one Text token equal to the original string.
+- **Termination:** arbitrary patterns always terminate, never produce empty Text, and repeat EOF or Error indefinitely.
+- **Valid input:** NUL bytes (`\x00`) lex without error.
+- **Invalid UTF-8:** a stray `\xff` always produces an Error.
+
+I created only files in the work dir:
+- `ph_props_test.go`
+- `ph_offset_test.go`
+- `repro_offset_test.go`
+- `findings.json`
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-190756/g02-syntax-lexer-go && cat > .proofhound/runs/20261017-190756/g02-syntax-lexer-go/ph_props_test.go <<'EOF'\npackage syntax\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\t\"unicode/utf8\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phQuote(s string) stri

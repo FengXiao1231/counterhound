@@ -1,0 +1,18 @@
+I tested 7 properties and reported 2 bugs; both repros fail as expected.
+
+- **`Calculate` with `maxCost`:** it can return a distance at or under `maxCost` that is far below the true one. `Calculate("aaa", "bbbab", 2, 1, 2, 2)` returns 2, but the true distance is 6. This also breaks `MinScore`: `Similarity` with `MinScore(0.75)` returns 0.75 for a pair whose real score is 0.25.
+- **`Similarity` and `Match` with zero costs:** they return NaN when the maximum possible distance is 0. `Similarity("", "a", NewParams().InsCost(0))` is NaN, although the docs say zero costs are allowed and scores are in 0..1.
+
+I left out the `maxCost` failure for zero-cost inputs, where `Calculate` returned 5 against a true distance of 4. It may be the same bug as the first one, and I didn't confirm that.
+
+Everything is in `.proofhound/runs/20261017-191654/g02-levenshtein-go/`:
+- `findings.json`
+- `repro_maxcost_test.go`
+- `repro_nan_test.go`
+- `ph_props_test.go`
+- `ph_probe_test.go` (a scratch probe)
+
+My first attempt to create the work directory and run the tests as one compound shell command was denied. I wrote the files with Write and ran each test file as a single `ph-test` command instead.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo3/levenshtein/.proofhound/runs/20261017-191654/g02-levenshtein-go && cat > /tmp/claude-0/zoo3/levenshtein/.proofhound/runs/20261017-191654/g02-levenshtein-go/ph_props_test.go <<'EOF'\npackage levenshtein\n\nimport (\n\t\"math\"\n\t\"testing\"\n\n\t\"pgregory.net

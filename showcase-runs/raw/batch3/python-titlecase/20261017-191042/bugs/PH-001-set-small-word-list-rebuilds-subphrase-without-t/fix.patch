@@ -1,0 +1,13 @@
+diff --git a/titlecase/__init__.py b/titlecase/__init__.py
+index fd24431..86bb01f 100755
+--- a/titlecase/__init__.py
++++ b/titlecase/__init__.py
+@@ -74,7 +74,7 @@ def set_small_word_list(small=SMALL):
+     SMALL_WORDS = regex.compile(r'^(%s)$' % small, regex.I)
+     SMALL_FIRST = regex.compile(r'^([%s]*)(%s)\b' % (PUNCT, small), regex.I)
+     SMALL_LAST = regex.compile(r'\b(%s)[%s]?$' % (small, PUNCT), regex.I)
+-    SUBPHRASE = regex.compile(r'([:.;?!][ ])(%s)' % small)
++    SUBPHRASE = regex.compile(r'([:.;?!\-–‒—―][ ])(%s)' % small)
+ 
+ 
+ def titlecase(text, callback=None, small_first_last=True, preserve_blank_lines=False, normalise_space_characters=False):

@@ -1,0 +1,11 @@
+I tested 34 properties across the two test files and reported 1 bug.
+
+The bug: `parse('a=b,c', { comma: true, charset: 'iso-8859-1', interpretNumericEntities: true })` returns `{ a: 'b,c' }` instead of `{ a: ['b', 'c'] }`. Line 191 of `lib/parse.js` runs `String(val)` on the already-split array, which joins it back into one string.
+
+The repro file `repro_comma_numeric_entities.test.mjs` fails now for that reason. The other 33 properties pass.
+
+Everything is in `.proofhound/runs/20261017-071404/g02-lib-parse-js/`; the finding is in `findings.json`.
+
+Permission denials:
+Bash: {"command":"ls /tmp/claude-0/zoo/qs /tmp/claude-0/zoo/qs/.proofhound; git -C /tmp/claude-0/zoo/qs log --oneline | head -3"}
+Bash: {"command":"sed -i 's/{ maxKeys: \\([0-9]\\) }/{ minKeys: 1, maxKeys: \\1, noNullPrototype: true }/g' .proofhound/runs/20261017-071404/g02-lib-parse-js/ph_props.test.mjs"}

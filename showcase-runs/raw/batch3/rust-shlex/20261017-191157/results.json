@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191157",
+  "diff": null,
+  "fixRun": true,
+  "repo": "rust-shlex",
+  "lang": "rust",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:11:57.329Z",
+  "ms": 42523,
+  "spend": {
+    "usd": 0.3473682,
+    "tokensIn": 542794,
+    "tokensOut": 8232,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g02-src-bytes-rs",
+      "file": "src/bytes.rs",
+      "functions": [
+        "Quoter::quote",
+        "try_join",
+        "try_quote",
+        "Quoter::join",
+        "split",
+        "Quoter::allow_nul"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 42044,
+      "costUsd": 0.15690379999999998,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-src-lib-rs",
+      "file": "src/lib.rs",
+      "functions": [
+        "try_join",
+        "try_quote",
+        "Quoter::join",
+        "split",
+        "Quoter::quote",
+        "Quoter::allow_nul"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 42504,
+      "costUsd": 0.1904644,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

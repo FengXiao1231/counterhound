@@ -1,0 +1,14 @@
+[
+  {
+    "title": "memoize of a unary function raises IndexError when called with a keyword argument",
+    "function": "toolz.functoolz.memoize",
+    "kind": "crash",
+    "property": "a memoized function can be called in every way the original can, and returns the same result",
+    "property_test": "test_memoize_unary_kwarg",
+    "repro_file": "test_repro_memoize_unary_kwarg.py",
+    "input": "def f(a): return a + 1; memoize(f)(a=0)",
+    "expected": "1, same as f(a=0)",
+    "actual": "IndexError: tuple index out of range at toolz/functoolz.py:444 (key returns args[0] but args is empty)",
+    "evidence": "memoize wraps arbitrary functions (docstring: 'Cache a function's result'), and its docs discuss kwargs handling; f(a=0) is valid for the original. The default key for unary functions unconditionally uses args[0], ignoring that the sole parameter may be passed by keyword."
+  }
+]

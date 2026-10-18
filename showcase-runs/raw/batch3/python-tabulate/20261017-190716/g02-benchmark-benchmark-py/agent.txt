@@ -1,0 +1,10 @@
+I couldn't test `benchmark(n)`: `benchmark/benchmark.py` imports `prettytable` at the top, and that module isn't installed here. I reported no bugs; `findings.json` is `[]`.
+
+I wrote one property test, `test_benchmark_output`. It runs `benchmark(n)` for small `n` and checks that the printed table has one row per method, sorted by relative time with the fastest at 1.0. It failed on that `ModuleNotFoundError` before any property ran, so it has never run against the code.
+
+I stopped there because installing `prettytable` needs network access, which the rules rule out. Reading the source turned up nothing wrong. I would need `prettytable` and `texttable` installed to run the test.
+
+1 property written, 0 run, 0 bugs reported.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-190716/g02-benchmark-benchmark-py && cat > .proofhound/runs/20261017-190716/g02-benchmark-benchmark-py/test_ph_props.py <<'EOF'\nimport sys\nfrom hypothesis import given, settings, strategies as st\nfrom benchmark import benchmark as bm\n\n\n@settings(m

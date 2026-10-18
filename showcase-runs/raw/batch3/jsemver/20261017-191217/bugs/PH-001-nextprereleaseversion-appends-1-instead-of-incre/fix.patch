@@ -1,0 +1,13 @@
+diff --git a/src/main/java/com/github/zafarkhaja/semver/Version.java b/src/main/java/com/github/zafarkhaja/semver/Version.java
+index 0da587c..59301e9 100644
+--- a/src/main/java/com/github/zafarkhaja/semver/Version.java
++++ b/src/main/java/com/github/zafarkhaja/semver/Version.java
+@@ -1338,7 +1338,7 @@ public class Version implements Comparable<Version>, Serializable {
+ 
+     private static boolean isNumeric(String id) {
+         // filters out <digits>
+-        if (id.startsWith("0")) {
++        if (id.startsWith("0") && !id.equals("0")) {
+             return false;
+         }
+         return id.chars().allMatch(Character::isDigit);

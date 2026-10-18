@@ -1,0 +1,334 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-064016",
+  "repo": "boltons",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T06:40:16.985Z",
+  "ms": 133696,
+  "spend": {
+    "usd": 1.0997141,
+    "tokensIn": 2010154,
+    "tokensOut": 23745,
+    "calls": 10
+  },
+  "groups": [
+    {
+      "group": "g02-boltons-strutils-py",
+      "file": "boltons/strutils.py",
+      "functions": [
+        "parse_int_list",
+        "format_int_list",
+        "strip_ansi",
+        "iter_splitlines",
+        "escape_shell_args",
+        "int_ranges_from_int_list"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 34611,
+      "costUsd": 0.1251617,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g03-boltons-tbutils-py",
+      "file": "boltons/tbutils.py",
+      "functions": [
+        "ParsedException.from_string",
+        "TracebackInfo.from_dict",
+        "TracebackInfo.from_frame",
+        "TracebackInfo.from_traceback",
+        "format_exception_only",
+        "Callpoint.from_tb"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 37299,
+      "costUsd": 0.1292636,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g01-boltons-urlutils-py",
+      "file": "boltons/urlutils.py",
+      "functions": [
+        "URL.to_text",
+        "QueryParamDict.to_text",
+        "QueryParamDict.from_text",
+        "unquote",
+        "parse_url",
+        "OrderedMultiDict.sorted"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 48430,
+      "costUsd": 0.1938469,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g04-boltons-iterutils-py",
+      "file": "boltons/iterutils.py",
+      "functions": [
+        "split_iter",
+        "chunked",
+        "chunked_iter",
+        "windowed_iter",
+        "partition",
+        "unique_iter"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 45049,
+      "costUsd": 0.15633800000000003,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g05-boltons-statsutils-py",
+      "file": "boltons/statsutils.py",
+      "functions": [
+        "Stats.get_histogram_counts",
+        "Stats.format_histogram",
+        "format_histogram_counts",
+        "Stats.trim_relative",
+        "Stats.get_quantile",
+        "Stats.describe"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 38013,
+      "costUsd": 0.1267055,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g06-boltons-timeutils-py",
+      "file": "boltons/timeutils.py",
+      "functions": [
+        "dt_to_timestamp",
+        "isoparse",
+        "parse_timedelta",
+        "relative_time",
+        "strpdate",
+        "decimal_relative_time"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 41697,
+      "costUsd": 0.1328342,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 6,
+    "functions": 36,
+    "reported": 4,
+    "verified": 4,
+    "duplicates": 0,
+    "confirmed": 4,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "TracebackInfo.from_dict does not rebuild Callpoint objects, so it does not invert to_dict",
+      "function": "boltons.tbutils.TracebackInfo.from_dict",
+      "kind": "wrong-result",
+      "property": "TracebackInfo.from_dict(ti.to_dict()).to_dict() == ti.to_dict()",
+      "property_test": "test_from_dict_roundtrip",
+      "repro_file": "test_repro_from_dict.py",
+      "input": "ti = TracebackInfo.from_traceback() for a caught ValueError; d = ti.to_dict()",
+      "expected": "from_dict(d) yields a TracebackInfo whose frames are Callpoints, so to_dict() and str() work and to_dict() equals d",
+      "actual": "frames stay plain dicts; ti2.to_dict() raises AttributeError: 'dict' object has no attribute 'to_dict' (str(ti2) fails too)",
+      "evidence": "Docstring: 'Complements TracebackInfo.to_dict'. The source is `return cls(d['frames'])` with a '# TODO: check this.' comment.",
+      "group": "g03-boltons-tbutils-py",
+      "file": "boltons/tbutils.py",
+      "workdir": ".proofhound/runs/20261017-064016/g03-boltons-tbutils-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_from_dict.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:AttributeError:boltons/tbutils.py:323",
+        "site": {
+          "file": "boltons/tbutils.py",
+          "line": 323,
+          "func": "to_dict",
+          "code": "return {'frames': [f.to_dict() for f in self.frames]}"
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "AttributeError",
+          "message": "'dict' object has no attribute 'to_dict'"
+        },
+        "testName": "test_repro_from_dict"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.85,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "TracebackInfo.from_dict leaves frames as plain dicts instead of rebuilding Callpoint objects",
+        "reason": "The docstring says from_dict 'Complements' to_dict, which implies a round trip. But `cls(d['frames'])` keeps the frames as raw dicts, so `to_dict()` and `str()` on the result fail with AttributeError. The author's own `# TODO: check this.` suggests the method was never finished, nothing else in the repo uses it, and no test covers it. The input is exactly what to_dict produces, and the repro is correct. The fix is small: build Callpoint objects from each frame dict.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "reproSource": "from boltons.tbutils import TracebackInfo\n\n\ndef test_repro_from_dict():\n    def f():\n        raise ValueError('x')\n    try:\n        f()\n    except ValueError:\n        ti = TracebackInfo.from_traceback()\n    d = ti.to_dict()\n    ti2 = TracebackInfo.from_dict(d)\n    assert ti2.to_dict() == d\n    str(ti2)\n",
+      "bugDir": ".proofhound/runs/20261017-064016/bugs/PH-002-tracebackinfo-from-dict-leaves-frames-as-plain-d"
+    },
+    {
+      "title": "QueryParamDict.to_text leaves ';' unquoted, but from_text treats ';' as a pair separator",
+      "function": "boltons.urlutils.QueryParamDict.to_text",
+      "kind": "inconsistency",
+      "property": "from_text(to_text(d)) gives back the same items as d, for any string keys/values and either full_quote setting",
+      "property_test": "test_qp_roundtrip_blank",
+      "repro_file": "test_repro_semicolon.py",
+      "input": "QueryParamDict([('a', 'b;c')]).to_text(full_quote=True)",
+      "expected": "';' within a value is percent-encoded (%3B), so parsing the output returns [('a', 'b;c')]",
+      "actual": "Output is 'a=b;c', which from_text parses as [('a', 'b'), ('c', None)]",
+      "evidence": "to_text docs: full_quote=True percent-quotes special characters (fully-quoted URLs are 'necessary for sending over the network'). _QUERY_SAFE keeps sub-delims such as ';' unquoted, while parse_qsl in the same module splits on both '&' and ';', so the two halves of the module disagree and data is corrupted.",
+      "group": "g01-boltons-urlutils-py",
+      "file": "boltons/urlutils.py",
+      "workdir": ".proofhound/runs/20261017-064016/g01-boltons-urlutils-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_semicolon.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_semicolon",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "a=b;c\nassert [('a', 'b'), ('c', None)] == [('a', 'b;c')]\n  \n  At index 0 diff: ('a', 'b') != ('a', 'b;c')\n  Left contains one more item: ('c', None)\n  Use -v to get more diff"
+        },
+        "testName": "test_repro_semicolon"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_qp_roundtrip_blank(\n    pairs=[(\n         '0',  # or any other generated value\n         ';',\n     )],\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.72,
+        "severity": "medium",
+        "category": "inconsistency",
+        "title": "QueryParamDict.to_text leaves ';' unquoted in values, but parse_qsl splits pairs on ';'",
+        "reason": "_QUERY_SAFE removes only '&', '=' and '+' from the safe set, so ';' is written raw. The module's own parse_qsl splits on both '&' and ';', so QueryParamDict.from_text(to_text(d)) turns ('a','b;c') into ('a','b'),('c',None). This silently corrupts data, and the loss happens even with full_quote=True, which is meant for sending over the network. Nothing in the tests relies on ';' staying unquoted in query values. Quoting ';' in query parts (or dropping the ';' split in parse_qsl, as CPython did) is a small change a maintainer would likely accept.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "from boltons.urlutils import QueryParamDict\n\n\ndef test_repro_semicolon():\n    d = QueryParamDict([('a', 'b;c')])\n    text = d.to_text(full_quote=True)\n    assert QueryParamDict.from_text(text).items(multi=True) == [('a', 'b;c')], text\n",
+      "bugDir": ".proofhound/runs/20261017-064016/bugs/PH-001-queryparamdict-to-text-leaves-unquoted-in-values"
+    },
+    {
+      "title": "format_histogram on empty Stats raises ZeroDivisionError",
+      "function": "boltons.statsutils.format_histogram_counts",
+      "kind": "crash",
+      "property": "format_histogram does not crash on an empty dataset, which Stats supports (default value)",
+      "property_test": "test_empty",
+      "repro_file": "test_repro_empty_hist.py",
+      "input": "Stats([]).format_histogram()",
+      "expected": "a string (or a clear documented error)",
+      "actual": "ZeroDivisionError: float division by zero at line_k = float(bar_cols) / count_max (count_max == 0)",
+      "evidence": "Stats has a `default` for empty data and get_quantile/describe handle empty data; get_histogram_counts explicitly handles empty data by returning [(0.0, 0)] (_get_bin_bounds returns [0.0]), but format_histogram_counts divides by the max count, which is 0.",
+      "group": "g05-boltons-statsutils-py",
+      "file": "boltons/statsutils.py",
+      "workdir": ".proofhound/runs/20261017-064016/g05-boltons-statsutils-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_empty_hist.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:ZeroDivisionError:boltons/statsutils.py:835",
+        "site": {
+          "file": "boltons/statsutils.py",
+          "line": 835,
+          "func": "format_histogram_counts",
+          "code": "line_k = float(bar_cols) / count_max"
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "ZeroDivisionError",
+          "message": "float division by zero"
+        },
+        "testName": "test_repro_empty_hist"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "crash",
+        "title": "Stats([]).format_histogram() raises ZeroDivisionError when all bin counts are zero",
+        "reason": "Stats supports empty data, and get_histogram_counts deliberately returns [(0.0, 0)] for it (_get_bin_bounds returns [0.0]). format_histogram_counts then computes `float(bar_cols) / count_max` with count_max == 0 and crashes. Nothing documents or tests this as an intended error, and the guard is trivial (for example, treating a zero count_max as 1), so a maintainer would likely accept the fix. The impact is a narrow edge case, hence low severity.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-003",
+      "reproSource": "from boltons.statsutils import Stats\n\n\ndef test_repro_empty_hist():\n    # empty Stats are supported elsewhere (default value); must not raise ZeroDivisionError\n    out = Stats([]).format_histogram()\n    assert isinstance(out, str)\n",
+      "bugDir": ".proofhound/runs/20261017-064016/bugs/PH-003-stats-format-histogram-raises-zerodivisionerror"
+    },
+    {
+      "title": "relative_time() ignores ndigits beyond 6 significant digits",
+      "function": "boltons.timeutils.relative_time",
+      "kind": "wrong-result",
+      "property": "the number printed by relative_time equals the value returned by decimal_relative_time rounded to ndigits",
+      "property_test": "test_relative_time_ndigits",
+      "repro_file": "test_repro_relative_time_ndigits.py",
+      "input": "d=datetime(2000,1,1), other=d+timedelta(seconds=1, microseconds=123456), ndigits=6",
+      "expected": "'1.123456 seconds ago'",
+      "actual": "'1.12346 seconds ago'",
+      "evidence": "Docstring: ndigits is 'The number of decimal digits to round to'. decimal_relative_time returns 1.123456, but relative_time formats with f'{abs(drt):g}', which keeps only 6 significant digits, so the requested precision is silently lost.",
+      "group": "g06-boltons-timeutils-py",
+      "file": "boltons/timeutils.py",
+      "workdir": ".proofhound/runs/20261017-064016/g06-boltons-timeutils-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_relative_time_ndigits.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_relative_time_ndigits",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert '1.12346 seconds ago' == '1.123456 seconds ago'\n  \n  - 1.123456 seconds ago\n  ?       -\n  + 1.12346 seconds ago"
+        },
+        "testName": "test_repro_relative_time_ndigits"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_relative_time_ndigits(\n    d=datetime.datetime(2000, 1, 1, 0, 0),  # or any other generated value\n    secs=1,\n    nd=6,\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.6,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "relative_time() drops requested decimal digits because it formats with :g (6 significant digits)",
+        "reason": "The docstring says ndigits is the number of decimal digits to round to, and decimal_relative_time rounds correctly to 1.123456. relative_time then formats with f'{abs(drt):g}', which keeps only 6 significant digits, so the printed value is 1.12346. The same happens whenever the integer part plus ndigits exceeds 6 digits, for example 12.123456 with ndigits=6 prints 12.1235. The :g format is there to drop trailing zeros ('0 seconds ago'), and a fix could keep that. The impact is narrow, since ndigits above 5 is rare, and no existing test covers it.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-004",
+      "reproSource": "from datetime import datetime, timedelta\nfrom boltons.timeutils import relative_time\n\n\ndef test_repro_relative_time_ndigits():\n    d = datetime(2000, 1, 1)\n    other = d + timedelta(seconds=1, microseconds=123456)\n    assert relative_time(d, other, ndigits=6) == '1.123456 seconds ago'\n",
+      "bugDir": ".proofhound/runs/20261017-064016/bugs/PH-004-relative-time-drops-requested-decimal-digits-bec"
+    }
+  ]
+}

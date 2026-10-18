@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-192924",
+  "diff": null,
+  "fixRun": true,
+  "repo": "byte-unit",
+  "lang": "rust",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:29:24.610Z",
+  "ms": 85507,
+  "spend": {
+    "usd": 0.5110134,
+    "tokensIn": 1187193,
+    "tokensOut": 11926,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-src-bit-mod-rs",
+      "file": "src/bit/mod.rs",
+      "functions": [
+        "Bit::from_f64",
+        "Bit::from_f32",
+        "Bit::from_i128",
+        "Bit::from_f64_with_unit",
+        "Bit::from_f32_with_unit",
+        "Bit::from_u128"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 52744,
+      "costUsd": 0.1770105,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-src-byte-mod-rs",
+      "file": "src/byte/mod.rs",
+      "functions": [
+        "Byte::from_f64",
+        "Byte::from_f32",
+        "Byte::from_u128",
+        "Byte::from_i128",
+        "Byte::from_f64_with_unit",
+        "Byte::from_f32_with_unit"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 65232,
+      "costUsd": 0.25605419999999995,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "from_f64_with_unit/from_f32_with_unit return 0 bytes for tiny positive sizes instead of rounding up",
+      "function": "byte_unit::Byte::from_f64_with_unit (also from_f32_with_unit)",
+      "kind": "inconsistency",
+      "property": "A positive size is rounded up to at least 1 byte, and from_f64_with_unit(x, Unit::B) equals from_f64(x)",
+      "property_test": "ph_tiny_positive_rounds_up_f64",
+      "repro_file": "repro_tiny_positive_rounds_to_zero.rs",
+      "input": "from_f64_with_unit(1e-29, Unit::B) (and from_f32_with_unit(1e-29, Unit::B))",
+      "expected": "Some(Byte(1)), as from_f64(1e-29) returns",
+      "actual": "Some(Byte(0))",
+      "evidence": "Docs: 'The calculated byte will be rounded up.' from_f64 documents 'The fractional part will be rounded up' and returns 1 for 1e-29. The Decimal conversion (Decimal::from_f64) silently flattens values below 1e-28 to zero before the ceil.",
+      "group": "g02-src-byte-mod-rs",
+      "file": "src/byte/mod.rs",
+      "workdir": ".proofhound/runs/20261017-192924/g02-src-byte-mod-rs",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_tiny_positive_rounds_to_zero.rs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_tiny_positive_rounds_to_zero",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assertion `left == right` failed\n  left: 0\n right: 1",
+          "example": null
+        },
+        "testName": "repro_tiny_positive_rounds_to_zero"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.6,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "from_f64_with_unit/from_f32_with_unit return Byte(0) for positive sizes below 1e-28, unlike from_f64/from_f32",
+        "reason": "Both functions document 'The calculated byte will be rounded up', and Byte::from_f64(1e-29) returns Byte(1) via ceil. The _with_unit variants first convert through rust_decimal's Decimal::from_f64, which cannot represent values below 1e-28 and returns zero. A positive size therefore becomes Byte(0), and the same input gives different results depending on the entry point. The input is valid (>= 0) and the repro uses the API correctly. The case is extremely obscure, and a maintainer could treat it as a limit of the Decimal dependency. A small clamp (positive input with a zero result becomes 1) would fix it.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "skipped",
+        "reason": "not attempted: --budget was used up"
+      },
+      "reproSource": "use byte_unit::{Byte, Unit};\n\n#[test]\nfn repro_tiny_positive_rounds_to_zero() {\n    // documented: \"The calculated byte will be rounded up\", so a positive size must give >= 1 byte\n    assert_eq!(Byte::from_f64(1e-29).unwrap().as_u64(), 1);\n    assert_eq!(Byte::from_f64_with_unit(1e-29, Unit::B).unwrap().as_u64(), 1);\n}\n\n#[test]\nfn repro_tiny_positive_rounds_to_zero_f32() {\n    assert_eq!(Byte::from_f32(1e-29).unwrap().as_u64(), 1);\n    assert_eq!(Byte::from_f32_with_unit(1e-29, Unit::B).unwrap().as_u64(), 1);\n}\n",
+      "bugDir": ".proofhound/runs/20261017-192924/bugs/PH-001-from-f64-with-unit-from-f32-with-unit-return-byt"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+diff --git a/durafmt.go b/durafmt.go
+index 128726e..ea320c8 100644
+--- a/durafmt.go
++++ b/durafmt.go
+@@ -87,11 +87,12 @@ func (d *Durafmt) String() string {
+ // Format parses d *Durafmt into a human readable duration with units.
+ func (d *Durafmt) Format(units Units) string {
+ 	var duration string
++	dur := d.duration
+ 
+ 	// Check for minus durations.
+ 	if string(d.input[0]) == "-" {
+ 		duration += "-"
+-		d.duration = -d.duration
++		dur = -dur
+ 	}
+ 
+ 	var microseconds int64
+@@ -104,7 +105,7 @@ func (d *Durafmt) Format(units Units) string {
+ 	var years int64
+ 	var shouldConvert = false
+ 
+-	remainingSecondsToConvert := int64(d.duration / time.Microsecond)
++	remainingSecondsToConvert := int64(dur / time.Microsecond)
+ 
+ 	// Convert duration.
+ 	if d.limitUnit == "" {
+@@ -178,7 +179,7 @@ func (d *Durafmt) Format(units Units) string {
+ 		case v == 1:
+ 			duration += strval + " " + u.Singular + " "
+ 		// omit any value with 0s or 0.
+-		case d.duration.String() == "0" || d.duration.String() == "0s":
++		case dur.String() == "0" || dur.String() == "0s":
+ 			pattern := fmt.Sprintf("^-?0%s$", unitsShort[i])
+ 			isMatch, err := regexp.MatchString(pattern, d.input)
+ 			if err != nil {
+@@ -210,11 +211,12 @@ func (d *Durafmt) Format(units Units) string {
+ 
+ func (d *Durafmt) InternationalString() string {
+ 	var duration string
++	dur := d.duration
+ 
+ 	// Check for minus durations.
+ 	if string(d.input[0]) == "-" {
+ 		duration += "-"
+-		d.duration = -d.duration
++		dur = -dur
+ 	}
+ 
+ 	var microseconds int64
+@@ -227,7 +229,7 @@ func (d *Durafmt) InternationalString() string {
+ 	var years int64
+ 	var shouldConvert = false
+ 
+-	remainingSecondsToConvert := int64(d.duration / time.Microsecond)
++	remainingSecondsToConvert := int64(dur / time.Microsecond)
+ 
+ 	// Convert duration.
+ 	if d.limitUnit == "" {
+@@ -299,7 +301,7 @@ func (d *Durafmt) InternationalString() string {
+ 		case v > 0:
+ 			duration += strval + " " + u + " "
+ 		// omit any value with 0.
+-		case d.duration.String() == "0":
++		case dur.String() == "0":
+ 			pattern := fmt.Sprintf("^-?0%s$", unitsShort[i])
+ 			isMatch, err := regexp.MatchString(pattern, d.input)
+ 			if err != nil {

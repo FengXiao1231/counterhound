@@ -1,0 +1,14 @@
+[
+  {
+    "title": "stringifyUrl corrupts existing index-format array in the URL's query ('a=[object Object]')",
+    "function": "stringifyUrl",
+    "kind": "wrong-result",
+    "property": "stringifyUrl({url: u, query: {}}, {arrayFormat:'index'}) leaves an existing query like a[0]=x&a[1]=y unchanged",
+    "property_test": "stringifyUrl preserves existing index-format array in url",
+    "repro_file": "repro_index_nosort.test.mjs",
+    "input": "stringifyUrl({url: 'https://foo.bar?a[0]=x&a[1]=y', query: {}}, {arrayFormat: 'index', encode: false})",
+    "expected": "'https://foo.bar?a[0]=x&a[1]=y'",
+    "actual": "'https://foo.bar?a=[object Object]'",
+    "evidence": "stringifyUrl parses the existing query with {sort:false, ...options}; in parse(), index-format arrays are only converted from index-keyed objects to arrays by keysSorter, which is skipped when sort === false, so an object is returned and stringified as [object Object]. The README documents arrayFormat 'index' parsing to arrays, and an existing test ('stringifyUrl uses parsing options when parsing existing query from url') shows the intent that array formats work for existing URL queries. Likewise parse(q,{arrayFormat:'index',sort:false}) returns an object instead of an array."
+  }
+]

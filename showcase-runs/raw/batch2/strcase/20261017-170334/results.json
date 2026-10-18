@@ -1,0 +1,111 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170334",
+  "repo": "strcase",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:03:34.460Z",
+  "ms": 55053,
+  "spend": {
+    "usd": 0.3557534,
+    "tokensIn": 703571,
+    "tokensOut": 9710,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g02-camel-go",
+      "file": "camel.go",
+      "functions": [
+        "ToCamel",
+        "ToLowerCamel"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 31592,
+      "costUsd": 0.1310332,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g01-snake-go",
+      "file": "snake.go",
+      "functions": [
+        "ToDelimited",
+        "ToScreamingSnake",
+        "ToScreamingKebab",
+        "ToSnake",
+        "ToKebab",
+        "ToScreamingDelimited"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 39705,
+      "costUsd": 0.14880500000000002,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 8,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "ToLowerCamel returns an uppercase first letter when input starts with a separator",
+      "function": "github.com/iancoleman/strcase.ToLowerCamel",
+      "kind": "wrong-result",
+      "property": "the result of ToLowerCamel never starts with an uppercase letter",
+      "property_test": "TestPhLowerCamelFirstLetterLower",
+      "repro_file": "repro_lowercamel_leading_sep_test.go",
+      "input": "_some_string",
+      "expected": "someString",
+      "actual": "SomeString",
+      "evidence": "ToLowerCamel is documented as converting to lowerCamelCase; the existing test shows a leading space is ignored (\" some string\" -> \"someString\"), but a leading '_', '-' or '.' sets capNext at i==0 and capitalizes the first letter.",
+      "group": "g02-camel-go",
+      "file": "camel.go",
+      "workdir": ".proofhound/runs/20261017-170334/g02-camel-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_lowercamel_leading_sep_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproLowerCamelLeadingSeparator",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "ToLowerCamel(\"_some_string\") = \"SomeString\", want \"someString\"",
+          "example": null
+        },
+        "testName": "TestReproLowerCamelLeadingSeparator"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: s: \"-A\""
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.7,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "ToLowerCamel returns an uppercase first letter when the input starts with '_', '-' or '.'",
+        "reason": "ToLowerCamel is documented as converting to lowerCamelCase, and the existing test shows a leading space is ignored (\" some string\" -> \"someString\"). A leading '_', '-' or '.' hits the final else branch in toCamelInitCase, which sets capNext for the first letter, so ToLowerCamel(\"_some_string\") returns \"SomeString\". The repro is valid and fails deterministically, and no test covers leading separators. Leading underscores are common in real identifiers, so the result is inconsistent with the space case and violates the function's name and doc. The reporter's mechanism is slightly off, since capNext is set after the separator and not at i==0. The fix is small, but a maintainer might argue leading separators are unspecified, which is why confidence is moderate.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "package strcase\n\nimport \"testing\"\n\nfunc TestReproLowerCamelLeadingSeparator(t *testing.T) {\n\tif got := ToLowerCamel(\"_some_string\"); got != \"someString\" {\n\t\tt.Fatalf(\"ToLowerCamel(%q) = %q, want %q\", \"_some_string\", got, \"someString\")\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-170334/bugs/PH-001-tolowercamel-returns-an-uppercase-first-letter-w"
+    }
+  ]
+}

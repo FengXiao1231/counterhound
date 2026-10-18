@@ -1,0 +1,4 @@
+I tested 17 properties across the three functions and reported 0 bugs.
+
+One test failed: `parse_date("2000-01-01", expanded=True)` raises `ISO8601Error`, because expanded mode requires a sign. The `parse_date` docstring says signs are "allowed", but the `build_date_regexps` docstring says a sign is "required" in expanded format, which matches ISO 8601. The contract is contradictory, so I didn't report it.
+

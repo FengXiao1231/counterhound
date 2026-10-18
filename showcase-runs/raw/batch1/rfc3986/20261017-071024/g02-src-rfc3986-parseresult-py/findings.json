@@ -1,0 +1,14 @@
+[
+  {
+    "title": "ParseResultBytes.unsplit() crashes for any URI without an authority",
+    "function": "rfc3986.parseresult.ParseResultBytes.unsplit",
+    "kind": "crash",
+    "property": "unsplitting a parsed relative/authority-less URI (bytes) returns the URI bytes instead of raising",
+    "property_test": "test_bytes_unsplit_vs_str",
+    "repro_file": "test_repro_bytes_unsplit_no_authority.py",
+    "input": "ParseResultBytes.from_string(b\"/a\").unsplit()",
+    "expected": "b\"/a\" (as ParseResult.from_string(\"/a\").unsplit() returns \"/a\")",
+    "actual": "AttributeError: 'NoneType' object has no attribute 'encode' raised in ParseResultBytes.authority (parseresult.py:409), because reference.authority is None",
+    "evidence": "unsplit is documented as ':returns: The parsed URI reconstituted as a string / :rtype: bytes'; the str counterpart ParseResult.unsplit and geturl() work for the same input, and authority-less URIs such as '/a', 'a:b', '?q' and '' are valid RFC 3986 references that from_string accepts. ParseResultMixin declares authority as Optional."
+  }
+]

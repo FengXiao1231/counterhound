@@ -1,0 +1,16 @@
+diff --git a/humanfriendly/__init__.py b/humanfriendly/__init__.py
+index 4c0a333..90f9aee 100644
+--- a/humanfriendly/__init__.py
++++ b/humanfriendly/__init__.py
+@@ -452,7 +452,10 @@ def format_timespan(num_seconds, detailed=False, max_units=3):
+             # Only include relevant units in the result.
+             if count not in (0, '0'):
+                 result.append(pluralize(count, unit['singular'], unit['plural']))
+-        if len(result) == 1:
++        if not result:
++            # All unit counts are zero (or rounded to zero).
++            return pluralize(0, 'second')
++        elif len(result) == 1:
+             # A single count/unit combination.
+             return result[0]
+         else:

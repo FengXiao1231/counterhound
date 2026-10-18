@@ -1,0 +1,14 @@
+[
+  {
+    "title": "isoparse('9999-12-31T24:00') raises OverflowError instead of ValueError",
+    "function": "dateutil.parser.isoparser.isoparser.isoparse",
+    "kind": "contract-violation",
+    "property": "isoparse signals every string it cannot turn into a datetime with ValueError",
+    "property_test": "test_isoparse_24_last_day",
+    "repro_file": "test_repro_24h_overflow.py",
+    "input": "9999-12-31T24:00",
+    "expected": "ValueError, like every other out-of-range input (year 0000, month 13, hour 25)",
+    "actual": "OverflowError: date value out of range, raised from `datetime(*components) + timedelta(days=1)`",
+    "evidence": "The parser consistently reports bad or unrepresentable input as ValueError (the docstring's own examples of failing strings, and every internal check). Callers doing `except ValueError` are bypassed only by the 24:00 path, which adds a timedelta after construction."
+  }
+]

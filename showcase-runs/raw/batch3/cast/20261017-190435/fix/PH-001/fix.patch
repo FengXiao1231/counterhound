@@ -1,0 +1,27 @@
+diff --git a/map.go b/map.go
+index 858d4ee..991fe75 100644
+--- a/map.go
++++ b/map.go
+@@ -188,7 +188,12 @@ func toStringMapIntE[T int | int64](i any, fn func(any) T, fnE func(any) (T, err
+ 			return m, fmt.Errorf(errorMsg, i, i, m)
+ 		}
+ 
+-		mVal.SetMapIndex(keyVal, reflect.ValueOf(val))
++		key, err := ToStringE(keyVal.Interface())
++		if err != nil {
++			return m, fmt.Errorf(errorMsg, i, i, m)
++		}
++
++		mVal.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(val))
+ 	}
+ 
+ 	return m, nil
+diff --git a/ph-err.txt b/ph-err.txt
+index 288440c..0abcd45 100644
+--- a/ph-err.txt
++++ b/ph-err.txt
+@@ -13,4 +13,3 @@ proofhound · Go · claude (sonnet) · 2 modules, 11 functions
+   not a bug (0.85) ToStringMapStringSliceE treats map[any]string values differently from map[string]string
+ 
+   writing fixes for 1 bug…
+-  ▸ fixing PH-001 ToStringMapIntE/ToStringMapInt64E panic on maps with non-string keys (reflect fallback)

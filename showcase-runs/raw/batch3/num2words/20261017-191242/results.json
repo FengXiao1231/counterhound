@@ -1,0 +1,181 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191242",
+  "diff": null,
+  "fixRun": true,
+  "repo": "num2words",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:12:42.852Z",
+  "ms": 111637,
+  "spend": {
+    "usd": 0.6367914,
+    "tokensIn": 1491082,
+    "tokensOut": 13049,
+    "calls": 6
+  },
+  "groups": [
+    {
+      "group": "g01-num2words-lang_BN-py",
+      "file": "num2words/lang_BN.py",
+      "functions": [
+        "Num2Word_BN.to_currency",
+        "Num2Word_BN.to_cardinal",
+        "Num2Word_BN.to_ordinal_num",
+        "Num2Word_BN.to_year",
+        "Num2Word_BN.parse_number",
+        "Num2Word_BN.parse_paisa"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 41935,
+      "costUsd": 0.1474716,
+      "reported": 2,
+      "verified": 2
+    },
+    {
+      "group": "g02-num2words-base-py",
+      "file": "num2words/base.py",
+      "functions": [
+        "Num2Word_Base.pluralize",
+        "Num2Word_Base.to_currency",
+        "Num2Word_Base.parse_minus",
+        "Num2Word_Base.splitnum",
+        "Num2Word_Base.to_cardinal",
+        "Num2Word_Base.to_cardinal_float"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 51935,
+      "costUsd": 0.16270500000000002,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 2,
+    "verified": 2,
+    "duplicates": 0,
+    "confirmed": 2,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 2,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "to_currency reads 0.01-0.09 as 10-90 paisa (leading zero lost)",
+      "function": "num2words.lang_BN.Num2Word_BN.to_currency",
+      "kind": "wrong-result",
+      "property": "the paisa part of 'T.PP' is spoken as the integer PP",
+      "property_test": "test_currency_paisa_exact",
+      "repro_file": "test_repro_paisa_leading_zero.py",
+      "input": "to_currency('0.01')",
+      "expected": "\u09b6\u09c2\u09a8\u09cd\u09af \u099f\u09be\u0995\u09be \u098f\u0995 \u09aa\u09af\u09bc\u09b8\u09be",
+      "actual": "\u09b6\u09c2\u09a8\u09cd\u09af \u099f\u09be\u0995\u09be \u09a6\u09b6 \u09aa\u09af\u09bc\u09b8\u09be",
+      "evidence": "parse_paisa does int('01')*100 -> '10'; 1 paisa = 0.01 taka. Docstring example 9999.15 -> \u09aa\u09a8\u09c7\u09b0 \u09aa\u09af\u09bc\u09b8\u09be shows the two decimals are paisa.",
+      "group": "g01-num2words-lang_BN-py",
+      "file": "num2words/lang_BN.py",
+      "workdir": ".proofhound/runs/20261017-191242/g01-num2words-lang_BN-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_paisa_leading_zero.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_paisa_leading_zero",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert '\u09b6\u09c2\u09a8\u09cd\u09af \u099f\u09be\u0995\u09be \u09a6\u09b6 \u09aa\u09af\u09bc\u09b8\u09be' == '\u09b6\u09c2\u09a8\u09cd\u09af \u099f\u09be\u0995\u09be \u098f\u0995 \u09aa\u09af\u09bc\u09b8\u09be'\n  \n  - \u09b6\u09c2\u09a8\u09cd\u09af \u099f\u09be\u0995\u09be \u098f\u0995 \u09aa\u09af\u09bc\u09b8\u09be\n  ?            ^^\n  + \u09b6\u09c2\u09a8\u09cd\u09af \u099f\u09be\u0995\u09be \u09a6\u09b6 \u09aa\u09af\u09bc\u09b8\u09be\n  ?            ^^"
+        },
+        "testName": "test_repro_paisa_leading_zero"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_currency_paisa_exact(\n    taka=0,  # or any other generated value\n    paisa=1,\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.93,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "Bengali to_currency treats paisa values 0.01\u20130.09 as 10\u201390 paisa (leading zero dropped)",
+        "reason": "`parse_paisa` takes the fractional digits as a string and computes `str(int('01') * 100)[:2]`. The leading zero is lost, so '01' becomes 100 and then '10'. Any 0.0X input is therefore spoken as X0 paisa, and 1.005 would come out as 50 paisa. Existing tests only cover fractions of 0.10 or more (20.50, 33.51, 10000.1), so nothing depends on this behaviour. A maintainer would accept a fix that pads or truncates the fraction to two digits, e.g. `(frac_str + '00')[:2]`.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/num2words/lang_BN.py b/num2words/lang_BN.py\nindex ef86ed7..9d145e0 100644\n--- a/num2words/lang_BN.py\n+++ b/num2words/lang_BN.py\n@@ -75,7 +75,7 @@ class Num2Word_BN:\n \n         # this is need, when we parse to decimal it removes trailing 0 .\n         if paisa_str:\n-            paisa_str = str(int(paisa_str) * 100)[:2]\n+            paisa_str = (paisa_str + '00')[:2]\n         return int(number), int(paisa_str)\n \n     def _is_smaller_than_max_number(self, number):\n",
+        "files": [
+          "num2words/lang_BN.py"
+        ],
+        "suite": "not compared (the suite already fails without the fix: python3 -m pytest -q -x -p no:cacheprovider --no-header)"
+      },
+      "reproSource": "from num2words.lang_BN import Num2Word_BN\n\n\ndef test_repro_paisa_leading_zero():\n    # 0.01 taka is one paisa, not ten\n    assert Num2Word_BN().to_currency('0.01') == '\u09b6\u09c2\u09a8\u09cd\u09af \u099f\u09be\u0995\u09be \u098f\u0995 \u09aa\u09af\u09bc\u09b8\u09be'\n",
+      "bugDir": ".proofhound/runs/20261017-191242/bugs/PH-001-bengali-to-currency-treats-paisa-values-0-01-0-0"
+    },
+    {
+      "title": "to_cardinal drops zeros after the decimal point (1.05 reads as 1.5)",
+      "function": "num2words.lang_BN.Num2Word_BN.to_cardinal",
+      "kind": "wrong-result",
+      "property": "every digit after the decimal point is spoken, including leading zeros",
+      "property_test": "test_cardinal_decimal_digits_preserved",
+      "repro_file": "test_repro_decimal_leading_zero.py",
+      "input": "to_cardinal('1.05')",
+      "expected": "a reading different from 1.5 (e.g. \u098f\u0995 \u09a6\u09b6\u09ae\u09bf\u0995 \u09b6\u09c2\u09a8\u09cd\u09af \u09aa\u09be\u0981\u099a)",
+      "actual": "\u098f\u0995 \u09a6\u09b6\u09ae\u09bf\u0995 \u09aa\u09be\u0981\u099a (identical to 1.5)",
+      "evidence": "parse_number converts the fractional string with int(), discarding leading zeros; _dosomik_to_bengali_word reads digit by digit, so the intent is digit-wise reading. 1.05 and 1.5 are different numbers.",
+      "group": "g01-num2words-lang_BN-py",
+      "file": "num2words/lang_BN.py",
+      "workdir": ".proofhound/runs/20261017-191242/g01-num2words-lang_BN-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_decimal_leading_zero.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_decimal_leading_zero",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert '\u098f\u0995 \u09a6\u09b6\u09ae\u09bf\u0995 \u09aa\u09be\u0981\u099a' != '\u098f\u0995 \u09a6\u09b6\u09ae\u09bf\u0995 \u09aa\u09be\u0981\u099a'\n +  where '\u098f\u0995 \u09a6\u09b6\u09ae\u09bf\u0995 \u09aa\u09be\u0981\u099a' = to_cardinal('1.05')\n +    where to_cardinal = <num2words.lang_BN.Num2Word_BN object at 0x7f43833842d0>.to_cardinal\n +  and   '\u098f\u0995 \u09a6\u09b6\u09ae\u09bf\u0995 \u09aa\u09be\u0981\u099a' = to_cardinal('1.5')\n +    where to_cardinal = <num2words.lang_BN.Num2Word_BN object at 0x7f43833842d0>.to_cardinal"
+        },
+        "testName": "test_repro_decimal_leading_zero"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_cardinal_decimal_digits_preserved(\n    whole=0,  # or any other generated value\n    frac=1,\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.9,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "BN to_cardinal drops leading zeros in the fractional part (1.05 reads the same as 1.5)",
+        "reason": "The fraction is read digit by digit (`_dosomik_to_bengali_word` iterates `str(number)`, and the existing tests expect e.g. 1.11 -> '\u098f\u0995 \u098f\u0995'). But `parse_number` runs `int()` on the fractional digit string, which strips leading zeros, so 1.05 and 1.5 both give '\u098f\u0995 \u09a6\u09b6\u09ae\u09bf\u0995 \u09aa\u09be\u0981\u099a'. This is a different number read aloud, and no test covers or intends it. A fix is easy: keep the fractional digits as a string and read them with the leading zeros included. `to_currency`/`parse_paisa` has its own separate handling, so the fix doesn't change that.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/num2words/lang_BN.py b/num2words/lang_BN.py\nindex ef86ed7..699da86 100644\n--- a/num2words/lang_BN.py\n+++ b/num2words/lang_BN.py\n@@ -157,10 +157,15 @@ class Num2Word_BN:\n \n         dosomik_word = None\n         number = self.str_to_number(number)\n+        fraction = str(number - int(number)).split('.')[1:]\n         number, decimal_part = self.parse_number(number)\n         self._is_smaller_than_max_number(number)\n \n         if decimal_part > 0:\n+            # parse_number drops the fraction's leading zeros, restore them.\n+            fraction = ''.join(fraction)\n+            leading_zeros = len(fraction) - len(fraction.lstrip('0'))\n+            decimal_part = '0' * leading_zeros + str(decimal_part)\n             dosomik_word = f' \u09a6\u09b6\u09ae\u09bf\u0995{self._dosomik_to_bengali_word(decimal_part)}'  # noqa: E501\n \n         words = self._number_to_bengali_word(number)\n",
+        "files": [
+          "num2words/lang_BN.py"
+        ],
+        "suite": "not compared (the suite already fails without the fix: python3 -m pytest -q -x -p no:cacheprovider --no-header)"
+      },
+      "reproSource": "from num2words.lang_BN import Num2Word_BN\n\n\ndef test_repro_decimal_leading_zero():\n    # 1.05 and 1.5 must not read the same\n    n = Num2Word_BN()\n    assert n.to_cardinal('1.05') != n.to_cardinal('1.5')\n",
+      "bugDir": ".proofhound/runs/20261017-191242/bugs/PH-002-bn-to-cardinal-drops-leading-zeros-in-the-fracti"
+    }
+  ]
+}

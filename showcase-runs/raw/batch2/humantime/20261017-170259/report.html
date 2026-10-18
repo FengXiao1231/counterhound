@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofhound · humantime</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}h1 span{color:var(--accent)}h2{font-size:18px;margin:40px 0 12px}
+.meta{color:var(--dim);font-size:13px}.meta code{font-size:12px}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+.funnel{margin:20px 0 8px;display:grid;gap:6px}.step{position:relative;height:30px}
+.bar{position:absolute;inset:0 auto 0 0;background:var(--bar1);border-radius:6px}.bar[data-i="3"]{background:var(--bar3)}
+.lab{position:relative;padding:5px 10px;font-size:13px;white-space:nowrap}.bar[data-i="3"]+.lab{color:#fff}
+.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:14px 0}
+.bug.needs-look{border-left-color:var(--warn)}
+.bug header{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.bug h3{margin:0;font-size:17px;flex:1 1 300px}
+.id{font:600 12px ui-monospace,monospace;color:var(--accent)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--dim)}
+.badge.ok{color:var(--ok);border-color:currentColor}.sev-high{color:var(--accent);border-color:currentColor}.sev-medium{color:var(--warn);border-color:currentColor}
+.where{margin:6px 0 10px;color:var(--dim);font-size:13px;word-break:break-all}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0 0 8px}dt{color:var(--dim);font-size:13px}dd{margin:0;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.copy{margin-left:8px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer}
+.err{color:var(--accent);margin:4px 0}.dim{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:500}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center}
+.tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+footer{margin-top:48px;color:var(--dim);font-size:12.5px}
+@media (max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style></head><body><main>
+<h1>proof<span>hound</span> report</h1>
+<div class="meta">humantime · rust · claude (sonnet) · 2 modules, 8 functions · 1m01s · $0.42 · 10/17/2026, 5:02:59 PM</div>
+<div class="funnel">
+    <div class="step"><div class="bar" style="width:100%" data-i="0"></div>
+    <div class="lab"><b>2</b> reported by the hunter</div></div>
+    <div class="step"><div class="bar" style="width:50%" data-i="1"></div>
+    <div class="lab"><b>1</b> reproduced deterministically</div></div>
+    <div class="step"><div class="bar" style="width:50%" data-i="2"></div>
+    <div class="lab"><b>1</b> unique</div></div>
+    <div class="step"><div class="bar" style="width:50%" data-i="3"></div>
+    <div class="lab"><b>1</b> confirmed by review</div></div></div>
+<p class="meta">Every bug below failed the same way in 3 fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
+
+<h2>1 confirmed bug</h2>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-001</span>
+    <h3>parse_rfc3339 accepts trailing garbage after &#39;Z&#39; (e.g. &quot;...00ZZ&quot;)</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.85</span>
+      <span class="badge ok">failed 3/3</span>
+    </span>
+  </header>
+  <p class="where"><code>humantime::parse_rfc3339</code> · <code>src/date.rs</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>1970-01-01T00:00:00ZZ</code></dd>
+    <dt>Expected</dt><dd>Err(Error::InvalidFormat) (or other error)</dd>
+    <dt>Actual</dt><dd>Ok(UNIX_EPOCH): weak parser only checks b[19]==&#39;Z&#39; and len&lt;=25, ignoring the remaining bytes</dd>
+    <dt>Property</dt><dd>a timestamp with extra characters between the seconds and the final Z is not a valid RFC3339 timestamp and must be rejected</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>use humantime::parse_rfc3339;
+
+#[test]
+fn repro_trailing_garbage() {
+    assert!(parse_rfc3339(&quot;1970-01-01T00:00:00ZZ&quot;).is_err());
+    assert!(parse_rfc3339(&quot;1970-01-01T00:00:00Zabc+00:00&quot;).is_err());
+}</code></pre>
+  <p class="err"><code>AssertionError: assertion failed: parse_rfc3339(&quot;1970-01-01T00:00:00ZZ&quot;).is_err()</code></p></details>
+  <details><summary>Why this is a bug</summary><p>Docs say parse_rfc3339 is for strictly programmatically generated strings; only &#39;Z&#39; or &#39;+00:00&#39; suffix is supported. &#39;ZZ&#39; and &#39;Zabc+00:00&#39; are not valid RFC3339 (the crate&#39;s own tests reject &#39;+00:00abcd&#39; and similar trailing junk).</p><p><b>Independent review:</b> The strict `parse_rfc3339` only checks that the last byte is &#39;Z&#39; or that the string ends with &quot;+00:00&quot;, then hands off to `parse_rfc3339_weak`. In the weak parser, the no-fraction branch at date.rs:187 rejects the input only when `len &gt; 25` or `b[19]` is neither &#39;Z&#39; nor the full &quot;+00:00&quot;. As a result, &quot;…00ZZ&quot; and &quot;…00Zabc+00:00&quot; (up to 25 bytes) pass, even though the docs say only `Z` or `+00:00` is supported for this strict function. The fix is simple (require `b.len()==20` with &#39;Z&#39;, or exactly `+00:00` at b[19..]), so a maintainer would likely accept it, though the impact is minor.</p>
+  <p><b>proptest shrank it to:</b> <code>Failing test case: s = 0, g = &quot;Z&quot;</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-170259/bugs/PH-001-parse-rfc3339-accepts-trailing-garbage-after-z-e/BUG.md</code></p></details>
+</article>
+
+
+
+<h2>Filtered out (1)</h2>
+<table><tr><th>Finding</th><th>Stage</th><th>Why it was dropped</th></tr><tr><td>parse_duration silently merges digits separated by whitespace into one number<div class="dim"><code>humantime::parse_duration</code></div></td><td><span class="tag">replay</span></td><td>test error: panic was raised outside the project&#39;s code</td></tr></table>
+
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
+<tr><td><code>src/date.rs</code></td><td>parse_rfc3339, format_rfc3339, format_rfc3339_millis, format_rfc3339_micros, format_rfc3339_nanos, format_rfc3339_seconds</td><td>1</td><td>1</td><td>44s</td></tr><tr><td><code>src/duration.rs</code></td><td>parse_duration, format_duration</td><td>1</td><td>0</td><td>49s</td></tr>
+</table>
+<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));
+</script>
+</body></html>

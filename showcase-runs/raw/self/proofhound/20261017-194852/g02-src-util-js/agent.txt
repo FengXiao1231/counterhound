@@ -1,0 +1,12 @@
+I tested 6 properties (one each for `slug`, `hash`, `fmtMs`, `relPath`, `extractJSON` and `sh`) and reported 3 bugs. Each bug has a repro file that fails now, and I ran all three to confirm.
+
+- **`extractJSON`:** `Result: [{"a":1},{"b":2}]` returns just `{a:1}`. It searches for `{` before `[` instead of taking whichever comes first.
+- **`fmtMs`:** 119500 ms gives `1m60s` and 59600 ms gives `60s`, because the rounded seconds are never carried into the minutes.
+- **`relPath`:** `relPath('/root', '/root/..foo/a.js')` returns the absolute path. The `startsWith('..')` check also matches real names like `..foo`.
+
+The `fmtMs` property test passed because random integer milliseconds rarely land on those rounding boundaries. The repro file is what shows that bug.
+
+Everything is in `.proofhound/runs/20261017-194852/g02-src-util-js/`, including `findings.json`.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/self/.proofhound/runs/20261017-194852/g02-src-util-js && cd /tmp/claude-0/self/.proofhound/runs/20261017-194852/g02-src-util-js && cat > ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';

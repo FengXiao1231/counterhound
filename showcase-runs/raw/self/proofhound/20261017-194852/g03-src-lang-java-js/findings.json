@@ -1,0 +1,14 @@
+[
+  {
+    "title": "parseJavaTrace attributes frames of tab-indented 'Suppressed:' exceptions to the main exception",
+    "function": "parseJavaTrace",
+    "kind": "wrong-result",
+    "property": "frames of a suppressed exception are not included in the frames of the primary exception",
+    "property_test": "suppressed frames are not attributed to the main exception",
+    "repro_file": "repro_suppressed.test.mjs",
+    "input": "java.lang.RuntimeException: boom\\n\\tat p.A.run(A.java:3)\\n\\tSuppressed: java.io.IOException: x\\n\\t\\tat p.B.close(B.java:9)\\n",
+    "expected": "frames only for A.java (the code splits the trace at Caused by/Suppressed to keep only the primary exception)",
+    "actual": "frames contains both A.java and B.java, because the split regex /\\n(?:Caused by|Suppressed): / requires the keyword at column 0",
+    "evidence": "Java's Throwable.printStackTrace emits suppressed exceptions as '\\tSuppressed: ...' (tab-indented); the code's own split on 'Suppressed: ' shows it intends to cut them off."
+  }
+]

@@ -1,0 +1,7 @@
+I tested 5 properties and reported 2 bugs; both repro files fail now for the stated reasons.
+
+- **Empty slug with smart truncation off:** with `EnableSmartTruncate=false` and the default `MaxLength=0`, `Make("a")` returns `""`. The doc says slugs aren't shortened by default.
+- **Trailing underscore after truncation:** with `MaxLength=2`, `Make("0_0")` returns `"0_"`, which `IsSlug` rejects. The `IsSlug` doc says all `Make` output should pass.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-170830/g01-slug-go && cat > .proofhound/runs/20261017-170830/g01-slug-go/ph_props_test.go <<'EOF'\npackage slug\n\nimport (\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc TestPhMakeIsSlugOrEmpty(t *testing.T) {\n\trapid.Check(t, func(t *rapid.T) 

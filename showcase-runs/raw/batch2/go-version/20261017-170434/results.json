@@ -1,0 +1,112 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170434",
+  "repo": "go-version",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:04:34.631Z",
+  "ms": 62813,
+  "spend": {
+    "usd": 0.4329026999999999,
+    "tokensIn": 677523,
+    "tokensOut": 14141,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g02-constraint-go",
+      "file": "constraint.go",
+      "functions": [
+        "Constraints.Equals",
+        "NewConstraint",
+        "MustConstraints",
+        "Constraints.Check",
+        "Constraint.Check",
+        "Constraint.Equals"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 47904,
+      "costUsd": 0.1867583,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-version-go",
+      "file": "version.go",
+      "functions": [
+        "NewVersion",
+        "NewSemver",
+        "Version.UnmarshalText",
+        "Version.MarshalText",
+        "Version.Compare",
+        "WithPrefix"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 48949,
+      "costUsd": 0.19144579999999997,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Compare ignores prerelease when segment counts differ (1.0.0.0-alpha == 1.0.0)",
+      "function": "github.com/hashicorp/go-version.(*Version).Compare",
+      "kind": "wrong-result",
+      "property": "A prerelease version is lower than the same segments without prerelease, regardless of trailing zero-padding of segments; equality is consistent/transitive",
+      "property_test": "TestPhZeroPadPrerelease",
+      "repro_file": "repro_prerelease_ignored_extra_segment_test.go",
+      "input": "a=1.0.0-alpha, b=1.0.0.0-alpha, c=1.0.0",
+      "expected": "1.0.0.0-alpha < 1.0.0 (as 1.0.0-alpha < 1.0.0), since trailing zero segments are treated as equal",
+      "actual": "1.0.0.0-alpha.Compare(1.0.0) == 0 while 1.0.0-alpha.Compare(1.0.0) == -1, so Equal is non-transitive (1.0.0-alpha == 1.0.0.0-alpha == 1.0.0 but 1.0.0-alpha != 1.0.0)",
+      "evidence": "Compare's own jagged-segment logic treats missing trailing segments as zeros (1.0 == 1.0.0 including prerelease handling via equalSegments only when lengths match); the fallthrough path returns 0 without ever comparing prereleases, violating SemVer precedence and the total-order contract that sort/Equal rely on.",
+      "group": "g01-version-go",
+      "file": "version.go",
+      "workdir": ".proofhound/runs/20261017-170434/g01-version-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_prerelease_ignored_extra_segment_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproPrereleaseIgnoredWithExtraSegment",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "1.0.0.0-alpha.Compare(1.0.0) = 0, want -1",
+          "example": null
+        },
+        "testName": "TestReproPrereleaseIgnoredWithExtraSegment"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "Compare ignores prerelease when segment counts differ (e.g. 1.0.0.0-alpha vs 1.0.0)",
+        "reason": "Prerelease is only compared inside the `equalSegments` branch, which requires equal segment counts. When counts differ, such as a 4-segment version against a 3-segment one, the jagged-segment loop treats the trailing zeros as equal and returns 0 without looking at prerelease. So `1.0.0.0-alpha` equals both `1.0.0` and `1.0.0.0-beta`, while `1.0.0-alpha < 1.0.0`. That makes Equal and sort ordering non-transitive, and nothing in the code or docs suggests this is intentional. The trigger is niche (4 or more segments plus a prerelease), but the fix is small: run the prerelease comparison after the segment loop finishes without finding a difference.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "package version\n\nimport \"testing\"\n\nfunc TestReproPrereleaseIgnoredWithExtraSegment(t *testing.T) {\n\tpre := Must(NewVersion(\"1.0.0-alpha\"))\n\tpadded := Must(NewVersion(\"1.0.0.0-alpha\"))\n\trel := Must(NewVersion(\"1.0.0\"))\n\n\tif pre.Compare(rel) != -1 {\n\t\tt.Fatalf(\"precondition: 1.0.0-alpha should be < 1.0.0\")\n\t}\n\tif got := padded.Compare(rel); got != -1 {\n\t\tt.Fatalf(\"1.0.0.0-alpha.Compare(1.0.0) = %d, want -1\", got)\n\t}\n\tif got := rel.Compare(padded); got != 1 {\n\t\tt.Fatalf(\"1.0.0.Compare(1.0.0.0-alpha) = %d, want 1\", got)\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-170434/bugs/PH-001-compare-ignores-prerelease-when-segment-counts-d"
+    }
+  ]
+}

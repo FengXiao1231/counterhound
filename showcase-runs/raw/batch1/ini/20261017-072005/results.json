@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-072005",
+  "repo": "ini",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:20:05.635Z",
+  "ms": 57664,
+  "spend": {
+    "usd": 0.25524030000000003,
+    "tokensIn": 444311,
+    "tokensOut": 5664,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-lib-ini-js",
+      "file": "lib/ini.js",
+      "functions": [
+        "parse",
+        "stringify"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 36844,
+      "costUsd": 0.13510060000000002,
+      "reported": 2,
+      "verified": 2
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 2,
+    "reported": 2,
+    "verified": 2,
+    "duplicates": 0,
+    "confirmed": 2,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Value containing backslash followed by ';' or '#' does not round-trip",
+      "function": "ini.stringify / ini.parse",
+      "kind": "wrong-result",
+      "property": "parse(stringify(obj)) deep-equals obj for string values",
+      "property_test": "roundtrip string values only",
+      "repro_file": "repro_backslash_semicolon.test.mjs",
+      "input": "{a: '\\\\;'} (a backslash followed by a semicolon)",
+      "expected": "parse(stringify({a:'\\\\;'})) -> {a:'\\\\;'}",
+      "actual": "{a:'\\\\'} (the ';' is treated as a comment start)",
+      "evidence": "stringify escapes ';' and '#' with a backslash but does not escape a preceding backslash, so the output 'a=\\\\;' is read by parse as an escaped backslash followed by an unescaped comment marker. encode/decode are a documented inverse pair, and safe() exists to make values round-trippable.",
+      "group": "g01-lib-ini-js",
+      "file": "lib/ini.js",
+      "workdir": ".proofhound/runs/20261017-072005/g01-lib-ini-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_backslash_semicolon.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_backslash_semicolon",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   a: '\\\\'\n-   a: '\\\\;'\n  }\n",
+          "example": null
+        },
+        "testName": "repro_backslash_semicolon"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Counterexample: [{\"a\":\"\\\\\\\\\"}]"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "stringify/parse does not round-trip string values with a backslash before ';' or '#'",
+        "reason": "`unsafe()` treats `\\\\` as an escaped backslash, and `\\;` or `\\#` as an escaped comment character. `safe()` escapes only `;` and `#`, and never escapes the backslash. So the value `\\;` is written as `\\;`, which `unsafe()` reads as a backslash followed by an unescaped `;`. The rest of the value is dropped as a comment, so data is silently lost. The same asymmetry loses data for any value with consecutive backslashes (`\\\\` comes back as `\\`). `safe()` and `unsafe()` are exported as a pair, and `safe()` already falls back to `JSON.stringify` for other values that would not survive, so a small fix is plausible, such as quoting values that contain a backslash next to a backslash, `;` or `#`. The input is a valid string and nothing in the code or tests excludes it. The only doubt is that the corner case is narrow and the README makes no explicit round-trip promise.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport mod from '../../../../../lib/ini.js';\n\ntest('repro_backslash_semicolon', () => {\n  assert.deepEqual({ ...mod.parse(mod.stringify({ a: '\\\\;' })) }, { a: '\\\\;' });\n});\n",
+      "bugDir": ".proofhound/runs/20261017-072005/bugs/PH-002-stringify-parse-does-not-round-trip-string-value"
+    },
+    {
+      "title": "Single-quote character value parses as empty string",
+      "function": "ini.parse (unsafe/isQuoted)",
+      "kind": "wrong-result",
+      "property": "unsafe(safe(s)) === s / parse(stringify(obj)) deep-equals obj",
+      "property_test": "safe/unsafe roundtrip",
+      "repro_file": "repro_single_quote_char.test.mjs",
+      "input": "{a: \"'\"}",
+      "expected": "{a: \"'\"}",
+      "actual": "{a: ''}",
+      "evidence": "safe() guards its quote check with val.length > 1, so a lone \"'\" is emitted unquoted, but unsafe()'s isQuoted has no length check: a single quote both starts and ends with \"'\", so slice(1,-1) yields ''. The two halves are inconsistent.",
+      "group": "g01-lib-ini-js",
+      "file": "lib/ini.js",
+      "workdir": ".proofhound/runs/20261017-072005/g01-lib-ini-js",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_single_quote_char.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_single_quote_char",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly deep-equal:\n+ actual - expected\n\n  {\n+   a: ''\n-   a: \"'\"\n  }\n",
+          "example": null
+        },
+        "testName": "repro_single_quote_char"
+      },
+      "propertyCheck": {
+        "failed": false,
+        "example": null
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.85,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "A lone single-quote value is parsed as an empty string (stringify/parse round-trip fails)",
+        "reason": "In lib/ini.js, safe() deliberately skips quoting when val.length > 1 is false, so \"'\" is written unquoted as `a='`. unsafe() then calls isQuoted(\"'\"), which is true because the string both starts and ends with \"'\". The single-quote branch slices it to '', and JSON.parse('') throws and is ignored, so the value becomes ''. A lone `\"` survives because JSON.parse fails and leaves it unchanged, so the single-quote path is the only broken one. The repro uses the API correctly and a one-character value is a valid string, so a length check in unsafe's quote handling would be an easy fix a maintainer would likely accept. The impact is narrow.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport mod from '../../../../../lib/ini.js';\n\ntest('repro_single_quote_char', () => {\n  assert.deepEqual({ ...mod.parse(mod.stringify({ a: \"'\" })) }, { a: \"'\" });\n});\n",
+      "bugDir": ".proofhound/runs/20261017-072005/bugs/PH-001-a-lone-single-quote-value-is-parsed-as-an-empty"
+    }
+  ]
+}

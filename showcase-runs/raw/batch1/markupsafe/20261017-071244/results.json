@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-071244",
+  "repo": "markupsafe",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:12:44.727Z",
+  "ms": 26597,
+  "spend": {
+    "usd": 0.10591279999999999,
+    "tokensIn": 172095,
+    "tokensOut": 1790,
+    "calls": 1
+  },
+  "groups": [
+    {
+      "group": "g01-src-markupsafe-__init__-py",
+      "file": "src/markupsafe/__init__.py",
+      "functions": [
+        "escape",
+        "Markup.escape",
+        "escape_silent",
+        "Markup.unescape",
+        "Markup.striptags",
+        "Markup.split"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 26518,
+      "costUsd": 0.10591279999999999,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

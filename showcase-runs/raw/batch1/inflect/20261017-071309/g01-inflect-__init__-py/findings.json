@@ -1,0 +1,14 @@
+[
+  {
+    "title": "plural_noun crashes with IndexError on title-cased 'X Of A Y' compounds",
+    "function": "inflect.engine.plural_noun",
+    "kind": "crash",
+    "property": "plural_noun never raises on a valid non-empty word/phrase, including when the phrase is capitalised",
+    "property_test": "test_multiword_upper_classical",
+    "repro_file": "test_repro_title_case_dual_compound.py",
+    "input": "engine().plural_noun('Son Of A Gun')",
+    "expected": "'Sons Of Guns' (lowercase 'son of a gun' gives 'sons of guns')",
+    "actual": "IndexError: list index out of range in engine.postprocess (inflect/__init__.py:2376)",
+    "evidence": "plural_noun accepts any Word; lowercase 'son of a gun' -> 'sons of guns' is tested in tests/test_pwd.py. The dual-compound branch of _plnoun drops the 'a', so the result has fewer words than the input, and postprocess's per-word capitalisation loop indexes result[index] for each original word, which overruns when the original word 'A' is capitalised."
+  }
+]

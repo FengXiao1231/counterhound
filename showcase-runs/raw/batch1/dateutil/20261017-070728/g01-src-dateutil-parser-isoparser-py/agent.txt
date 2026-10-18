@@ -1,0 +1,13 @@
+I tested 14 properties and reported 1 bug.
+
+The bug is that `isoparse('9999-12-31T24:00')` raises `OverflowError` instead of `ValueError`. The repro file fails as intended. The harness added a note that the failure "looks like a problem in the test", because I used `pytest.fail`. The failure itself is the `OverflowError` escaping. The reviewer may treat this as weak, since the docstring doesn't promise `ValueError`.
+
+I left out a second failure: `parse_isodate('0001-W53-1')` quietly returns a date in a different ISO year. The docstring says the parser's strictness isn't a stable contract, so I didn't count it as a bug.
+
+Files are in `.proofhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py/`:
+- test_ph_props.py
+- test_repro_24h_overflow.py
+- findings.json
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-070728/g01-src-dateutil-parser-isoparser-py/"}

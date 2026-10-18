@@ -1,0 +1,20 @@
+I tested 10 properties and reported 1 bug.
+
+The bug is in `normalize_file`. It strips only one leading `/`, so `normalize_file('//a')` returns `'/a'`, which is still absolute. The docstring promises relative paths. Normalizing the result a second time changes it again, so the function isn't idempotent. The deterministic repro fails as expected.
+
+This one is debatable: the docstring says "remove leading `/`", and a reviewer could read that as removing just one.
+
+The other properties all passed:
+- **`normalize_file` / `normalize_files`:** no backslashes remain when `\` is a separator, empty separators change nothing but the prefix, and grouping preserves the originals.
+- **`match_files` / `detailed_match_files`:** their matched files agree, the `all_matches` flag doesn't change which files match, and the last matching pattern agrees with `check_match_file`.
+- **`check_match_file`:** forward and reversed pattern order give the same answer.
+
+I didn't test `TreeEntry.is_file`.
+
+Files are in `.proofhound/runs/20261017-191448/g01-pathspec-util-py/`:
+- `test_ph_props.py`
+- `test_repro_double_slash.py`
+- `findings.json`
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191448/g01-pathspec-util-py; grep -n \"NORMALIZE_PATH_SEPS\" -A8 pathspec/util.py | head -30"}

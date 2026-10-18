@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-070558",
+  "repo": "inflection",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:05:58.482Z",
+  "ms": 67653,
+  "spend": {
+    "usd": 0.19363670000000002,
+    "tokensIn": 388441,
+    "tokensOut": 3535,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-inflection-__init__-py",
+      "file": "inflection/__init__.py",
+      "functions": [
+        "camelize",
+        "titleize",
+        "ordinalize",
+        "ordinal",
+        "singularize",
+        "humanize"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 47694,
+      "costUsd": 0.1429197,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "camelize('', uppercase_first_letter=False) raises IndexError",
+      "function": "inflection.camelize",
+      "kind": "crash",
+      "property": "camelize does not crash on any str; the empty string maps to the empty string for both values of uppercase_first_letter",
+      "property_test": "test_empty_lower",
+      "repro_file": "test_repro_camelize_empty.py",
+      "input": "camelize('', False)",
+      "expected": "''",
+      "actual": "IndexError: string index out of range (string[0] at inflection/__init__.py:171)",
+      "evidence": "Signature is camelize(string: str, ...) with no documented restriction on empty strings; camelize('') returns '' for the default flag, so the False branch is inconsistent.",
+      "group": "g01-inflection-__init__-py",
+      "file": "inflection/__init__.py",
+      "workdir": ".proofhound/runs/20261017-070558/g01-inflection-__init__-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_camelize_empty.py",
+        "runs": 3,
+        "kind": "crash",
+        "signature": "crash:IndexError:inflection/__init__.py:171",
+        "site": {
+          "file": "inflection/__init__.py",
+          "line": 171,
+          "func": "camelize",
+          "code": "return string[0].lower() + camelize(string)[1:]"
+        },
+        "explicitRaise": false,
+        "error": {
+          "type": "IndexError",
+          "message": "string index out of range"
+        },
+        "testName": "test_repro_camelize_empty"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "crash",
+        "title": "camelize('', uppercase_first_letter=False) raises IndexError on empty string",
+        "reason": "The signature accepts any `str` and the docstring excludes no inputs. `camelize('')` correctly returns `''`, but the `False` branch evaluates `string[0]` unguarded (inflection/__init__.py:171) and raises IndexError. Empty strings are a normal edge case, the two branches should agree, and the fix is trivial, e.g. `string[:1].lower() + camelize(string)[1:]`.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "from inflection import camelize\n\n\ndef test_repro_camelize_empty():\n    assert camelize(\"\", True) == \"\"\n    assert camelize(\"\", False) == \"\"\n",
+      "bugDir": ".proofhound/runs/20261017-070558/bugs/PH-001-camelize-uppercase-first-letter-false-raises-ind"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "title": "to_currency reads 0.01-0.09 as 10-90 paisa (leading zero lost)",
+    "function": "num2words.lang_BN.Num2Word_BN.to_currency",
+    "kind": "wrong-result",
+    "property": "the paisa part of 'T.PP' is spoken as the integer PP",
+    "property_test": "test_currency_paisa_exact",
+    "repro_file": "test_repro_paisa_leading_zero.py",
+    "input": "to_currency('0.01')",
+    "expected": "শূন্য টাকা এক পয়সা",
+    "actual": "শূন্য টাকা দশ পয়সা",
+    "evidence": "parse_paisa does int('01')*100 -> '10'; 1 paisa = 0.01 taka. Docstring example 9999.15 -> পনের পয়সা shows the two decimals are paisa."
+  },
+  {
+    "title": "to_cardinal drops zeros after the decimal point (1.05 reads as 1.5)",
+    "function": "num2words.lang_BN.Num2Word_BN.to_cardinal",
+    "kind": "wrong-result",
+    "property": "every digit after the decimal point is spoken, including leading zeros",
+    "property_test": "test_cardinal_decimal_digits_preserved",
+    "repro_file": "test_repro_decimal_leading_zero.py",
+    "input": "to_cardinal('1.05')",
+    "expected": "a reading different from 1.5 (e.g. এক দশমিক শূন্য পাঁচ)",
+    "actual": "এক দশমিক পাঁচ (identical to 1.5)",
+    "evidence": "parse_number converts the fractional string with int(), discarding leading zeros; _dosomik_to_bengali_word reads digit by digit, so the intent is digit-wise reading. 1.05 and 1.5 are different numbers."
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "title": "parseGoJson blames a package-level panic on every already-failed test, not just the one that died",
+    "function": "parseGoJson",
+    "kind": "wrong-result",
+    "property": "a test that finished with an explicit fail event keeps its own assertion error even if a different test later panics in package output",
+    "property_test": "a test that failed on its own does not inherit another test's panic",
+    "repro_file": "repro_sibling_panic.test.mjs",
+    "input": "TestA: output '    a_test.go:3: got 1, want 2' then fail; TestB: run only; package-level output 'panic: boom'",
+    "expected": "TestA error = AssertionError 'got 1, want 2' (only the unfinished TestB may take the panic)",
+    "actual": "TestA error is re-parsed from its lines plus the package output and becomes type 'panic', message 'boom'",
+    "evidence": "The comment says 'a panic printed after the test's own lines lands in package output', i.e. it is meant for the test that was running; but the condition only checks outcome === 'failed' and that the test's own lines lack 'panic:', so every failed test with a t.Error is overwritten."
+  }
+]

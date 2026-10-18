@@ -1,0 +1,14 @@
+[
+  {
+    "title": "parse_duration silently merges digits separated by whitespace into one number",
+    "function": "humantime::parse_duration",
+    "kind": "wrong-result",
+    "property": "a number that is not followed by a unit (e.g. '1' in '1 30m') is rejected, rather than being concatenated with the next number",
+    "property_test": "ph_ws_in_number",
+    "repro_file": "repro_ws_merges_numbers.rs",
+    "input": "\"1 0s\" (also \"1 30m\")",
+    "expected": "Err (time unit needed / number without unit), as for '10 months 1'",
+    "actual": "Ok(10s); '1 30m' parses as 130 minutes",
+    "evidence": "Docs: a duration is a concatenation of time spans, each 'an integer number and a suffix'; a number omitted/unit missing is meant to be an error (UnknownUnit with empty unit, test_nice_error_message). The digit loop in Parser::parse treats whitespace as ignorable inside the number, so '1 30m' mis-parses as 130m instead of reporting a missing unit."
+  }
+]

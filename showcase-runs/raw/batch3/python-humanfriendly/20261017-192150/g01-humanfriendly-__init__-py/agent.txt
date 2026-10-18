@@ -1,0 +1,7 @@
+I tested 11 properties and reported 1 bug: `format_timespan(0, detailed=True)` returns an empty string, where `format_timespan(0)` returns `'0 seconds'`. The repro file fails now, as it should.
+
+The other three failures were float/rounding noise or invalid input, so I didn't report them:
+- **Size rounding:** a value just under 1000 YB rounds to "1000 YB".
+- **Length round-trip:** `format_length` on a value like 4e-168 gives scientific notation that `parse_length` can't read.
+- **Zero timespan round-trip:** the `format_timespan(0, detailed=True)` bug above caused a second failure in a round-trip test. I counted it as one bug.
+

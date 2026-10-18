@@ -1,0 +1,8 @@
+I tested 7 properties across `encode`, `decode` and `escape` and reported 0 bugs, so `findings.json` is `[]`. All 7 pass in the final run.
+
+Two earlier failures were my test being too strict, not bugs:
+- **Raw `&` with `allowUnsafeSymbols`:** a raw `&` stays raw, and strict decode correctly rejects an ambiguous `&j`.
+- **`\r` and other control characters:** `\r` encodes to a reference that strict decode correctly rejects as disallowed. I excluded control characters from that property.
+
+Permission denials:
+Bash: {"command":"cat > .proofhound/runs/20261017-071910/g01-src-he-mjs/ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport { encode, decode, escape } from '../../../../src/he.mjs';\n\nconst opts = fc.record({\n  allowUns

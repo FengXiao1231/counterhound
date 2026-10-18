@@ -1,0 +1,1 @@
+I changed `formatPathSegment` in `index.js` so that numbers >= 1e21 are escaped as string keys. Before, they went to bracket notation and came out in exponent form, like `[1e+21]`, which `parsePath` rejects. The repro now passes. I didn't run the project's existing tests or add a regression test.

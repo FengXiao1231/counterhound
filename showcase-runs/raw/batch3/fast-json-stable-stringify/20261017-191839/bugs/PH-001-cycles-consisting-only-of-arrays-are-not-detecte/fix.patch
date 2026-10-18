@@ -1,0 +1,37 @@
+diff --git a/index.js b/index.js
+index c44e6a4..8a4bd91 100644
+--- a/index.js
++++ b/index.js
+@@ -26,23 +26,24 @@ module.exports = function (data, opts) {
+         if (typeof node !== 'object') return JSON.stringify(node);
+ 
+         var i, out;
++        if (node === null) return 'null';
++
++        if (seen.indexOf(node) !== -1) {
++            if (cycles) return JSON.stringify('__cycle__');
++            throw new TypeError('Converting circular structure to JSON');
++        }
++
++        var seenIndex = seen.push(node) - 1;
+         if (Array.isArray(node)) {
+             out = '[';
+             for (i = 0; i < node.length; i++) {
+                 if (i) out += ',';
+                 out += stringify(node[i]) || 'null';
+             }
++            seen.splice(seenIndex, 1);
+             return out + ']';
+         }
+ 
+-        if (node === null) return 'null';
+-
+-        if (seen.indexOf(node) !== -1) {
+-            if (cycles) return JSON.stringify('__cycle__');
+-            throw new TypeError('Converting circular structure to JSON');
+-        }
+-
+-        var seenIndex = seen.push(node) - 1;
+         var keys = Object.keys(node).sort(cmp && cmp(node));
+         out = '';
+         for (i = 0; i < keys.length; i++) {

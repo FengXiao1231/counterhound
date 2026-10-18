@@ -1,0 +1,1 @@
+I changed the singular-unit check in `src/formatters.rs` to use the magnitude of the integer part, `f64_eq(fabs(ipart), 1.0)`. Negative sizes from -1.x up now get the singular unit, like their positive counterparts. The repro now passes. I didn't run any other test files.

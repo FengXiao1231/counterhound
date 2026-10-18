@@ -1,0 +1,14 @@
+[
+  {
+    "title": "parse_rfc3339 accepts trailing garbage after the seconds when the string ends in Z",
+    "function": "humantime::parse_rfc3339",
+    "kind": "contract-violation",
+    "property": "a timestamp with extra characters between the seconds and the final Z is not a valid RFC3339 timestamp and must be rejected",
+    "property_test": "ph_no_trailing_garbage",
+    "repro_file": "repro_trailing_garbage.rs",
+    "input": "1970-01-01T00:00:00ZZ",
+    "expected": "Err(Error::InvalidFormat) (or other error)",
+    "actual": "Ok(UNIX_EPOCH): weak parser only checks b[19]=='Z' and len<=25, ignoring the remaining bytes",
+    "evidence": "Docs say parse_rfc3339 is for strictly programmatically generated strings; only 'Z' or '+00:00' suffix is supported. 'ZZ' and 'Zabc+00:00' are not valid RFC3339 (the crate's own tests reject '+00:00abcd' and similar trailing junk)."
+  }
+]

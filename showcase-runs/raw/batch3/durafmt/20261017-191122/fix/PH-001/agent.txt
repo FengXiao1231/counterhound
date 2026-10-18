@@ -1,0 +1,5 @@
+`Format` and `InternationalString` no longer change the stored duration. Each now works on a local copy, `dur := d.duration`, and negates that copy for negative inputs, so repeated calls give the same output and `Duration()` stays negative. The repro now passes. I didn't run the project's other tests, and I didn't add a regression test.
+
+I changed `InternationalString` too because it had the same in-place negation as `Format`.
+Permission denials:
+Bash: {"command":"sed -i 's/^\\t\\td\\.duration = -d\\.duration$/\\t\\tdur = -dur/; s/int64(d\\.duration \\/ time\\.Microsecond)/int64(dur \\/ time.Microsecond)/; s/case d\\.duration\\.String() == \"0\"/case dur.String() == \"0\"/; s/|| d\\.duration\\.String() == \"0s\"/|| dur.String() == \"0s\"/; s/^\\tv

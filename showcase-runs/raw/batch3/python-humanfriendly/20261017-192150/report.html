@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofhound · python-humanfriendly</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}h1 span{color:var(--accent)}h2{font-size:18px;margin:40px 0 12px}
+.meta{color:var(--dim);font-size:13px}.meta code{font-size:12px}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+.funnel{margin:20px 0 8px;display:grid;gap:6px}.step{position:relative;height:30px}
+.bar{position:absolute;inset:0 auto 0 0;background:var(--bar1);border-radius:6px}.bar[data-i="3"]{background:var(--bar3)}
+.lab{position:relative;padding:5px 10px;font-size:13px;white-space:nowrap}.bar[data-i="3"]+.lab{color:#fff}
+.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:14px 0}
+.bug.needs-look{border-left-color:var(--warn)}
+.bug header{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.bug h3{margin:0;font-size:17px;flex:1 1 300px}
+.id{font:600 12px ui-monospace,monospace;color:var(--accent)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--dim)}
+.badge.ok{color:var(--ok);border-color:currentColor}.sev-high{color:var(--accent);border-color:currentColor}.sev-medium{color:var(--warn);border-color:currentColor}
+.where{margin:6px 0 10px;color:var(--dim);font-size:13px;word-break:break-all}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0 0 8px}dt{color:var(--dim);font-size:13px}dd{margin:0;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.copy{margin-left:8px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer}
+.err{color:var(--accent);margin:4px 0}.dim{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:500}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center}
+.tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+footer{margin-top:48px;color:var(--dim);font-size:12.5px}
+@media (max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style></head><body><main>
+<h1>proof<span>hound</span> report</h1>
+<div class="meta">python-humanfriendly · python · claude (sonnet) · 2 modules, 12 functions · 1m10s · $0.41 · 10/17/2026, 7:21:50 PM</div>
+<div class="funnel">
+    <div class="step"><div class="bar" style="width:100%" data-i="0"></div>
+    <div class="lab"><b>1</b> reported by the hunter</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="1"></div>
+    <div class="lab"><b>1</b> reproduced deterministically</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="2"></div>
+    <div class="lab"><b>1</b> unique</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="3"></div>
+    <div class="lab"><b>1</b> confirmed by review</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="4"></div>
+    <div class="lab"><b>1</b> fixed, with a verified patch</div></div></div>
+<p class="meta">Every bug below failed the same way in 3 fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
+
+<h2>1 confirmed bug</h2>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-001</span>
+    <h3>format_timespan(0, detailed=True) returns an empty string instead of &#39;0 seconds&#39;</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.85</span>
+      <span class="badge ok">failed 3/3</span>
+      <span class="badge ok">fix verified</span>
+    </span>
+  </header>
+  <p class="where"><code>humanfriendly.format_timespan</code> · <code>humanfriendly/__init__.py</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>format_timespan(0, detailed=True)</code></dd>
+    <dt>Expected</dt><dd>&#39;0 seconds&#39; (as format_timespan(0) gives)</dd>
+    <dt>Actual</dt><dd>&#39;&#39; (empty string), because all unit counts are zero and concatenate([]) is &#39;&#39;</dd>
+    <dt>Property</dt><dd>formatting a valid zero timespan yields a non-empty human readable string (and parse_timespan of its parts gives back 0)</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from humanfriendly import format_timespan
+
+
+def test_repro_timespan_zero_detailed():
+    assert format_timespan(0) == &#39;0 seconds&#39;
+    assert format_timespan(0, detailed=True) != &#39;&#39;</code></pre>
+  <p class="err"><code>AssertionError: assert &#39;&#39; != &#39;&#39;</code></p></details>
+  <details><summary>Suggested fix: the repro passes with it; project tests not compared (the suite already fails without the fix: python3 -m pytest -q -x -p no:cacheprovider --no-header) <button class="copy" data-copy>copy</button></summary><pre><code>diff --git a/humanfriendly/__init__.py b/humanfriendly/__init__.py
+index 4c0a333..90f9aee 100644
+--- a/humanfriendly/__init__.py
++++ b/humanfriendly/__init__.py
+@@ -452,7 +452,10 @@ def format_timespan(num_seconds, detailed=False, max_units=3):
+             # Only include relevant units in the result.
+             if count not in (0, &#39;0&#39;):
+                 result.append(pluralize(count, unit[&#39;singular&#39;], unit[&#39;plural&#39;]))
+-        if len(result) == 1:
++        if not result:
++            # All unit counts are zero (or rounded to zero).
++            return pluralize(0, &#39;second&#39;)
++        elif len(result) == 1:
+             # A single count/unit combination.
+             return result[0]
+         else:</code></pre></details>
+  
+  <details><summary>Why this is a bug</summary><p>Docstring: format_timespan(0) -&gt; &#39;0 seconds&#39;; returns &#39;The formatted timespan as a string&#39;. detailed only changes how milliseconds are represented, so zero should still render as a quantity.</p><p><b>Independent review:</b> The input is valid, because coerce_seconds accepts 0 and the docstring says format_timespan(0) gives &#39;0 seconds&#39;. With detailed=True the slow path skips every zero-count unit, so `result` is empty and `concatenate([])` returns &#39;&#39;. The docstring says `detailed` only changes how milliseconds are shown, and no test or doc says an empty result is intended. The tests cover only non-zero values with detailed=True, so the empty string looks like an unhandled edge case, not a deliberate choice. A small fix is easy: return pluralize(0, &#39;second&#39;) when `result` is empty. Severity is low because it is a rare edge case.</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_timespan_float_detailed(
+    x=0.0,
+)</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-192150/bugs/PH-001-format-timespan-0-detailed-true-returns-an-empty/BUG.md</code></p></details>
+</article>
+
+
+
+<h2>Filtered out (0)</h2>
+<p class="dim">Nothing was filtered out.</p>
+
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
+<tr><td><code>humanfriendly/usage.py</code></td><td>format_usage, parse_usage, render_usage, inject_usage, render_paragraph, replace_special_tokens</td><td>0</td><td>0</td><td>32s</td></tr><tr><td><code>humanfriendly/__init__.py</code></td><td>format_size, parse_size, format_length, parse_length, format_timespan, parse_timespan</td><td>1</td><td>1</td><td>37s</td></tr>
+</table>
+<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));
+</script>
+</body></html>

@@ -1,0 +1,8 @@
+I tested 4 property tests (covering about 10 properties) and reported 0 bugs. All 4 passed, and `findings.json` is `[]`.
+
+- **Reference match:** `length` agrees with an independent LCS implementation on arbitrary strings, including unicode.
+- **Distance formula:** `distance` equals |s1| + |s2| − 2·LCS on a small alphabet, which forces many repeated characters.
+- **Distance laws:** `distance` is symmetric and is at least the difference in lengths.
+- **Identity and empty:** `distance(a, a)` is 0, and `length(a, a)` is |a|. Against `""`, `length` is 0 and `distance` is |a|.
+- **Null arguments:** both functions throw `NullPointerException` when either argument is null, as documented.
+

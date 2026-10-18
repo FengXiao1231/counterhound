@@ -1,0 +1,14 @@
+[
+  {
+    "title": "stringify() sorts the caller's filter array in place when `sort` is also given",
+    "function": "stringify (lib/stringify.js module.exports)",
+    "kind": "contract-violation",
+    "property": "stringify does not mutate its input options (the filter array) when sort is supplied",
+    "property_test": "filter array not mutated when sort given",
+    "repro_file": "repro_filter_mutation.test.mjs",
+    "input": "stringify({i:1,a:2}, {filter:['i','a'], sort:(a,b)=>a.localeCompare(b)})",
+    "expected": "Output 'a=2&i=1' and the caller's filter array remains ['i','a']",
+    "actual": "Output is sorted, but filter is mutated to ['a','i'] (objKeys = filter; objKeys.sort(...))",
+    "evidence": "Top-level code does `objKeys = filter; ... objKeys.sort(options.sort)`, sorting the user's array. Inner recursion sorts a fresh Object.keys copy, so only the filter path leaks the mutation; a serializer is expected not to modify its options, and reusing one filter array across calls is the documented usage."
+  }
+]

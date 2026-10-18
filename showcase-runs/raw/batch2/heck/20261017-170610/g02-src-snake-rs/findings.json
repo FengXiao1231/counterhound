@@ -1,0 +1,14 @@
+[
+  {
+    "title": "to_snake_case drops combining marks (they are treated as word separators), so output is not a fixed point",
+    "function": "heck::ToSnakeCase::to_snake_case (str)",
+    "kind": "wrong-result",
+    "property": "snake-casing an already snake-cased string leaves it unchanged (idempotence)",
+    "property_test": "ph_idempotent_mixed",
+    "repro_file": "repro_idempotent_dotted_i.rs",
+    "input": "\"İ\" (U+0130)",
+    "expected": "to_snake_case(to_snake_case(\"İ\")) == to_snake_case(\"İ\") == \"i\\u{307}\"",
+    "actual": "first pass gives \"i\\u{307}\" (standard lowercase of İ), second pass gives \"i\" because the combining dot U+0307 is not char::is_alphanumeric and is treated as a word separator and discarded",
+    "evidence": "transform() splits words on !c.is_alphanumeric(); combining marks (category Mn) are not alphanumeric, so they are silently deleted or split words (e.g. NFD \"cafe\\u{301}\" loses its accent). lowercase() itself emits such a mark for İ, so the library produces output that its own algorithm then treats as a separator. Snake case of an already-snake string is expected to be stable, as for all ASCII inputs (which passed)."
+  }
+]

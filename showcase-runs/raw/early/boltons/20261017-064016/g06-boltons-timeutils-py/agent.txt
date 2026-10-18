@@ -1,0 +1,12 @@
+I tested 7 properties and reported 1 bug: `relative_time` drops digits when `ndigits` is large.
+
+- **Reported:** `relative_time` formats the number with `:g`, which keeps only 6 significant digits. With `ndigits=6` and a 1.123456 s difference it returns `'1.12346 seconds ago'`. `decimal_relative_time` correctly returns 1.123456. The repro fails for that reason.
+- **Rejected as not defensible:**
+  - `isoparse` fails on timezone-aware ISO strings, but its docstring only promises a limited subset.
+  - `parse_timedelta('')` returns a zero `timedelta` instead of raising, and the docstring doesn't clearly require a raise.
+  - `strpdate` failed on year 999, which comes from `strftime` not zero-padding `%Y` on this platform, not from the project.
+
+The files are in `.proofhound/runs/20261017-064016/g06-boltons-timeutils-py/`: `test_ph_props.py`, `test_repro_relative_time_ndigits.py` and `findings.json`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-064016/g06-boltons-timeutils-py"}

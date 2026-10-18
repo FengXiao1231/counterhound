@@ -1,0 +1,26 @@
+[
+  {
+    "title": "Integer 0 expands as empty value in ? / & / ; expansions",
+    "function": "uritemplate.variable.URIVariable.expand",
+    "kind": "wrong-result",
+    "property": "a scalar int n expands to its decimal string in query and path-parameter expansion",
+    "property_test": "test_query_int_zero_and_ints",
+    "repro_file": "test_repro_zero.py",
+    "input": "URIVariable('?x').expand({'x': 0}); URIVariable(';x').expand({'x': 0})",
+    "expected": "'?x=0' and ';x=0'",
+    "actual": "'?x=' and ';x' (0 is treated as empty string by a truthiness check `if value:`)",
+    "evidence": "ScalarVariableValue includes int; RFC 6570 only treats the empty string as empty (3.2.7/3.2.8), 0 is defined and stringifies to '0'; other ints like 1 expand correctly."
+  },
+  {
+    "title": "Reserved/fragment expansion skips encoding when value contains any percent-escape",
+    "function": "uritemplate.variable.Operator.quote",
+    "kind": "wrong-result",
+    "property": "output of {+var} contains no characters outside reserved/unreserved/pct-encoded",
+    "property_test": "test_reserved_quote_encodes_spaces",
+    "repro_file": "test_repro_reserved_space.py",
+    "input": "Operator.reserved.quote('a b%41')",
+    "expected": "'a%20b%41'",
+    "actual": "'a b%41' (value returned unchanged because unquote(value) != value)",
+    "evidence": "RFC 6570 3.2.3: reserved expansion passes through only pct-encoded triplets and reserved/unreserved characters; every other character (e.g. space) must be percent-encoded."
+  }
+]

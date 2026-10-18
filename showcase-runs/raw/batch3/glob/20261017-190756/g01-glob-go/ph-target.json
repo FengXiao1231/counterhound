@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "glob",
+  "importPath": "github.com/gobwas/glob"
+}

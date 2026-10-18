@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Format/String mutates receiver for negative durations, so a second call gives a wrong result",
+    "function": "github.com/hako/durafmt.(*Durafmt).Format",
+    "kind": "wrong-result",
+    "property": "Formatting the same *Durafmt twice returns the same string, and Duration() is unchanged by formatting",
+    "property_test": "TestPhFormatIdempotent",
+    "repro_file": "repro_format_mutates_negative_test.go",
+    "input": "d := Parse(-1000 * time.Nanosecond); d.String() twice",
+    "expected": "\"-1 microsecond\" both times; Duration() still -1µs",
+    "actual": "first call \"-1 microsecond\", second call \"-\"; Duration() returns +1µs after formatting (d.duration = -d.duration is written back to the receiver while d.input still starts with '-')",
+    "evidence": "Format is a pure formatting method (String() is also used by fmt via Stringer, and Duration() is a getter); the code negates d.duration in place at durafmt.go:94 whenever input[0]=='-', so each call flips the sign again and formatting has side effects."
+  }
+]

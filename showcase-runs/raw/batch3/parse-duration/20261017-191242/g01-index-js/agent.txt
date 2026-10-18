@@ -1,0 +1,6 @@
+I tested 9 properties and reported 1 bug. `parse('duration: -1h')` returns `3600000` instead of `-3600000`, because the minus sign is only checked at the start of the whole string. The README promises both noisy input and negatives, so I filed it as an inconsistency; it is the weakest kind of finding, since the README never shows the two combined.
+
+The repro file fails as expected, and `findings.json` is written.
+
+Permission denials:
+Bash: {"command":"cd /tmp/claude-0/zoo3/parse-duration/.proofhound/runs/20261017-191242/g01-index-js && cat > ph_props.test.mjs <<'EOF'\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\nimport fc from 'fast-check';\nimport parse from '../../../../index.js';\nconst units = ['ns','us

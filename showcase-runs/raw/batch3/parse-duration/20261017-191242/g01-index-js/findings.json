@@ -1,0 +1,14 @@
+[
+  {
+    "title": "parse() ignores a minus sign when the input has leading noise text",
+    "function": "parse",
+    "kind": "inconsistency",
+    "property": "a duration written with a minus sign parses as negative, even when preceded by noise text that parse otherwise tolerates",
+    "property_test": "negative sign applies with noise prefix",
+    "repro_file": "repro_negative_after_noise.test.mjs",
+    "input": "parse('duration: -1h')",
+    "expected": "-3600000 (negative, like parse('-1h'))",
+    "actual": "3600000 (sign silently dropped, because only str.trimStart()[0] === '-' is checked)",
+    "evidence": "README advertises noisy input ('duration: 1h:20min' is parsed) and negatives ('-1hr 40mins' => -1*h - 40*m). The sign is detected only at the first character of the whole string (index.js line 56), so the two documented features do not combine: the number is parsed from the noisy string but its sign is lost, giving a result with the wrong sign and no error."
+  }
+]

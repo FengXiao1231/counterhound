@@ -1,0 +1,13 @@
+I tested 7 properties and reported 1 bug: `format_histogram` on an empty `Stats` raises `ZeroDivisionError`. `format_histogram_counts` divides by the maximum count, which is 0 for empty data. The repro fails for that reason.
+
+One other property failed and I did not report it. `get_quantile` on `[11, 11]` returned `11.000000000000002`, which is above the max. I judged that float rounding noise.
+
+My first attempt to create the work directory and write the test file in one shell command was denied. I wrote the files with the Write tool instead.
+
+Files are in `.proofhound/runs/20261017-064016/g05-boltons-statsutils-py/`:
+- `test_ph_props.py`
+- `test_repro_empty_hist.py`
+- `findings.json`
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-064016/g05-boltons-statsutils-py && cat > .proofhound/runs/20261017-064016/g05-boltons-statsutils-py/test_ph_props.py <<'E'\nfrom hypothesis import given, assume, settings, strategies as st\nfrom boltons.statsutils import Stats\nnums = st.lists(st.integ

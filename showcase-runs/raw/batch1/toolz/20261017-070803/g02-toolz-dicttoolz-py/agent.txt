@@ -1,0 +1,6 @@
+I tested 7 properties across the six target functions and reported 0 bugs, so `findings.json` is `[]`.
+
+The only failure was in `update_in`, and it came from my own test: the generated input descended through a key whose value was an int, not a dict. I tightened the strategy and all 7 now pass. The failed background run (b6tms1mts) was the first, pre-fix run of the same test file, so it adds nothing new.
+
+My `update_in` test only reaches nested paths where the intermediate keys are missing or hold dicts. The generated dicts are flat, so I never exercised it on a genuinely nested input.
+

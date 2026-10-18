@@ -1,0 +1,14 @@
+[
+  {
+    "title": "normalize_file leaves a leading '/' when the path starts with multiple slashes",
+    "function": "pathspec.util.normalize_file",
+    "kind": "contract-violation",
+    "property": "the normalized path is relative, i.e. never starts with '/'",
+    "property_test": "test_normalize_not_leading_slash",
+    "repro_file": "test_repro_double_slash.py",
+    "input": "normalize_file('//a')  (also '\\\\\\\\' with default separators)",
+    "expected": "'a' (relative path, no leading '/')",
+    "actual": "'/a' (only one leading '/' is stripped, result is still absolute)",
+    "evidence": "Docstring: 'Normalizes the file path to use the POSIX path separator, and make the paths relative (remove leading \"/\")'. Windows-style '\\\\\\\\server' also becomes '//server' -> '/server' after one strip, and normalizing the result again changes it, so the function is not idempotent."
+  }
+]

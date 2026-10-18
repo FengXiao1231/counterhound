@@ -1,0 +1,14 @@
+[
+  {
+    "title": "parse() collapses comma-separated arrays into a string when interpretNumericEntities is used with iso-8859-1",
+    "function": "parse (lib/parse.js module.exports)",
+    "kind": "wrong-result",
+    "property": "with comma:true, 'a=b,c' parses to {a:['b','c']} regardless of whether interpretNumericEntities/charset are also set (the entity pass only rewrites values, it must not change their shape)",
+    "property_test": "comma + iso + interpretNumericEntities keeps array (ph_props2.test.mjs)",
+    "repro_file": "repro_comma_numeric_entities.test.mjs",
+    "input": "parse('a=b,c', { comma: true, charset: 'iso-8859-1', interpretNumericEntities: true })",
+    "expected": "{ a: ['b', 'c'] }",
+    "actual": "{ a: 'b,c' }",
+    "evidence": "parseValues splits the value into an array via parseArrayValue (comma:true), then `val = interpretNumericEntities(String(val))` at lib/parse.js:191 stringifies the array with Array#toString, rejoining it with ',' and returning a string. The README documents comma:true as parsing comma-separated values into arrays; without interpretNumericEntities the same input yields ['b','c']."
+  }
+]

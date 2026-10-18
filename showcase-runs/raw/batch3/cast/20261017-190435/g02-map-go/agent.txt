@@ -1,0 +1,9 @@
+I tested 4 properties across the listed functions and reported 2 bugs.
+
+- **Panic on non-string keys:** `ToStringMapIntE` and `ToStringMapInt64E` panic on a map with non-string keys, for example `map[int]int{0: 0}`. The reflect fallback at `map.go:191` inserts the original key into a `map[string]T`.
+- **Inconsistent string handling:** `ToStringMapStringSliceE` treats `map[any]string` values differently from `map[string]string`. Splitting on whitespace turns `"a b"` into `["a","b"]`, and `""` becomes an empty slice. This one is the weaker of the two, since the splitting may be intended behaviour of the slice conversion.
+
+Both repro tests fail as expected, and `findings.json` is written.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-190435/g02-map-go && cat > .proofhound/runs/20261017-190435/g02-map-go/ph_props_test.go <<'EOF'\npackage cast\n\nimport (\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc TestPhIntNonStringKeys(t *testing.T) {\n\trapid.Check(t, func(t *rapid.T) {\n

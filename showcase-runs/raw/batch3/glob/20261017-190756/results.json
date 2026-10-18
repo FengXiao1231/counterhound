@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-190756",
+  "diff": null,
+  "fixRun": true,
+  "repo": "glob",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:07:56.122Z",
+  "ms": 77618,
+  "spend": {
+    "usd": 0.5203823,
+    "tokensIn": 1152297,
+    "tokensOut": 16157,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-glob-go",
+      "file": "glob.go",
+      "functions": [
+        "QuoteMeta",
+        "Compile",
+        "MustCompile",
+        "Pattern.Separators",
+        "Pattern.String"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 59738,
+      "costUsd": 0.23229940000000002,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02-syntax-lexer-go",
+      "file": "syntax/lexer.go",
+      "functions": [
+        "IsSpecial",
+        "NewLexer",
+        "Lexer.Next"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 63550,
+      "costUsd": 0.21640079999999998,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 8,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Lexer.Offset() runs ahead of the returned token inside character classes",
+      "function": "github.com/gobwas/glob/syntax.Lexer.Next",
+      "kind": "contract-violation",
+      "property": "for escape-free patterns, Offset() after each Next() equals the total source length of the tokens returned so far",
+      "property_test": "TestPhOffsetAfterToken",
+      "repro_file": "repro_offset_test.go",
+      "input": "\"[a-c]\" (also \"[]\"): call Next() once, then Offset()",
+      "expected": "Next() returns RangeOpen and Offset() == 1, right after the '['",
+      "actual": "Offset() == 5 (2 for \"[]\"): fetchRange lexes the whole class and queues all its tokens, so pos is already past them",
+      "evidence": "Doc of Offset: 'the byte offset in the source the lexer stopped at, that is, the position right after the most recently returned token.' The parser (parse.go) uses lex.Offset() for error positions, so errors reported at a token inside a class point past it.",
+      "group": "g02-syntax-lexer-go",
+      "file": "syntax/lexer.go",
+      "workdir": ".proofhound/runs/20261017-190756/g02-syntax-lexer-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_offset_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproOffsetAfterRangeOpen",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Offset() after range_open<\"[\"> = 5, want 1 (right after the returned token)",
+          "example": null
+        },
+        "testName": "TestReproOffsetAfterRangeOpen"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.8,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "Lexer.Offset() points past the end of the class for tokens inside a character class",
+        "reason": "The doc on Offset() says it is the position right after the most recently returned token. fetchRange (lexer.go:303) lexes the whole class eagerly and queues RangeOpen, Lo, Between, Hi and Close, so after Next() returns RangeOpen for \"[a-c]\", pos is already 5 instead of 1. Escape-free input is valid, and the repro uses the API correctly. The parser passes lex.Offset() as the error position in parse.go, so errors on tokens inside a class are reported too far along. The impact is small, since it only affects diagnostic offsets, but a maintainer would likely fix it by tracking a per-token end offset, or by lexing the class lazily.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "skipped",
+        "reason": "not attempted: --budget was used up"
+      },
+      "reproSource": "package syntax\n\nimport \"testing\"\n\nfunc TestReproOffsetAfterRangeOpen(t *testing.T) {\n\tl := NewLexer(\"[a-c]\")\n\ttk := l.Next()\n\tif tk.Type != RangeOpen {\n\t\tt.Fatalf(\"unexpected token %v\", tk)\n\t}\n\tif got := l.Offset(); got != 1 {\n\t\tt.Fatalf(\"Offset() after %v = %d, want 1 (right after the returned token)\", tk, got)\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-190756/bugs/PH-001-lexer-offset-points-past-the-end-of-the-class-fo"
+    }
+  ]
+}

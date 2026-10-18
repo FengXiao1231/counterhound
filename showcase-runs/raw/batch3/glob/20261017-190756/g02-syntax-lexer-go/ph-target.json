@@ -1,0 +1,5 @@
+{
+  "pkgDir": "syntax",
+  "pkgName": "syntax",
+  "importPath": "github.com/gobwas/glob/syntax"
+}

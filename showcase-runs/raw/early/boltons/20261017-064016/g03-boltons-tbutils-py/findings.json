@@ -1,0 +1,10 @@
+[{"title": "TracebackInfo.from_dict does not rebuild Callpoint objects, so it does not invert to_dict",
+"function": "boltons.tbutils.TracebackInfo.from_dict",
+"kind": "wrong-result",
+"property": "TracebackInfo.from_dict(ti.to_dict()).to_dict() == ti.to_dict()",
+"property_test": "test_from_dict_roundtrip",
+"repro_file": "test_repro_from_dict.py",
+"input": "ti = TracebackInfo.from_traceback() for a caught ValueError; d = ti.to_dict()",
+"expected": "from_dict(d) yields a TracebackInfo whose frames are Callpoints, so to_dict() and str() work and to_dict() equals d",
+"actual": "frames stay plain dicts; ti2.to_dict() raises AttributeError: 'dict' object has no attribute 'to_dict' (str(ti2) fails too)",
+"evidence": "Docstring: 'Complements TracebackInfo.to_dict'. The source is `return cls(d['frames'])` with a '# TODO: check this.' comment."}]

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170700",
+  "repo": "datasize",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:07:00.115Z",
+  "ms": 29085,
+  "spend": {
+    "usd": 0.1232395,
+    "tokensIn": 210945,
+    "tokensOut": 3482,
+    "calls": 1
+  },
+  "groups": [
+    {
+      "group": "g01-datasize-go",
+      "file": "datasize.go",
+      "functions": [
+        "Parse",
+        "MustParse",
+        "ParseString",
+        "MustParseString",
+        "ByteSize.MarshalText",
+        "ByteSize.UnmarshalText"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 28852,
+      "costUsd": 0.1232395,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

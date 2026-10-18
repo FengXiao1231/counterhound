@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "cast",
+  "importPath": "github.com/spf13/cast"
+}

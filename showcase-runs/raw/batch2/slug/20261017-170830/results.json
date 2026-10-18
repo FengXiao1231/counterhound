@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170830",
+  "repo": "slug",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:08:30.446Z",
+  "ms": 48588,
+  "spend": {
+    "usd": 0.27976460000000003,
+    "tokensIn": 443535,
+    "tokensOut": 5716,
+    "calls": 3
+  },
+  "groups": [
+    {
+      "group": "g01-slug-go",
+      "file": "slug.go",
+      "functions": [
+        "IsSlug",
+        "Substitute",
+        "Make",
+        "MakeLang",
+        "SubstituteRune"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 32768,
+      "costUsd": 0.13980710000000002,
+      "reported": 2,
+      "verified": 2
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 5,
+    "reported": 2,
+    "verified": 2,
+    "duplicates": 0,
+    "confirmed": 2,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Make() with EnableSmartTruncate=false and default MaxLength=0 returns empty slug",
+      "function": "github.com/gosimple/slug.MakeLang",
+      "kind": "wrong-result",
+      "property": "With MaxLength unset (0), slugs are not shortened, so a simple lowercase word is returned unchanged regardless of EnableSmartTruncate",
+      "property_test": "TestPhNonSmartDefaultMax",
+      "repro_file": "repro_nonsmart_zero_maxlength_test.go",
+      "input": "EnableSmartTruncate=false, MaxLength=0, Make(\"a\")",
+      "expected": "\"a\"",
+      "actual": "\"\" (slug[:0] since len(slug) >= MaxLength is true)",
+      "evidence": "Doc on MaxLength: 'By default slugs aren't shortened.' The non-smart branch `len(slug) >= MaxLength` does not guard MaxLength > 0 (unlike the smart branch).",
+      "group": "g01-slug-go",
+      "file": "slug.go",
+      "workdir": ".proofhound/runs/20261017-170830/g01-slug-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_nonsmart_zero_maxlength_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproNonSmartZeroMaxLength",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Make(\"a\") with MaxLength=0 and smart truncate off = \"\", want \"a\"",
+          "example": null
+        },
+        "testName": "TestReproNonSmartZeroMaxLength"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: s: \"a\""
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.93,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "MakeLang returns an empty slug when EnableSmartTruncate=false and MaxLength is 0 (the default)",
+        "reason": "slug.go:131 runs `if !EnableSmartTruncate && len(slug) >= MaxLength { slug = slug[:MaxLength] }` with no `MaxLength > 0` check. With the default MaxLength=0, `len(slug) >= 0` is always true, so every slug is cut to `slug[:0]` and comes back empty. The MaxLength doc says 'By default slugs aren't shortened', and the smart branch at line 144 guards with `MaxLength > 0`, so the missing guard is an oversight and not intended. The repro uses the public API correctly, and a one-line fix is trivial for a maintainer to accept.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "package slug\n\nimport \"testing\"\n\nfunc TestReproNonSmartZeroMaxLength(t *testing.T) {\n\tEnableSmartTruncate = false\n\tdefer func() { EnableSmartTruncate = true }()\n\tif got := Make(\"a\"); got != \"a\" {\n\t\tt.Fatalf(\"Make(\\\"a\\\") with MaxLength=0 and smart truncate off = %q, want \\\"a\\\"\", got)\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-170830/bugs/PH-001-makelang-returns-an-empty-slug-when-enablesmartt"
+    },
+    {
+      "title": "Make() with MaxLength can return slug ending in underscore, failing IsSlug",
+      "function": "github.com/gosimple/slug.MakeLang",
+      "kind": "contract-violation",
+      "property": "All output of Make(text) passes IsSlug (when non-empty)",
+      "property_test": "TestPhMakeMaxLength",
+      "repro_file": "repro_truncate_trailing_underscore_test.go",
+      "input": "MaxLength=2, Make(\"0_0\")",
+      "expected": "a slug without trailing '_' (e.g. \"0\") that passes IsSlug",
+      "actual": "\"0_\", IsSlug returns false",
+      "evidence": "IsSlug doc: 'All output from slug.Make(text) should pass this test' and slugs may not end with '-' or '_'. smartTruncate cuts text[:MaxLength] without re-trimming '_' / '-'.",
+      "group": "g01-slug-go",
+      "file": "slug.go",
+      "workdir": ".proofhound/runs/20261017-170830/g01-slug-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_truncate_trailing_underscore_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproTruncateTrailingUnderscore",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Make(\"0_0\") with MaxLength=2 = \"0_\", not a valid slug",
+          "example": null
+        },
+        "testName": "TestReproTruncateTrailingUnderscore"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: s: \"0_z\", m: 2"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.85,
+        "severity": "low",
+        "category": "contract-violation",
+        "title": "Make() with MaxLength can return a slug ending in '_' that fails IsSlug",
+        "reason": "The IsSlug doc says all output from Make should pass it, and IsSlug rejects a trailing '_' or '-'. With smart truncation, Make trims the ends first and then calls smartTruncate. smartTruncate cuts at `text[:MaxLength]`, or at the last '-', without re-trimming. So \"0_0\" with MaxLength=2 becomes \"0_\", and a cut at a '-' can leave a trailing '_' in the same way. The input is ordinary, the guarantee is documented, and re-trimming `-_` after truncation is a small fix a maintainer would accept.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-002",
+      "reproSource": "package slug\n\nimport \"testing\"\n\nfunc TestReproTruncateTrailingUnderscore(t *testing.T) {\n\tMaxLength = 2\n\tdefer func() { MaxLength = 0 }()\n\tgot := Make(\"0_0\")\n\tif got != \"\" && !IsSlug(got) {\n\t\tt.Fatalf(\"Make(\\\"0_0\\\") with MaxLength=2 = %q, not a valid slug\", got)\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-170830/bugs/PH-002-make-with-maxlength-can-return-a-slug-ending-in"
+    }
+  ]
+}

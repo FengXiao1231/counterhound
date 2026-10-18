@@ -1,0 +1,38 @@
+diff --git a/packages/change-case/src/index.ts b/packages/change-case/src/index.ts
+index a84701f..3d6fd5d 100644
+--- a/packages/change-case/src/index.ts
++++ b/packages/change-case/src/index.ts
+@@ -232,7 +232,10 @@ function capitalCaseTransformFactory(
+   lower: (input: string) => string,
+   upper: (input: string) => string,
+ ) {
+-  return (word: string) => `${upper(word[0])}${lower(word.slice(1))}`;
++  return (word: string) => {
++    const char0 = String.fromCodePoint(word.codePointAt(0)!);
++    return `${upper(char0)}${lower(word.slice(char0.length))}`;
++  };
+ }
+ 
+ function pascalCaseTransformFactory(
+@@ -240,10 +243,10 @@ function pascalCaseTransformFactory(
+   upper: (input: string) => string,
+ ) {
+   return (word: string, index: number) => {
+-    const char0 = word[0];
++    const char0 = String.fromCodePoint(word.codePointAt(0)!);
+     const initial =
+       index > 0 && char0 >= "0" && char0 <= "9" ? "_" + char0 : upper(char0);
+-    return initial + lower(word.slice(1));
++    return initial + lower(word.slice(char0.length));
+   };
+ }
+ 
+diff --git a/ph-err.txt b/ph-err.txt
+index df9f005..2c08c89 100644
+--- a/ph-err.txt
++++ b/ph-err.txt
+@@ -11,4 +11,3 @@ proofhound · JavaScript/TypeScript · claude (sonnet) · 2 modules, 7 functions
+   bug (0.80) Capitalisation indexes by UTF-16 code unit, so words starting with astral letters are not capitalised
+ 
+   writing fixes for 1 bug…
+-  ▸ fixing PH-001 Capitalisation splits surrogate pairs, so words starting with astral cased letters are not capitalised

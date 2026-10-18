@@ -1,0 +1,31 @@
+diff --git a/ph-err.txt b/ph-err.txt
+index 7146f81..c10afdf 100644
+--- a/ph-err.txt
++++ b/ph-err.txt
+@@ -11,4 +11,3 @@ proofhound · Java · claude (sonnet) · 2 modules, 5 functions
+   bug (0.85) Negative threshold applies the Winkler bonus instead of giving plain Jaro
+ 
+   writing fixes for 1 bug…
+-  ▸ fixing PH-001 JaroWinkler(negative threshold) still applies the Winkler bonus, contradicting the constructor javadoc
+diff --git a/src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java b/src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java
+index 267cbb4..cdafb18 100644
+--- a/src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java
++++ b/src/main/java/info/debatty/java/stringsimilarity/JaroWinkler.java
+@@ -75,7 +75,7 @@ public class JaroWinkler
+         }
+ 
+         int[] mtp = matches(s1, s2);
+-        float m = mtp[0];
++        double m = mtp[0];
+         if (m == 0) {
+             return 0f;
+         }
+@@ -83,7 +83,7 @@ public class JaroWinkler
+                 / THREE;
+         double jw = j;
+ 
+-        if (j > getThreshold()) {
++        if (getThreshold() >= 0 && j > getThreshold()) {
+             jw = j + Math.min(JW_COEF, 1.0 / mtp[THREE]) * mtp[2] * (1 - j);
+         }
+         return jw;

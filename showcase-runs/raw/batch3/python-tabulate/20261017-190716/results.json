@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-190716",
+  "diff": null,
+  "fixRun": true,
+  "repo": "python-tabulate",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:07:16.235Z",
+  "ms": 42253,
+  "spend": {
+    "usd": 0.20032319999999998,
+    "tokensIn": 399878,
+    "tokensOut": 4802,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g02-benchmark-benchmark-py",
+      "file": "benchmark/benchmark.py",
+      "functions": [
+        "benchmark"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 20712,
+      "costUsd": 0.0904941,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-tabulate-__init__-py",
+      "file": "tabulate/__init__.py",
+      "functions": [
+        "simple_separated_format",
+        "tabulate"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 42178,
+      "costUsd": 0.1098291,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 3,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

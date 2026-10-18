@@ -1,0 +1,8 @@
+I tested 6 properties and reported 1 bug. `Compare` ignores the prerelease when the two versions have different segment counts, so `1.0.0.0-alpha` compares equal to `1.0.0` even though `1.0.0-alpha` is less than `1.0.0`.
+
+The other five properties passed. They were the marshal/unmarshal round trip, `Compare` antisymmetry, `Compare` transitivity, `WithPrefix`, and `NewSemver` input being accepted by `NewVersion` with the same result.
+
+The repro `repro_prerelease_ignored_extra_segment_test.go` fails now, with `1.0.0.0-alpha.Compare(1.0.0) = 0, want -1`. `findings.json` is in the same directory.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-170434/g01-version-go && cat > .proofhound/runs/20261017-170434/g01-version-go/ph_props_test.go <<'EOF'\npackage version\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phVer() *rapid.Generator[string] {\n\treturn rapid.

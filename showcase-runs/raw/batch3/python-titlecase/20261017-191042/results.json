@@ -1,0 +1,120 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191042",
+  "diff": null,
+  "fixRun": true,
+  "repo": "python-titlecase",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:10:42.284Z",
+  "ms": 73203,
+  "spend": {
+    "usd": 0.39186509999999997,
+    "tokensIn": 786071,
+    "tokensOut": 7789,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g02-titlecase-tests-py",
+      "file": "titlecase/tests.py",
+      "functions": [
+        "TestSymbols.at_n_t",
+        "TestCallback.abbreviation",
+        "TestCustomAbbreviations.test_technical_acronyms"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 26788,
+      "costUsd": 0.1172759,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-titlecase-__init__-py",
+      "file": "titlecase/__init__.py",
+      "functions": [
+        "titlecase",
+        "create_wordlist_filter_from_file",
+        "set_small_word_list"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 41076,
+      "costUsd": 0.14399309999999998,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 6,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "set_small_word_list() with default list changes SUBPHRASE behaviour (drops dash separators)",
+      "function": "titlecase.set_small_word_list",
+      "kind": "inconsistency",
+      "property": "Calling set_small_word_list() with its default (SMALL) leaves titlecase output unchanged",
+      "property_test": "test_set_small_default_roundtrip",
+      "repro_file": "test_repro_set_small_default.py",
+      "input": "titlecase('foo - the end') before vs after set_small_word_list()",
+      "expected": "'Foo - The End' both before and after (default list is unchanged)",
+      "actual": "After set_small_word_list(), result is 'Foo - the End'",
+      "evidence": "Module-level SUBPHRASE uses [:.;?!\\-\u2013\u2012\u2014\u2015][ ] but set_small_word_list rebuilds it with only [:.;?!][ ], while its default argument is SMALL, the same list used at import; resetting to the default should be a no-op.",
+      "group": "g01-titlecase-__init__-py",
+      "file": "titlecase/__init__.py",
+      "workdir": ".proofhound/runs/20261017-191042/g01-titlecase-__init__-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_set_small_default.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_set_small_default",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert 'Foo - The End' == 'Foo - the End'\n  \n  - Foo - the End\n  ?       ^\n  + Foo - The End\n  ?       ^"
+        },
+        "testName": "test_repro_set_small_default"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_set_small_default_roundtrip(\n    ws=['foo'],\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.9,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "set_small_word_list() rebuilds SUBPHRASE without the dash separators used at import",
+        "reason": "At import, SUBPHRASE is `([:.;?!\\-\u2013\u2012\u2014\u2015][ ])(SMALL)`. `set_small_word_list()` rebuilds it as `([:.;?!][ ])(small)`, so the dash characters are dropped. Calling it with the default list therefore changes output: 'foo - the end' goes from 'Foo - The End' to 'Foo - the End'. The existing test comment says calling it 'should be the case that one could call titlecase.set_small_word_list() and reset to the original behavior', and that test is skipped with a FIXME for this same divergence. The repro is valid, and a maintainer would accept the one-line regex fix.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/titlecase/__init__.py b/titlecase/__init__.py\nindex fd24431..86bb01f 100755\n--- a/titlecase/__init__.py\n+++ b/titlecase/__init__.py\n@@ -74,7 +74,7 @@ def set_small_word_list(small=SMALL):\n     SMALL_WORDS = regex.compile(r'^(%s)$' % small, regex.I)\n     SMALL_FIRST = regex.compile(r'^([%s]*)(%s)\\b' % (PUNCT, small), regex.I)\n     SMALL_LAST = regex.compile(r'\\b(%s)[%s]?$' % (small, PUNCT), regex.I)\n-    SUBPHRASE = regex.compile(r'([:.;?!][ ])(%s)' % small)\n+    SUBPHRASE = regex.compile(r'([:.;?!\\-\u2013\u2012\u2014\u2015][ ])(%s)' % small)\n \n \n def titlecase(text, callback=None, small_first_last=True, preserve_blank_lines=False, normalise_space_characters=False):\n",
+        "files": [
+          "titlecase/__init__.py"
+        ],
+        "suite": "not run (no test command found; set \"testCommand\" in .proofhound/config.json)"
+      },
+      "reproSource": "from titlecase import titlecase, set_small_word_list\n\n\ndef test_repro_set_small_default():\n    text = \"foo - the end\"\n    before = titlecase(text)\n    try:\n        set_small_word_list()  # default arg == built-in SMALL list\n        after = titlecase(text)\n    finally:\n        set_small_word_list()\n    assert before == after\n",
+      "bugDir": ".proofhound/runs/20261017-191042/bugs/PH-001-set-small-word-list-rebuilds-subphrase-without-t"
+    }
+  ]
+}

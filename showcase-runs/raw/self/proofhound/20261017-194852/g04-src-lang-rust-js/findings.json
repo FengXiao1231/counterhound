@@ -1,0 +1,14 @@
+[
+  {
+    "title": "parseLibtest drops #[should_panic] tests (failures go unreported)",
+    "function": "parseLibtest",
+    "kind": "wrong-result",
+    "property": "every 'test <name> ... <result>' line of libtest output yields one entry with the matching outcome",
+    "property_test": "parseLibtest reports every test line with outcome",
+    "repro_file": "repro_should_panic.test.mjs",
+    "input": "running 1 test\ntest tests::it_panics - should panic ... FAILED\n\nfailures:\n\n---- tests::it_panics stdout ----\nnote: test did not panic as expected\n\nfailures:\n    tests::it_panics\n",
+    "expected": "one test, outcome 'failed'",
+    "actual": "empty list: the line is not matched, so the failure is silently lost",
+    "evidence": "libtest's pretty format prints '<name> - should panic' for #[should_panic] tests; the line regex /^test (\\S+) \\.\\.\\. / requires a single non-space token before '...'. The function is the parser of cargo test output used by rust.runTests."
+  }
+]

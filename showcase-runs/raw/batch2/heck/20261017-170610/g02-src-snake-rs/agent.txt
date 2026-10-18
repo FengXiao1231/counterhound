@@ -1,0 +1,12 @@
+I tested 10 properties and reported 1 bug.
+
+The bug is that `to_snake_case` treats combining marks as word separators and drops them, so its output isn't stable. `"İ"` (U+0130) becomes `"i\u{307}"`, but running that result through `to_snake_case` again gives `"i"`. NFD-decomposed text like `"cafe\u{301}"` loses its accent for the same reason. The repro, `repro_idempotent_dotted_i.rs`, fails now with `left: "i"` against `right: "i\u{307}"`.
+
+Idempotence held on ASCII input and on Unicode input once I excluded uppercase letters with no lowercase mapping.
+
+I didn't report the `"Ę𝔖A"` failure. That input contains an uppercase letter with no lowercase form, so the output keeps an uppercase character and re-splits on the second pass. That is arguably not a bug.
+
+Everything is in `.proofhound/runs/20261017-170610/g02-src-snake-rs/`, with the finding in `findings.json`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-170610/g02-src-snake-rs"}

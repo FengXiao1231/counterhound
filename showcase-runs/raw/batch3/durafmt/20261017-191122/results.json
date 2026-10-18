@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191122",
+  "diff": null,
+  "fixRun": true,
+  "repo": "durafmt",
+  "lang": "go",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:11:22.165Z",
+  "ms": 78210,
+  "spend": {
+    "usd": 0.4579488,
+    "tokensIn": 895167,
+    "tokensOut": 10335,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g02-unit-go",
+      "file": "unit.go",
+      "functions": [
+        "UnitsCoder.Decode",
+        "UnitsCoder.Encode",
+        "Units.Units"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 21511,
+      "costUsd": 0.09491150000000001,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g01-durafmt-go",
+      "file": "durafmt.go",
+      "functions": [
+        "Parse",
+        "Durafmt.Format",
+        "ParseStringShort",
+        "ParseShort",
+        "Durafmt.LimitToUnit",
+        "ParseString"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 36528,
+      "costUsd": 0.16436610000000001,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 9,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 1,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "Format/String mutates receiver for negative durations, so a second call gives a wrong result",
+      "function": "github.com/hako/durafmt.(*Durafmt).Format",
+      "kind": "wrong-result",
+      "property": "Formatting the same *Durafmt twice returns the same string, and Duration() is unchanged by formatting",
+      "property_test": "TestPhFormatIdempotent",
+      "repro_file": "repro_format_mutates_negative_test.go",
+      "input": "d := Parse(-1000 * time.Nanosecond); d.String() twice",
+      "expected": "\"-1 microsecond\" both times; Duration() still -1\u00b5s",
+      "actual": "first call \"-1 microsecond\", second call \"-\"; Duration() returns +1\u00b5s after formatting (d.duration = -d.duration is written back to the receiver while d.input still starts with '-')",
+      "evidence": "Format is a pure formatting method (String() is also used by fmt via Stringer, and Duration() is a getter); the code negates d.duration in place at durafmt.go:94 whenever input[0]=='-', so each call flips the sign again and formatting has side effects.",
+      "group": "g01-durafmt-go",
+      "file": "durafmt.go",
+      "workdir": ".proofhound/runs/20261017-191122/g01-durafmt-go",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_format_mutates_negative_test.go",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:TestReproFormatMutatesNegative",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "String() not repeatable: first \"-1 microsecond\", second \"-\"",
+          "example": null
+        },
+        "testName": "TestReproFormatMutatesNegative"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: d: -1000"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.95,
+        "severity": "medium",
+        "category": "wrong-result",
+        "title": "Format/String negates d.duration in place for negative durations, so repeated calls give wrong output",
+        "reason": "durafmt.go:94 does `d.duration = -d.duration` on the receiver whenever input starts with '-', but input is never changed. The first call leaves the stored duration positive, and the second call negates it back to negative, so the unit calculations run on a negative value and the output collapses to \"-\". Nothing in the docs or tests suggests this is intentional. A pure formatter should be repeatable, and `Duration()` should not change after formatting. The fix is a one-line change to use a local copy of the duration, and a maintainer would take it.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "fix": {
+        "status": "verified",
+        "reason": "the repro passes on the patched code",
+        "patch": "diff --git a/durafmt.go b/durafmt.go\nindex 128726e..ea320c8 100644\n--- a/durafmt.go\n+++ b/durafmt.go\n@@ -87,11 +87,12 @@ func (d *Durafmt) String() string {\n // Format parses d *Durafmt into a human readable duration with units.\n func (d *Durafmt) Format(units Units) string {\n \tvar duration string\n+\tdur := d.duration\n \n \t// Check for minus durations.\n \tif string(d.input[0]) == \"-\" {\n \t\tduration += \"-\"\n-\t\td.duration = -d.duration\n+\t\tdur = -dur\n \t}\n \n \tvar microseconds int64\n@@ -104,7 +105,7 @@ func (d *Durafmt) Format(units Units) string {\n \tvar years int64\n \tvar shouldConvert = false\n \n-\tremainingSecondsToConvert := int64(d.duration / time.Microsecond)\n+\tremainingSecondsToConvert := int64(dur / time.Microsecond)\n \n \t// Convert duration.\n \tif d.limitUnit == \"\" {\n@@ -178,7 +179,7 @@ func (d *Durafmt) Format(units Units) string {\n \t\tcase v == 1:\n \t\t\tduration += strval + \" \" + u.Singular + \" \"\n \t\t// omit any value with 0s or 0.\n-\t\tcase d.duration.String() == \"0\" || d.duration.String() == \"0s\":\n+\t\tcase dur.String() == \"0\" || dur.String() == \"0s\":\n \t\t\tpattern := fmt.Sprintf(\"^-?0%s$\", unitsShort[i])\n \t\t\tisMatch, err := regexp.MatchString(pattern, d.input)\n \t\t\tif err != nil {\n@@ -210,11 +211,12 @@ func (d *Durafmt) Format(units Units) string {\n \n func (d *Durafmt) InternationalString() string {\n \tvar duration string\n+\tdur := d.duration\n \n \t// Check for minus durations.\n \tif string(d.input[0]) == \"-\" {\n \t\tduration += \"-\"\n-\t\td.duration = -d.duration\n+\t\tdur = -dur\n \t}\n \n \tvar microseconds int64\n@@ -227,7 +229,7 @@ func (d *Durafmt) InternationalString() string {\n \tvar years int64\n \tvar shouldConvert = false\n \n-\tremainingSecondsToConvert := int64(d.duration / time.Microsecond)\n+\tremainingSecondsToConvert := int64(dur / time.Microsecond)\n \n \t// Convert duration.\n \tif d.limitUnit == \"\" {\n@@ -299,7 +301,7 @@ func (d *Durafmt) InternationalString() string {\n \t\tcase v > 0:\n \t\t\tduration += strval + \" \" + u + \" \"\n \t\t// omit any value with 0.\n-\t\tcase d.duration.String() == \"0\":\n+\t\tcase dur.String() == \"0\":\n \t\t\tpattern := fmt.Sprintf(\"^-?0%s$\", unitsShort[i])\n \t\t\tisMatch, err := regexp.MatchString(pattern, d.input)\n \t\t\tif err != nil {\n",
+        "files": [
+          "durafmt.go"
+        ],
+        "suite": "passed (go test -count=1 ./...)"
+      },
+      "reproSource": "package durafmt\n\nimport (\n\t\"testing\"\n\t\"time\"\n)\n\nfunc TestReproFormatMutatesNegative(t *testing.T) {\n\td := Parse(-1000 * time.Nanosecond)\n\tfirst := d.String()\n\tsecond := d.String()\n\tif first != second {\n\t\tt.Fatalf(\"String() not repeatable: first %q, second %q\", first, second)\n\t}\n\tif d.Duration() != -1000*time.Nanosecond {\n\t\tt.Fatalf(\"Duration() mutated to %v\", d.Duration())\n\t}\n}\n",
+      "bugDir": ".proofhound/runs/20261017-191122/bugs/PH-001-format-string-negates-d-duration-in-place-for-ne"
+    }
+  ]
+}

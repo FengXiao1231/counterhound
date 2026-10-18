@@ -1,0 +1,8 @@
+I tested 6 properties and reported 0 bugs, so `findings.json` is `[]`.
+
+The properties were format-then-parse round trips under four formats (default, escape with no quote, default plus escape, and `;`-delimited with an LF record separator), a system-separator check, and a `newFormat` delimiter check.
+
+One failure turned out to be an input the format can't represent, not a bug. A single empty value with no quote character formats to an empty string, which parses back as zero records. I excluded that input and all six passed.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-192020/g01--main-java-org-apache-commons-csv-CSVFormat-java && cat > .proofhound/runs/20261017-192020/g01--main-java-org-apache-commons-csv-CSVFormat-java/PhPropsTest.java <<'EOF'\npackage org.apache.commons.csv;\n\nimport java.io.StringReader;\nimport 

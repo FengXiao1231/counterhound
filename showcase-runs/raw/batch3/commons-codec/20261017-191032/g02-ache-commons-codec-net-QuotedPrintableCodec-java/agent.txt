@@ -1,0 +1,11 @@
+I tested 8 properties and reported 1 bug. It is a strict-mode line that comes out 77 characters long, over the RFC 1521 limit of 76. The repro, `ReproStrictLineLengthTest.java`, fails as expected.
+
+The failing input is 70 `a` bytes, then two `0x00` bytes, then two more `a`. The first encoded line is `aaaa…a=00=00=`, which is 77 characters.
+
+Everything else passed: the strict and non-strict round trips, custom printable sets, ASCII-only output, no trailing whitespace before a soft break, and decode throwing only `DecoderException`.
+
+`mkdir` and `sed` were denied in this session. The work directory already accepted my file writes, so nothing was lost.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191032/g02-ache-commons-codec-net-QuotedPrintableCodec-java/"}
+Bash: {"command":"sed -i 's/ofSizeBetween(0, max)/ofSizeBetween(3, max)/' .proofhound/runs/20261017-191032/g02-ache-commons-codec-net-QuotedPrintableCodec-java/PhPropsTest.java"}

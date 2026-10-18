@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-192924",
+  "diff": null,
+  "fixRun": true,
+  "repo": "decamelize",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:29:24.291Z",
+  "ms": 28819,
+  "spend": {
+    "usd": 0.12057760000000001,
+    "tokensIn": 249059,
+    "tokensOut": 3059,
+    "calls": 1
+  },
+  "groups": [
+    {
+      "group": "g01-index-js",
+      "file": "index.js",
+      "functions": [
+        "decamelize"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 28799,
+      "costUsd": 0.12057760000000001,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 1,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

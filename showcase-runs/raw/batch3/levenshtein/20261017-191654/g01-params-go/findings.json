@@ -1,0 +1,14 @@
+[
+  {
+    "title": "BonusScale clamp is not enforced when BonusPrefix is raised afterwards; Match() exceeds 1",
+    "function": "Params.BonusScale",
+    "kind": "contract-violation",
+    "property": "after any sequence of BonusScale/BonusPrefix calls, Match() stays within 0..1 (scale never exceeds 1/BonusPrefix)",
+    "property_test": "TestPhMatchRange",
+    "repro_file": "repro_prefix_after_scale_test.go",
+    "input": "NewParams().BonusScale(0.25).BonusPrefix(10); Match(\"aaaaaaaaaaaaaaaaaaab\", \"aaaaaaaaaaaaaaaaaaac\", p)",
+    "expected": "Score <= 1",
+    "actual": "Match returns 1.075",
+    "evidence": "Doc: 'To guarantee that the similarity score remains in the interval 0..1, this scaling factor is not allowed to exceed 1 / BonusPrefix.' The clamp is only applied inside BonusScale, so a later BonusPrefix(v) (which does not re-clamp) breaks the invariant; Similarity range 0..1 is promised for Match."
+  }
+]

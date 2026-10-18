@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "semver",
+  "importPath": "github.com/blang/semver"
+}

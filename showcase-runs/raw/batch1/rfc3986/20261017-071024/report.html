@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofhound · rfc3986</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}h1 span{color:var(--accent)}h2{font-size:18px;margin:40px 0 12px}
+.meta{color:var(--dim);font-size:13px}.meta code{font-size:12px}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+.funnel{margin:20px 0 8px;display:grid;gap:6px}.step{position:relative;height:30px}
+.bar{position:absolute;inset:0 auto 0 0;background:var(--bar1);border-radius:6px}.bar[data-i="3"]{background:var(--bar3)}
+.lab{position:relative;padding:5px 10px;font-size:13px;white-space:nowrap}.bar[data-i="3"]+.lab{color:#fff}
+.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:14px 0}
+.bug.needs-look{border-left-color:var(--warn)}
+.bug header{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.bug h3{margin:0;font-size:17px;flex:1 1 300px}
+.id{font:600 12px ui-monospace,monospace;color:var(--accent)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--dim)}
+.badge.ok{color:var(--ok);border-color:currentColor}.sev-high{color:var(--accent);border-color:currentColor}.sev-medium{color:var(--warn);border-color:currentColor}
+.where{margin:6px 0 10px;color:var(--dim);font-size:13px;word-break:break-all}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0 0 8px}dt{color:var(--dim);font-size:13px}dd{margin:0;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.copy{margin-left:8px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer}
+.err{color:var(--accent);margin:4px 0}.dim{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:500}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center}
+.tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+footer{margin-top:48px;color:var(--dim);font-size:12.5px}
+@media (max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style></head><body><main>
+<h1>proof<span>hound</span> report</h1>
+<div class="meta">rfc3986 · python · claude (sonnet) · 3 modules, 17 functions · 2m18s · $0.86 · 10/17/2026, 7:10:24 AM</div>
+<div class="funnel">
+    <div class="step"><div class="bar" style="width:100%" data-i="0"></div>
+    <div class="lab"><b>4</b> reported by the hunter</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="1"></div>
+    <div class="lab"><b>4</b> reproduced deterministically</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="2"></div>
+    <div class="lab"><b>4</b> unique</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="3"></div>
+    <div class="lab"><b>4</b> confirmed by review</div></div></div>
+<p class="meta">Every bug below failed the same way in 3 fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
+
+<h2>4 confirmed bugs</h2>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-001</span>
+    <h3>ParseResultBytes.unsplit() raises AttributeError for URIs without an authority</h3>
+    <span class="badges">
+      <span class="badge kind">crash</span>
+      <span class="badge sev-medium">medium</span>
+      <span class="badge">confidence 0.93</span>
+      <span class="badge ok">failed 3/3</span>
+    </span>
+  </header>
+  <p class="where"><code>rfc3986.parseresult.ParseResultBytes.unsplit</code> · <code>src/rfc3986/parseresult.py:409</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>ParseResultBytes.from_string(b&quot;/a&quot;).unsplit()</code></dd>
+    <dt>Expected</dt><dd>b&quot;/a&quot; (as ParseResult.from_string(&quot;/a&quot;).unsplit() returns &quot;/a&quot;)</dd>
+    <dt>Actual</dt><dd><code>AttributeError: &#39;NoneType&#39; object has no attribute &#39;encode&#39;</code></dd>
+    <dt>Property</dt><dd>unsplitting a parsed relative/authority-less URI (bytes) returns the URI bytes instead of raising</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from rfc3986.parseresult import ParseResultBytes
+
+
+def test_repro_bytes_unsplit_no_authority():
+    pr = ParseResultBytes.from_string(b&quot;/a&quot;)
+    assert pr.unsplit() == b&quot;/a&quot;</code></pre>
+  <p class="err"><code>AttributeError: &#39;NoneType&#39; object has no attribute &#39;encode&#39;</code></p></details>
+  <details><summary>Why this is a bug</summary><p>unsplit is documented as &#39;:returns: The parsed URI reconstituted as a string / :rtype: bytes&#39;; the str counterpart ParseResult.unsplit and geturl() work for the same input, and authority-less URIs such as &#39;/a&#39;, &#39;a:b&#39;, &#39;?q&#39; and &#39;&#39; are valid RFC 3986 references that from_string accepts. ParseResultMixin declares authority as Optional.</p><p><b>Independent review:</b> I re-ran the repro and it fails as reported. `ParseResultBytes.authority` (parseresult.py:409) calls `self.reference.authority.encode(...)` with no None check, although `ParseResult.authority` and the mixin both declare the value Optional. `from_string` accepts authority-less references such as b&#39;/a&#39;, and the str `unsplit` handles them. The default `lazy_normalize=True` path in `ParseResultBytes.unsplit` hits the crash on a plain relative path, which is a common input, so a maintainer would accept a small None-guard fix.</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_bytes_unsplit_vs_str(
+    u=&#39;&#39;,
+    lazy=True,
+)</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-071024/bugs/PH-001-parseresultbytes-unsplit-raises-attributeerror-f/BUG.md</code></p></details>
+</article>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-002</span>
+    <h3>URIBuilder.extend_query_with drops existing query parameters that have blank values</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.80</span>
+      <span class="badge ok">failed 3/3</span>
+    </span>
+  </header>
+  <p class="where"><code>rfc3986.builder.URIBuilder.extend_query_with</code> · <code>src/rfc3986/builder.py</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>URIBuilder(query=&#39;a=&#39;).extend_query_with([(&#39;b&#39;, &#39;c&#39;)])</code></dd>
+    <dt>Expected</dt><dd>query == &#39;a=&amp;b=c&#39;</dd>
+    <dt>Actual</dt><dd>query == &#39;b=c&#39; (the existing &#39;a=&#39; is lost); extending with [] turns &#39;a=&#39; into &#39;&#39;</dd>
+    <dt>Property</dt><dd>extending a query keeps all existing key/value pairs, including those with empty values, and appends the new ones</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from rfc3986.builder import URIBuilder
+
+
+def test_repro_extend_query_blank():
+    b = URIBuilder(query=&quot;a=&quot;).extend_query_with([(&quot;b&quot;, &quot;c&quot;)])
+    assert b.query == &quot;a=&amp;b=c&quot;</code></pre>
+  <p class="err"><code>AssertionError: assert &#39;b=c&#39; == &#39;a=&amp;b=c&#39;</code></p></details>
+  <details><summary>Why this is a bug</summary><p>Docstring: &#39;Extend the existing query string with the new query items.&#39; Existing items are parsed with parse_qsl(self.query) without keep_blank_values=True, so blank-valued params are discarded; extension should only add, never remove.</p><p><b>Independent review:</b> extend_query_with parses the existing query with `parse_qsl(self.query or &quot;&quot;)`. That call defaults to `keep_blank_values=False`, so `a=` is discarded, and extending with an empty list turns `a=` into an empty query. The docstring says it extends the existing query, and the examples show existing items being preserved. Losing data from a query that was already valid is not the intended behaviour. The tests I found don&#39;t cover blank values, so nothing suggests the drop is deliberate, and passing `keep_blank_values=True` is a one-line fix a maintainer would likely accept.</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_extend_query(
+    # The test always failed when commented parts were varied together.
+    a=[(
+         &#39;0&#39;,  # or any other generated value
+         &#39;&#39;,
+     )],
+    b=[],  # or any other generated value
+)</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-071024/bugs/PH-002-uribuilder-extend-query-with-drops-existing-quer/BUG.md</code></p></details>
+</article>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-003</span>
+    <h3>normalize_uri turns a path beginning with &#39;//&#39; into an authority when the URI has no authority</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.70</span>
+      <span class="badge ok">failed 3/3</span>
+    </span>
+  </header>
+  <p class="where"><code>rfc3986.api.normalize_uri</code> · <code>src/rfc3986/api.py</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>a:/.//b</code></dd>
+    <dt>Expected</dt><dd>a path of &#39;//b&#39; with no authority (e.g. &#39;a:/.//b&#39; or &#39;a:/%2F...&#39; style form); result must not re-parse with authority &#39;b&#39;</dd>
+    <dt>Actual</dt><dd>&#39;a://b&#39;, which parses as scheme &#39;a&#39;, authority &#39;b&#39;, no path</dd>
+    <dt>Property</dt><dd>normalized URI re-parses with the same authority presence as the input</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from rfc3986.api import normalize_uri, uri_reference
+
+
+def test_repro_path_becomes_authority():
+    # path &quot;/.//b&quot; normalizes to &quot;//b&quot;; with no authority the result
+    # &quot;a://b&quot; re-parses with host &quot;b&quot; instead of path &quot;//b&quot;.
+    n = normalize_uri(&quot;a:/.//b&quot;)
+    assert uri_reference(n).authority is None</code></pre>
+  <p class="err"><code>AssertionError: assert &#39;b&#39; is None</code></p></details>
+  <details><summary>Why this is a bug</summary><p>RFC 3986 section 3.3: when no authority is present the path cannot begin with &#39;//&#39;; section 6.2.2 normalization must be semantics-preserving. remove_dot_segments produces &#39;//b&#39; and unsplit() concatenates it directly after &#39;a:&#39;.</p><p><b>Independent review:</b> &#39;a:/.//b&#39; is a valid URI: scheme &#39;a&#39;, no authority, path &#39;/.//b&#39;. Normalization runs remove_dot_segments to get &#39;//b&#39;, and unsplit() then emits &#39;a:&#39; followed by &#39;//b&#39;. That string re-parses with authority &#39;b&#39; and no path, so normalization changed the URI&#39;s meaning, which RFC 3986 §6.2 forbids and §3.3 rules out for a no-authority path. This is a narrow edge case, and a fix is small: when there is no authority and the path starts with &#39;//&#39;, keep a &#39;/.&#39; prefix as the WHATWG URL spec does, or skip dot-segment removal that would create the leading &#39;//&#39;. I couldn&#39;t run the repro myself because shell access was denied, so this rests on reading the source and on the harness&#39;s three failing runs.</p>
+  
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-071024/bugs/PH-003-normalize-uri-turns-a-path-beginning-with-into-a/BUG.md</code></p></details>
+</article>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-004</span>
+    <h3>normalize_uri drops an empty-but-present authority (file:///path becomes file:/path)</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.62</span>
+      <span class="badge ok">failed 3/3</span>
+    </span>
+  </header>
+  <p class="where"><code>rfc3986.api.normalize_uri</code> · <code>src/rfc3986/api.py</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>file:///etc/hosts</code></dd>
+    <dt>Expected</dt><dd>file:///etc/hosts</dd>
+    <dt>Actual</dt><dd>file:/etc/hosts</dd>
+    <dt>Property</dt><dd>normalizing a URI preserves its component structure; an empty-but-present authority stays &#39;//&#39;</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from rfc3986.api import normalize_uri
+
+
+def test_repro_empty_authority_dropped():
+    # &quot;file:///etc/hosts&quot; has an empty (but present) authority; normalizing
+    # must not change the URI&#39;s structure.
+    assert normalize_uri(&quot;file:///etc/hosts&quot;) == &quot;file:///etc/hosts&quot;</code></pre>
+  <p class="err"><code>AssertionError: assert &#39;file:/etc/hosts&#39; == &#39;file:///etc/hosts&#39;</code></p></details>
+  <details><summary>Why this is a bug</summary><p>RFC 3986 section 5.3 recomposition: if authority is defined (even empty), append &#39;//&#39; + authority. Docstring says normalize_uri equals uri_reference(uri).normalize().unsplit(); normalization (6.2.2) must not change the URI&#39;s meaning. unsplit() uses truthiness of authority, so &#39;//&#39; is lost (also &#39;//&#39; -&gt; &#39;&#39;).</p><p><b>Independent review:</b> normalize() rebuilds the authority with normalize_authority(), which returns &#39;&#39; for an empty authority. unsplit() then tests `if self.authority:`, so the &#39;//&#39; is dropped, and `file:///etc/hosts` becomes `file:/etc/hosts`. RFC 3986 5.3 says &#39;//&#39; is emitted whenever the authority is defined, even if empty, and normalization shouldn&#39;t change a URI&#39;s structure. I read the source and found no test or documentation saying the drop is intended. I could not run the code (Bash was denied), so this rests on reading the source and the proofhound run, which failed 3/3. The fix is delicate because it has to tell None from &#39;&#39; for authority across parsing, normalization and unsplit, which is why I&#39;m only moderately confident a maintainer would take it.</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_unsplit_roundtrip(
+    # The test always failed when commented parts were varied together.
+    u=(lambda s, a, p, q, f: (s + &#39;:&#39; if s else &#39;&#39;) + (&#39;//&#39; + a if a is not None else &#39;&#39;) + ((&#39;/&#39; if a is not None and p and (not p.startswith(&#39;/&#39;)) else &#39;&#39;) + p) + (&#39;?&#39; + q if q is not None else &#39;&#39;) + (&#39;#&#39; + f if f is not None else &#39;&#39;))(
+        &#39;&#39;,  # or any other generated value
+  </code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-071024/bugs/PH-004-normalize-uri-drops-an-empty-but-present-authori/BUG.md</code></p></details>
+</article>
+
+
+
+<h2>Filtered out (0)</h2>
+<p class="dim">Nothing was filtered out.</p>
+
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
+<tr><td><code>src/rfc3986/builder.py</code></td><td>URIBuilder.add_path, URIBuilder.extend_path, URIBuilder.from_uri, URIBuilder.add_credentials, URIBuilder.add_query_from, URIBuilder.extend_query_with</td><td>1</td><td>1</td><td>47s</td></tr><tr><td><code>src/rfc3986/parseresult.py</code></td><td>ParseResultBytes.from_string, ParseResult.from_string, ParseResultBytes.unsplit, ParseResult.unsplit, ParseResult.encode, split_authority</td><td>1</td><td>1</td><td>60s</td></tr><tr><td><code>src/rfc3986/api.py</code></td><td>normalize_uri, urlparse, is_valid_uri, uri_reference, iri_reference</td><td>2</td><td>2</td><td>1m27s</td></tr>
+</table>
+<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));
+</script>
+</body></html>

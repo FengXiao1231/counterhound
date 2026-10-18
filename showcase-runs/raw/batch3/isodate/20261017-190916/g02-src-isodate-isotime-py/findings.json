@@ -1,0 +1,14 @@
+[
+  {
+    "title": "parse_time raises ValueError for hh.hhhh with many trailing 9s (microsecond rounds to 1000000)",
+    "function": "isodate.isotime.parse_time",
+    "kind": "crash",
+    "property": "any syntactically valid 'hh.hhh...' time string parses to a time or raises ISO8601Error, never a raw ValueError from time()",
+    "property_test": "test_hour_fraction_nines",
+    "repro_file": "test_repro_hour_fraction_rounding.py",
+    "input": "parse_time('00.9999999999999') (also '10.99999999999999')",
+    "expected": "A datetime.time just before the next hour (e.g. 00:59:59.999999), as the seconds/minutes branches do via ROUND_FLOOR",
+    "actual": "ValueError: microsecond must be in 0..999999 (isotime.py:134)",
+    "evidence": "Docstring lists 'hh.hhTZD' with arbitrary decimal fraction as supported; the regex accepts any number of digits. The hour-fraction branch skips the ROUND_FLOOR quantize used by the minute/second branches and then calls to_integral() (rounding), so microsecond can become 1000000."
+  }
+]

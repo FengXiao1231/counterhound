@@ -1,0 +1,312 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-070558",
+  "repo": "humanize",
+  "lang": "python",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T07:05:58.481Z",
+  "ms": 88556,
+  "spend": {
+    "usd": 0.6476451000000002,
+    "tokensIn": 1397509,
+    "tokensOut": 17912,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g01-src-humanize-number-py",
+      "file": "src/humanize/number.py",
+      "functions": [
+        "ordinal",
+        "clamp",
+        "intcomma",
+        "intword",
+        "apnumber",
+        "fractional"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 56233,
+      "costUsd": 0.1762601,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g03-src-humanize-i18n-py",
+      "file": "src/humanize/i18n.py",
+      "functions": [
+        "activate",
+        "thousands_separator",
+        "decimal_separator",
+        "deactivate"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 68038,
+      "costUsd": 0.19278640000000005,
+      "reported": 1,
+      "verified": 0
+    },
+    {
+      "group": "g02-src-humanize-time-py",
+      "file": "src/humanize/time.py",
+      "functions": [
+        "naturaltime",
+        "naturaldelta",
+        "naturaldate",
+        "precisedelta",
+        "naturalday"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 69014,
+      "costUsd": 0.22031590000000006,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 3,
+    "functions": 15,
+    "reported": 2,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 1
+  },
+  "findings": [
+    {
+      "title": "ordinal() gives wrong suffix for negative integers (-1 -> '-1th')",
+      "function": "humanize.number.ordinal",
+      "kind": "wrong-result",
+      "property": "the ordinal suffix of -n depends on the digits of n, same as for n (1->st, 2->nd, 3->rd, 11-13->th)",
+      "property_test": "test_ordinal_matches_reference",
+      "repro_file": "test_repro_ordinal_negative.py",
+      "input": "ordinal(-1)",
+      "expected": "'-1st' (also -2 -> '-2nd', -3 -> '-3rd', -21 -> '-21st')",
+      "actual": "'-1th', '-2th', '-3th', '-21th'",
+      "evidence": "Docstring: 'Works for any integer'; 1 is '1st', 2 is '2nd', 3 is '3rd'. The code uses Python's modulo (value % 10, value % 100) on a negative value, which yields 9/8/7 etc., so the suffix is chosen from the wrong digit.",
+      "group": "g01-src-humanize-number-py",
+      "file": "src/humanize/number.py",
+      "workdir": ".proofhound/runs/20261017-070558/g01-src-humanize-number-py",
+      "verification": {
+        "verified": true,
+        "reproFile": "test_repro_ordinal_negative.py",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:test_repro_ordinal_negative",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assert '-1th' == '-1st'\n  \n  - -1st\n  ?   -\n  + -1th\n  ?    +"
+        },
+        "testName": "test_repro_ordinal_negative"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: test_ordinal_matches_reference(\n    n=-1,\n)"
+      },
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.72,
+        "severity": "low",
+        "category": "wrong-result",
+        "title": "ordinal() picks the wrong suffix for negative integers (-1 -> '-1th')",
+        "reason": "The docstring says ordinal() \"works for any integer\", and negative ints are valid input. The code takes `value % 10` and `value % 100` on the signed value. Python's modulo is non-negative, so -1 gives digit 9 and the suffix 'th', while the suffix for -n should depend on the digits of n. The repro is correct and fails deterministically. The only doubt is that negative ordinals are unusual and untested, and no test or doc promises '-1st'. Even so, '-1th' is clearly wrong, and the fix is a one-line `abs(value)` in the modulo expressions, so a maintainer would likely accept it.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "import sys, types\nif \"humanize._version\" not in sys.modules:\n    _m = types.ModuleType(\"humanize._version\")\n    _m.__version__ = \"0\"\n    sys.modules[\"humanize._version\"] = _m\nfrom humanize.number import ordinal\n\n\ndef test_repro_ordinal_negative():\n    assert ordinal(-1) == \"-1st\"\n    assert ordinal(-2) == \"-2nd\"\n    assert ordinal(-3) == \"-3rd\"\n    assert ordinal(-21) == \"-21st\"\n",
+      "bugDir": ".proofhound/runs/20261017-070558/bugs/PH-001-ordinal-picks-the-wrong-suffix-for-negative-inte"
+    },
+    {
+      "title": "activate() ignores `path` when the locale was activated before from another path",
+      "function": "humanize.i18n.activate",
+      "kind": "contract-violation",
+      "property": "activate(locale, path) loads the catalogue from `path`; if none exists there it raises FileNotFoundError, regardless of earlier activations",
+      "property_test": "test_activate_uses_given_path",
+      "repro_file": "test_repro_path_ignored_after_cache.py",
+      "input": "activate('fr_FR', dirA) (has catalogue) then activate('fr_FR', emptyDir)",
+      "expected": "FileNotFoundError because emptyDir has no fr_FR catalogue (and a different dir's catalogue is used if it differs)",
+      "actual": "Returns the cached translations from dirA silently; `path` is ignored because _TRANSLATIONS is keyed by locale only",
+      "evidence": "Docstring: 'Search for locale in directory `path`' and 'Raises: FileNotFoundError: If humanize cannot find the locale folder'. Cache key at i18n.py:88 omits path.",
+      "group": "g03-src-humanize-i18n-py",
+      "file": "src/humanize/i18n.py",
+      "workdir": ".proofhound/runs/20261017-070558/g03-src-humanize-i18n-py",
+      "verification": {
+        "verified": false,
+        "reason": "test error: Failed means the test itself is broken",
+        "reproFile": "test_repro_path_ignored_after_cache.py",
+        "error": {
+          "type": "Failed",
+          "message": "DID NOT RAISE FileNotFoundError",
+          "notes": [],
+          "frames": [
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/runner.py",
+              "line": 361,
+              "func": "from_call",
+              "code": "result: TResult | None = func()"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/runner.py",
+              "line": 250,
+              "func": "<lambda>",
+              "code": "lambda: runtest_hook(item=item, **kwds),"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_caller.py",
+              "line": 197,
+              "func": "__call__",
+              "code": "return self._hookexec("
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_manager.py",
+              "line": 183,
+              "func": "_hookexec",
+              "code": "return self._inner_hookexec(hook_name, methods, kwargs, firstresult)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 195,
+              "func": "_multicall",
+              "code": "raise exception"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 167,
+              "func": "_multicall",
+              "code": "teardown.throw(exception)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/logging.py",
+              "line": 865,
+              "func": "pytest_runtest_call",
+              "code": "yield"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 167,
+              "func": "_multicall",
+              "code": "teardown.throw(exception)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/capture.py",
+              "line": 900,
+              "func": "pytest_runtest_call",
+              "code": "return (yield)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 167,
+              "func": "_multicall",
+              "code": "teardown.throw(exception)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 64,
+              "func": "run_old_style_hookwrapper",
+              "code": "return result.get_result()"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_result.py",
+              "line": 103,
+              "func": "get_result",
+              "code": "raise exc.with_traceback(tb)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 49,
+              "func": "run_old_style_hookwrapper",
+              "code": "res = yield"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 167,
+              "func": "_multicall",
+              "code": "teardown.throw(exception)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/skipping.py",
+              "line": 268,
+              "func": "pytest_runtest_call",
+              "code": "return (yield)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 147,
+              "func": "_multicall",
+              "code": "res = hook_impl.function(*args)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/runner.py",
+              "line": 184,
+              "func": "pytest_runtest_call",
+              "code": "item.runtest()"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/python.py",
+              "line": 1707,
+              "func": "runtest",
+              "code": "self.ihook.pytest_pyfunc_call(pyfuncitem=self)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_caller.py",
+              "line": 197,
+              "func": "__call__",
+              "code": "return self._hookexec("
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_manager.py",
+              "line": 183,
+              "func": "_hookexec",
+              "code": "return self._inner_hookexec(hook_name, methods, kwargs, firstresult)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 195,
+              "func": "_multicall",
+              "code": "raise exception"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/pluggy/_execution.py",
+              "line": 147,
+              "func": "_multicall",
+              "code": "res = hook_impl.function(*args)"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/python.py",
+              "line": 167,
+              "func": "pytest_pyfunc_call",
+              "code": "result = testfunction(**testargs)"
+            },
+            {
+              "file": "/tmp/claude-0/zoo/humanize/.proofhound/runs/20261017-070558/g03-src-humanize-i18n-py/test_repro_path_ignored_after_cache.py",
+              "line": 18,
+              "func": "test_repro_path_ignored_after_cache",
+              "code": "with pytest.raises(FileNotFoundError):"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/raises.py",
+              "line": 699,
+              "func": "__exit__",
+              "code": "fail(f\"DID NOT RAISE {self.expected_exceptions[0].__name__}\")"
+            },
+            {
+              "file": "/root/.local/lib/python3.13/site-packages/_pytest/outcomes.py",
+              "line": 162,
+              "func": "__call__",
+              "code": "raise Failed(msg=reason, pytrace=pytrace)"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

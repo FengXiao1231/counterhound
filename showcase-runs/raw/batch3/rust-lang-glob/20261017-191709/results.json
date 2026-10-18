@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-191709",
+  "diff": null,
+  "fixRun": true,
+  "repo": "rust-lang-glob",
+  "lang": "rust",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:17:09.243Z",
+  "ms": 62623,
+  "spend": {
+    "usd": 0.23003649999999998,
+    "tokensIn": 585153,
+    "tokensOut": 5297,
+    "calls": 1
+  },
+  "groups": [
+    {
+      "group": "g01-src-lib-rs",
+      "file": "src/lib.rs",
+      "functions": [
+        "Pattern::escape",
+        "Pattern::matches_path",
+        "Pattern::matches_path_with",
+        "glob",
+        "Pattern::from_str",
+        "Pattern::matches"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 62601,
+      "costUsd": 0.23003649999999998,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 6,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

@@ -1,0 +1,4 @@
+I tested 20 properties and reported 0 bugs. The one failing property was `test_wb_words_whole`: with `max_length=1`, `word_boundary=True` and `'00'`, the output is a hard-cut `'0'`. That is the documented fallback when no whole word fits, so I did not count it.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo/python-slugify/.proofhound/runs/20261017-070708/g01-slugify-slugify-py"}

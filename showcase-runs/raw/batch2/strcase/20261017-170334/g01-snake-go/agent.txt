@@ -1,0 +1,16 @@
+I tested 7 properties across the six functions and reported 0 bugs. `findings.json` is `[]`.
+
+Four properties covered `ToSnake`, `ToKebab` and `ToScreamingSnake`:
+- Idempotence.
+- Output case: lowercase for the snake and kebab forms, uppercase for the screaming ones.
+- `ToSnake` and `ToKebab` agree once the delimiter is swapped.
+- Delimiters aren't doubled, leading or trailing, and the letters are preserved.
+
+Two properties covered `ToScreamingDelimited` and `ToDelimited`: characters in `ignore` survive, and arbitrary Unicode input with several delimiters doesn't crash.
+
+The seventh was `ToScreamingKebab` upper-casing its output, which sat inside the case property. The generated inputs were mostly ASCII letters, digits, spaces and `_ . -`, plus the Unicode no-crash test. I didn't test non-ASCII inputs against the case and ignore properties.
+
+My first Bash call was denied. The retry with just the `ph-test` command ran fine.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-170334/g01-snake-go && cat > .proofhound/runs/20261017-170334/g01-snake-go/ph_props_test.go <<'EOF'\npackage strcase\n\nimport (\n\t\"strings\"\n\t\"testing\"\n\n\t\"pgregory.net/rapid\"\n)\n\nfunc phIn() *rapid.Generator[string] {\n\treturn rapid.Strin

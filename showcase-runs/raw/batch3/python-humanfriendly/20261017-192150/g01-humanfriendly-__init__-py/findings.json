@@ -1,0 +1,10 @@
+[{"title": "format_timespan(0, detailed=True) returns an empty string",
+"function": "humanfriendly.format_timespan",
+"kind": "wrong-result",
+"property": "formatting a valid zero timespan yields a non-empty human readable string (and parse_timespan of its parts gives back 0)",
+"property_test": "test_timespan_float_detailed",
+"repro_file": "test_repro_timespan_zero_detailed.py",
+"input": "format_timespan(0, detailed=True)",
+"expected": "'0 seconds' (as format_timespan(0) gives)",
+"actual": "'' (empty string), because all unit counts are zero and concatenate([]) is ''",
+"evidence": "Docstring: format_timespan(0) -> '0 seconds'; returns 'The formatted timespan as a string'. detailed only changes how milliseconds are represented, so zero should still render as a quantity."}]

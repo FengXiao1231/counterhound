@@ -1,0 +1,16 @@
+I couldn't run any tests. The functions you listed aren't compiled into the test build, so I tested 0 properties and reported 0 bugs.
+
+`Bit` and `Unit` live in `src/bit/` and `src/unit/`. They're declared as private modules and re-exported from `lib.rs` (`pub use bit::*`, `pub use unit::*`). The `bit` module is behind the `bit` Cargo feature (`src/lib.rs:222`), and `default = ["std", "byte"]` doesn't include it. `ph-test` builds with default features, so `use byte_unit::Bit` fails with "no `Bit` in the root … gated behind the `bit` feature". The `byte_unit::bit::Bit` path from your instructions doesn't work either, because `mod bit` is private.
+
+Getting past this means enabling `bit`, or `bit` plus `u128` to cover the 10²⁷ limit. I can't do that from a test file. It would take a change to `Cargo.toml`'s defaults, or feature flags passed to `ph-test`. Both are outside what I'm allowed to touch.
+
+I also had `Bash` denied for ordinary commands such as `ls` and `cat`. I only got as far as reading the source and running `ph-test` twice.
+
+**Where I stopped:** I wrote a draft property file with 14 properties (`ph_props.rs` in the run directory). It's ready to run once the feature is on, using `use byte_unit::{Bit, Unit};`. I haven't written `findings.json` or any repro files.
+
+**Source read:** from reading the code, I'd focus first on whether `from_f64_with_unit` and `from_f32_with_unit` round tiny positive values up to 1 bit, as the docs promise. They go through `Decimal::from_f64`, which may round or drop precision first. That's a suspicion only; nothing has been run.
+
+**Decision for you:** should I rerun with `bit` and `u128` enabled? If so, change the default features or give `ph-test` a flag for them, and I'll finish the run.
+
+Permission denials:
+Bash: {"command":"cd /tmp/claude-0/zoo3/byte-unit; cat .proofhound/ph-test | head -30; mkdir -p .proofhound/runs/20261017-192924/g01-src-bit-mod-rs; grep -n \"pub fn\\|pub const fn\" src/unit/*.rs | head -20"}

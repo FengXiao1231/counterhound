@@ -1,0 +1,6 @@
+I tested 7 properties and reported 1 bug: `extend_query_with` drops existing query parameters that have blank values (`a=` is lost). The repro file fails for that reason.
+
+The `extend_path` property failed too, but only for a `..` segment in the base path, which I judged invalid input, so I left it out.
+
+Permission denials:
+Bash: {"command":"mkdir -p /tmp/claude-0/zoo/rfc3986/.proofhound/runs/20261017-071024/g01-src-rfc3986-builder-py && cat > /tmp/claude-0/zoo/rfc3986/.proofhound/runs/20261017-071024/g01-src-rfc3986-builder-py/test_ph_props.py <<'EOF'\nfrom urllib.parse import parse_qsl, unquote\nfrom hypothesis import give

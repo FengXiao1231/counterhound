@@ -1,0 +1,145 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-170610",
+  "repo": "heck",
+  "lang": "rust",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T17:06:10.013Z",
+  "ms": 71867,
+  "spend": {
+    "usd": 0.4258935,
+    "tokensIn": 847655,
+    "tokensOut": 9677,
+    "calls": 4
+  },
+  "groups": [
+    {
+      "group": "g01-src-shouty_snake-rs",
+      "file": "src/shouty_snake.rs",
+      "functions": [
+        "ToShoutySnekCase::TO_SHOUTY_SNEK_CASE",
+        "ToShoutySnakeCase::to_shouty_snake_case"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 38646,
+      "costUsd": 0.1272125,
+      "reported": 1,
+      "verified": 1
+    },
+    {
+      "group": "g02-src-snake-rs",
+      "file": "src/snake.rs",
+      "functions": [
+        "ToSnekCase::to_snek_case",
+        "ToSnakeCase::to_snake_case"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 54763,
+      "costUsd": 0.17078159999999998,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 4,
+    "reported": 2,
+    "verified": 2,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 2,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "to_shouty_snake_case is not idempotent: full uppercase mapping emits combining marks that are then treated as word boundaries",
+      "function": "heck::ToShoutySnakeCase::to_shouty_snake_case",
+      "kind": "inconsistency",
+      "property": "converting an already shouty-snake-case string again leaves it unchanged (f(f(x)) == f(x)); output contains only alphanumerics and '_'",
+      "property_test": "ph_idempotent",
+      "repro_file": "repro_idempotent_combining.rs",
+      "input": "\"ΐ\" (U+0390 GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS)",
+      "expected": "Output is a stable SHOUTY_SNAKE_CASE string; converting it again returns the same string",
+      "actual": "First call gives \"Ι\\u{308}\\u{301}\" (word containing combining marks, which are not alphanumeric); second call splits at the marks and returns \"Ι\"",
+      "evidence": "lib.rs: 'Word boundaries are defined by non-alphanumeric characters' and the library is 'intended to be unicode aware, internally consistent'. The uppercase() helper uses char::to_uppercase (full mapping) per word, producing non-alphanumeric combining characters inside a word, so the output of the conversion is itself re-segmented differently. Shouty-snake output of already-shouty input is expected to be a fixed point (cf. test6 SHOUTY_SNAKE_CASE => SHOUTY_SNAKE_CASE).",
+      "group": "g01-src-shouty_snake-rs",
+      "file": "src/shouty_snake.rs",
+      "workdir": ".proofhound/runs/20261017-170610/g01-src-shouty_snake-rs",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_idempotent_combining.rs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_idempotent_combining",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assertion `left == right` failed\n  left: \"Ι\\u{308}\\u{301}\"\n right: \"Ι\"",
+          "example": null
+        },
+        "testName": "repro_idempotent_combining"
+      },
+      "propertyCheck": {
+        "failed": true,
+        "example": "Failing test case: s = \"ΐ\""
+      },
+      "review": {
+        "verdict": "not_a_bug",
+        "confidence": 0.7,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "Case conversion of characters with multi-char uppercase mappings emits combining marks that later split words",
+        "reason": "The behaviour is real, but the crate never promises idempotence. Word boundaries are defined purely by `char::is_alphanumeric`, so combining marks already split words in any input, including a decomposed 'é'. The `uppercase()` helper deliberately uses the full Unicode mapping, and the same effect occurs in the lowercase path ('İ' lowercases to 'i' plus U+0307). The README's 'unicode aware, internally consistent' wording is loose, and fixing this would need a new design for combining-mark handling that the project has no precedent for.",
+        "maintainerWouldFix": false
+      },
+      "status": "rejected"
+    },
+    {
+      "title": "to_snake_case drops combining marks (they are treated as word separators), so output is not a fixed point",
+      "function": "heck::ToSnakeCase::to_snake_case (str)",
+      "kind": "wrong-result",
+      "property": "snake-casing an already snake-cased string leaves it unchanged (idempotence)",
+      "property_test": "ph_idempotent_mixed",
+      "repro_file": "repro_idempotent_dotted_i.rs",
+      "input": "\"İ\" (U+0130)",
+      "expected": "to_snake_case(to_snake_case(\"İ\")) == to_snake_case(\"İ\") == \"i\\u{307}\"",
+      "actual": "first pass gives \"i\\u{307}\" (standard lowercase of İ), second pass gives \"i\" because the combining dot U+0307 is not char::is_alphanumeric and is treated as a word separator and discarded",
+      "evidence": "transform() splits words on !c.is_alphanumeric(); combining marks (category Mn) are not alphanumeric, so they are silently deleted or split words (e.g. NFD \"cafe\\u{301}\" loses its accent). lowercase() itself emits such a mark for İ, so the library produces output that its own algorithm then treats as a separator. Snake case of an already-snake string is expected to be stable, as for all ASCII inputs (which passed).",
+      "group": "g02-src-snake-rs",
+      "file": "src/snake.rs",
+      "workdir": ".proofhound/runs/20261017-170610/g02-src-snake-rs",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_idempotent_dotted_i.rs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_idempotent_dotted_i",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "assertion `left == right` failed\n  left: \"i\"\n right: \"i\\u{307}\"",
+          "example": null
+        },
+        "testName": "repro_idempotent_dotted_i"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "not_a_bug",
+        "confidence": 0.62,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "to_snake_case drops combining marks (e.g. U+0307) because they are not char::is_alphanumeric",
+        "reason": "Heck documents no idempotence guarantee. Splitting words on !char::is_alphanumeric is a deliberate design choice: the CHANGELOG says the library uses char::is_alphanumeric for word boundaries in all cases. The lowercase() output for İ and the splitter disagree, but that only shows up on a rare input. A maintainer would more likely treat dropped Mn marks, such as NFD accents, as a known Unicode limitation than as a defect in a stated contract. The repro is correct, though, and a fix that keeps Mn characters inside words would be small and harmless, so this is a low-severity wart rather than a clear rejection.",
+        "maintainerWouldFix": false
+      },
+      "status": "rejected"
+    }
+  ]
+}

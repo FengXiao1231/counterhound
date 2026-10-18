@@ -1,0 +1,2 @@
+I tested 5 properties (round-trip, eq/hash, join forms, join with non-string parts, and the load_tests suite run) and found 0 bugs. All 26 test results passed, and `findings.json` is an empty array.
+

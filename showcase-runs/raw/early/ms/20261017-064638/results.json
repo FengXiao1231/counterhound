@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-064638",
+  "repo": "ms",
+  "lang": "javascript",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T06:46:38.644Z",
+  "ms": 50536,
+  "spend": {
+    "usd": 0.18576890000000001,
+    "tokensIn": 323420,
+    "tokensOut": 4459,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01-src-index-ts",
+      "file": "src/index.ts",
+      "functions": [
+        "parse",
+        "format",
+        "parseStrict"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 35292,
+      "costUsd": 0.12592830000000002,
+      "reported": 1,
+      "verified": 1
+    }
+  ],
+  "counts": {
+    "modules": 1,
+    "functions": 3,
+    "reported": 1,
+    "verified": 1,
+    "duplicates": 0,
+    "confirmed": 1,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "droppedByVerification": 0
+  },
+  "findings": [
+    {
+      "title": "format() rounds negative half values toward zero, asymmetric with positives (and yields '-1 seconds')",
+      "function": "format",
+      "kind": "inconsistency",
+      "property": "format(-n) === '-' + format(n) for positive n",
+      "property_test": "format sign symmetry at half boundaries",
+      "repro_file": "repro_negative_half_rounding.test.mjs",
+      "input": "format(-1500) and format(-1500, {long:true})",
+      "expected": "'-2s' and '-2 seconds' (mirroring format(1500) === '2s')",
+      "actual": "'-1s'; long form gives '-1 seconds' (plural suffix chosen from |ms| >= 1.5*unit, but number rounded by Math.round to -1)",
+      "evidence": "Math.round(-1.5) === -1 whereas Math.round(1.5) === 2; the plural() helper uses msAbs for pluralization, so it intends symmetric handling of negatives, yet yields ungrammatical '-1 seconds' vs '2 seconds' for the positive.",
+      "group": "g01-src-index-ts",
+      "file": "src/index.ts",
+      "workdir": ".proofhound/runs/20261017-064638/g01-src-index-ts",
+      "verification": {
+        "verified": true,
+        "reproFile": "repro_negative_half_rounding.test.mjs",
+        "runs": 3,
+        "kind": "assertion",
+        "signature": "assertion:repro_negative_half_rounding",
+        "site": null,
+        "explicitRaise": false,
+        "error": {
+          "type": "AssertionError",
+          "message": "Expected values to be strictly equal:\n\n'-1s' !== '-2s'\n",
+          "example": null
+        },
+        "testName": "repro_negative_half_rounding"
+      },
+      "propertyCheck": null,
+      "review": {
+        "verdict": "bug",
+        "confidence": 0.6,
+        "severity": "low",
+        "category": "inconsistency",
+        "title": "format() rounds negative half-unit values toward +infinity, giving '-1 seconds' for -1500 ms",
+        "reason": "In src/index.ts, fmtShort and plural() decide the unit and the plural suffix from msAbs, but round the signed value with Math.round(ms / n). For -1500 the suffix logic treats the value as 1.5 or more and adds 's', while Math.round(-1.5) gives -1, so the output is '-1 seconds' (and '-1s'), where 1500 gives '2 seconds' ('2s'). Existing tests cover negatives only at non-half values, so nothing contradicts a fix. The fix is tiny (round the absolute value and reapply the sign). The impact is cosmetic and limited to exact .5 boundaries, so a maintainer might defer it.",
+        "maintainerWouldFix": true
+      },
+      "status": "confirmed",
+      "bugId": "PH-001",
+      "reproSource": "import test from 'node:test';\nimport assert from 'node:assert/strict';\nimport { format } from '../../../../../src/index.ts';\n\ntest('repro_negative_half_rounding', () => {\n  assert.equal(format(1500), '2s');\n  assert.equal(format(-1500), '-2s');\n  assert.equal(format(-1500, { long: true }), '-2 seconds');\n});\n",
+      "bugDir": ".proofhound/runs/20261017-064638/bugs/PH-001-format-rounds-negative-half-unit-values-toward-i"
+    }
+  ]
+}

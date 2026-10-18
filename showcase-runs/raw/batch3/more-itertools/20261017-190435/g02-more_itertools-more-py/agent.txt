@@ -1,0 +1,2 @@
+That notification is for the first test run, the one that timed out before I shrank the `derangements` inputs. It doesn't change anything. The re-run passed all 7 properties, and `findings.json` is still `[]`, so I reported 0 bugs.
+

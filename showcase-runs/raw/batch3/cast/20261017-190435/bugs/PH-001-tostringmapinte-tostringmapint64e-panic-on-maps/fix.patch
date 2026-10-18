@@ -1,0 +1,18 @@
+diff --git a/map.go b/map.go
+index 858d4ee..991fe75 100644
+--- a/map.go
++++ b/map.go
+@@ -188,7 +188,12 @@ func toStringMapIntE[T int | int64](i any, fn func(any) T, fnE func(any) (T, err
+ 			return m, fmt.Errorf(errorMsg, i, i, m)
+ 		}
+ 
+-		mVal.SetMapIndex(keyVal, reflect.ValueOf(val))
++		key, err := ToStringE(keyVal.Interface())
++		if err != nil {
++			return m, fmt.Errorf(errorMsg, i, i, m)
++		}
++
++		mVal.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(val))
+ 	}
+ 
+ 	return m, nil

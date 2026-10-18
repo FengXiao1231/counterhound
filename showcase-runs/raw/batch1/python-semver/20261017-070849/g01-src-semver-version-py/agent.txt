@@ -1,0 +1,10 @@
+I tested 11 properties (9 in the main file, 2 in a second, narrower file) and reported 1 bug.
+
+The bug is in `Version.next_version`. `Version.parse('1.0.0-rc.1').next_version('prerelease', 'alpha')` returns `1.0.0-alpha.1`, which sorts lower than `1.0.0-rc.1`. The docstring promises "preserving natural order", so the next version should not be older than the current one. The repro `test_repro_next_version_lower.py` fails now for that reason.
+
+The other properties passed: parse round-trip, `match` agreeing with `compare`, `bump_prerelease`, `bump_build`, `is_compatible`, hash/equality consistency, and ordering transitivity. A broader test with numeric tokens, such as `next_version('prerelease', '0')` on `0.0.0-1`, also failed. I did not report that one. It is the same token-switching branch, so I count it as the same bug.
+
+All files are in `.proofhound/runs/20261017-070849/g01-src-semver-version-py/`. The write-up is in `findings.json`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-070849/g01-src-semver-version-py; cat > .proofhound/runs/20261017-070849/g01-src-semver-version-py/test_ph_props.py <<'EOF'\nfrom hypothesis import given, assume, settings, strategies as st\nfrom semver.version import Version\n\nnum = st.integers(0, 10*

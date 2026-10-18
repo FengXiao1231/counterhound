@@ -1,0 +1,4 @@
+I tested 5 properties (parse/stringify round-trip, stringify idempotence, error type, escaped-text round-trip) and reported 0 bugs; all five passed and `findings.json` is `[]`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191047/g01-src-index-ts"}

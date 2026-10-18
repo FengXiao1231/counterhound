@@ -1,0 +1,2 @@
+I tested 7 properties across the six target functions and reported 0 bugs, so `findings.json` is not written. The tests are in `test_ph_props.py`, and all 7 passed. The properties compare `token_prev`, `token_first` and `get_token_at_offset` against reference implementations. They also check ancestry, `token_index` and `get_cases` invariants. All of them ran on a small fixed set of SQL statements, not generated SQL.
+

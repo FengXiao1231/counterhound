@@ -1,0 +1,3 @@
+In `parseGoJson` (`src/lang/go.js`), the package-level panic now goes only to a test that never got a `pass`, `fail` or `skip` event. Before, any failed test whose own output lacked `panic:` was overwritten with it. A test that already finished keeps its own `t.Error` message.
+
+The repro now passes. I didn't run the rest of the project's tests or add a regression test.

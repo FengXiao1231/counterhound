@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "tool": "proofhound",
+  "runId": "20261017-192020",
+  "diff": null,
+  "fixRun": true,
+  "repo": "commons-csv",
+  "lang": "java",
+  "agent": "claude",
+  "model": "sonnet",
+  "startedAt": "2026-10-17T19:20:20.242Z",
+  "ms": 101274,
+  "spend": {
+    "usd": 0.4776648,
+    "tokensIn": 1139292,
+    "tokensOut": 14293,
+    "calls": 2
+  },
+  "groups": [
+    {
+      "group": "g01--main-java-org-apache-commons-csv-CSVFormat-java",
+      "file": "src/main/java/org/apache/commons/csv/CSVFormat.java",
+      "functions": [
+        "CSVFormat.parse",
+        "CSVFormat.format",
+        "CSVFormat.newFormat",
+        "CSVFormat.withRecordSeparator",
+        "CSVFormat.withSystemRecordSeparator",
+        "CSVFormat.withEscape"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 41949,
+      "costUsd": 0.1486328,
+      "reported": 0,
+      "verified": 0
+    },
+    {
+      "group": "g02--main-java-org-apache-commons-csv-CSVParser-java",
+      "file": "src/main/java/org/apache/commons/csv/CSVParser.java",
+      "functions": [
+        "CSVParser.parse",
+        "CSVParser.hasHeaderComment",
+        "CSVParser.iterator",
+        "CSVParser.stream",
+        "CSVParser.hasTrailerComment",
+        "CSVParser.getRecords"
+      ],
+      "agentOk": true,
+      "agentError": null,
+      "ms": 92154,
+      "costUsd": 0.329032,
+      "reported": 0,
+      "verified": 0
+    }
+  ],
+  "counts": {
+    "modules": 2,
+    "functions": 12,
+    "reported": 0,
+    "verified": 0,
+    "duplicates": 0,
+    "confirmed": 0,
+    "needsLook": 0,
+    "rejectedByReview": 0,
+    "fixed": 0,
+    "droppedByVerification": 0
+  },
+  "findings": []
+}

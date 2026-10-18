@@ -1,0 +1,13 @@
+I tested 5 properties and reported 0 bugs; all 5 passed. The properties were:
+- the output contains only a-z, 0-9 and '-';
+- no "--" and no leading or trailing '-';
+- idempotence;
+- agreement with a reference implementation on printable ASCII;
+- the charset and dash rules on arbitrary Unicode chars.
+
+I did not test `slugify_owned`. It only exists for wasm targets, so the native test crate can't reach it.
+
+`findings.json` is `[]`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-170730/g01-src-lib-rs && cat > .proofhound/runs/20261017-170730/g01-src-lib-rs/ph_props.rs <<'EOF'\nuse proptest::prelude::*;\nuse slug::slugify;\n\nproptest! {\n    #[test]\n    fn ph_charset(s in \"\\\\PC*\") {\n        let r = slugify(&s);\n        p

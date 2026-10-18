@@ -1,0 +1,5 @@
+I fixed the bug in `index.js`: arrays are now tracked in `seen` the same way objects are. A pure-array cycle now throws `TypeError`, or returns `'["__cycle__"]'` with `cycles: true`, instead of overflowing the stack. The repro test passes. I did not run any other tests and did not add a regression test.
+
+The change moves the `null` check and the `seen` check ahead of the `Array.isArray` branch, and removes the array from `seen` once it has been serialised. Because `seen` is cleared on the way out, the same array appearing twice without a cycle still serialises normally.
+Permission denials:
+Bash: {"command":"python3 - <<'E'\ns=open('index.js').read()\na=s.index(\"        var i, out;\")\nb=s.index(\"        var keys\")\nnew=\"\"\"        var i, out;\n        if (node === null) return 'null';\n\n        if (seen.indexOf(node) !== -1) {\n            if (cycles) return JSON.stringify('__cycle__'

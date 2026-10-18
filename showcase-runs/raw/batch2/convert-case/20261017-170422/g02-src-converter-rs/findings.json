@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Camel (and Sentence) pattern treats a leading empty word as the first word",
+    "function": "Converter::convert",
+    "kind": "contract-violation",
+    "property": "with the Camel pattern, the first non-empty word is lowercased and the remaining words are capitalized, even if the input has leading delimiters",
+    "property_test": "ph_camel_leading_delims",
+    "repro_file": "repro_camel_leading_empty_word.rs",
+    "input": "Converter::new().from_case(Case::Kebab).to_case(Case::Camel).convert(\"-a-a\")",
+    "expected": "\"aA\"",
+    "actual": "\"AA\" (the empty leading word consumes the 'first word' slot, so the real first word is capitalized)",
+    "evidence": "Pattern::Camel doc: 'Makes the first non-empty word lowercase and the remaining capitalized.' Pattern::Sentence doc says the same for 'first non-empty word capitalized' (convert(\"_a_a\") with Snake->Sentence gives \" a a\" instead of \" A a\"). Pattern::mutate uses index i == 0 instead of the first non-empty word."
+  }
+]

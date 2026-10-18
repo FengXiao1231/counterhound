@@ -1,0 +1,14 @@
+[
+  {
+    "title": "stringifyPath emits unparseable path for integer-valued numbers >= 1e21",
+    "function": "stringifyPath",
+    "kind": "contract-violation",
+    "property": "for any finite number segment, parsePath(stringifyPath(segs)) does not throw (stringifyPath returns 'a string path that can be used with other dot-prop functions')",
+    "property_test": "stringify of any finite number segment is parseable",
+    "repro_file": "repro_large_number_segment.test.mjs",
+    "input": "stringifyPath([1e21])",
+    "expected": "a path string that parsePath accepts (e.g. the number treated as a string key like '1e\\+21'/escaped, or a digit-only index)",
+    "actual": "returns '[1e+21]', and parsePath('[1e+21]') throws \"Invalid character 'e' in an index at position 3\"",
+    "evidence": "readme: stringifyPath 'Returns a string path that can be used with other dot-prop functions'; type is Array<string | number>. Number.isInteger(1e21) is true so formatPathSegment uses `[${segment}]`, which stringifies in exponent notation."
+  }
+]

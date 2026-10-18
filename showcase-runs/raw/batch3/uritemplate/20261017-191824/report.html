@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>proofhound · uritemplate</title>
+<style>
+:root{--bg:#fbfaf7;--fg:#1d1b18;--dim:#6b665e;--card:#fff;--line:#e6e1d8;--accent:#c2410c;--ok:#15803d;--warn:#b45309;--code:#f4f1ea;--bar1:#d6d3cd;--bar3:#c2410c}
+@media (prefers-color-scheme:dark){:root{--bg:#141311;--fg:#ece8e1;--dim:#9b958b;--card:#1d1b18;--line:#302d28;--accent:#fb923c;--ok:#4ade80;--warn:#fbbf24;--code:#25221e;--bar1:#3a3631;--bar3:#fb923c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 80px}
+h1{font-size:28px;margin:0 0 4px;letter-spacing:-.02em}h1 span{color:var(--accent)}h2{font-size:18px;margin:40px 0 12px}
+.meta{color:var(--dim);font-size:13px}.meta code{font-size:12px}
+code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+pre{background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto;margin:8px 0}
+.funnel{margin:20px 0 8px;display:grid;gap:6px}.step{position:relative;height:30px}
+.bar{position:absolute;inset:0 auto 0 0;background:var(--bar1);border-radius:6px}.bar[data-i="3"]{background:var(--bar3)}
+.lab{position:relative;padding:5px 10px;font-size:13px;white-space:nowrap}.bar[data-i="3"]+.lab{color:#fff}
+.bug{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;padding:16px 18px;margin:14px 0}
+.bug.needs-look{border-left-color:var(--warn)}
+.bug header{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}.bug h3{margin:0;font-size:17px;flex:1 1 300px}
+.id{font:600 12px ui-monospace,monospace;color:var(--accent)}
+.badges{display:flex;gap:6px;flex-wrap:wrap}.badge{font-size:11.5px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--dim)}
+.badge.ok{color:var(--ok);border-color:currentColor}.sev-high{color:var(--accent);border-color:currentColor}.sev-medium{color:var(--warn);border-color:currentColor}
+.where{margin:6px 0 10px;color:var(--dim);font-size:13px;word-break:break-all}
+dl{display:grid;grid-template-columns:90px 1fr;gap:4px 12px;margin:0 0 8px}dt{color:var(--dim);font-size:13px}dd{margin:0;word-break:break-word}
+details{margin-top:8px}summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.copy{margin-left:8px;font-size:11px;border:1px solid var(--line);background:transparent;color:var(--dim);border-radius:5px;cursor:pointer}
+.err{color:var(--accent);margin:4px 0}.dim{color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--dim);font-weight:500}
+.empty{padding:24px;border:1px dashed var(--line);border-radius:10px;color:var(--dim);text-align:center}
+.tag{font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:0 5px}
+footer{margin-top:48px;color:var(--dim);font-size:12.5px}
+@media (max-width:600px){dl{grid-template-columns:1fr}dt{margin-top:6px}}
+</style></head><body><main>
+<h1>proof<span>hound</span> report</h1>
+<div class="meta">uritemplate · python · claude (sonnet) · 2 modules, 9 functions · 1m51s · $0.70 · 10/17/2026, 7:18:24 PM</div>
+<div class="funnel">
+    <div class="step"><div class="bar" style="width:100%" data-i="0"></div>
+    <div class="lab"><b>5</b> reported by the hunter</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="1"></div>
+    <div class="lab"><b>5</b> reproduced deterministically</div></div>
+    <div class="step"><div class="bar" style="width:100%" data-i="2"></div>
+    <div class="lab"><b>5</b> unique</div></div>
+    <div class="step"><div class="bar" style="width:60%" data-i="3"></div>
+    <div class="lab"><b>3</b> confirmed by review</div></div>
+    <div class="step"><div class="bar" style="width:4%" data-i="4"></div>
+    <div class="lab"><b>0</b> fixed, with a verified patch</div></div></div>
+<p class="meta">Every bug below failed the same way in 3 fresh runs of a deterministic test, the failure comes from the project's own code (or is a wrong result), and an independent reviewer could not refute it.</p>
+
+<h2>3 confirmed bugs</h2>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-001</span>
+    <h3>Prefix modifier (`{var:N}`) raises TypeError on int/float scalar values</h3>
+    <span class="badges">
+      <span class="badge kind">crash</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.88</span>
+      <span class="badge ok">failed 3/3</span>
+      
+    </span>
+  </header>
+  <p class="where"><code>uritemplate.api.expand</code> · <code>uritemplate/variable.py:450</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>expand(&#39;{a:1}&#39;, {&#39;a&#39;: 12})</code></dd>
+    <dt>Expected</dt><dd>&#39;1&#39;</dd>
+    <dt>Actual</dt><dd><code>TypeError: &#39;int&#39; object is not subscriptable</code></dd>
+    <dt>Property</dt><dd>{a:N} on an int value truncates its string form without raising</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from uritemplate.api import expand
+
+
+def test_repro_int_prefix():
+    assert expand(&quot;{a:1}&quot;, {&quot;a&quot;: 12}) == &quot;1&quot;</code></pre>
+  <p class="err"><code>TypeError: &#39;int&#39; object is not subscriptable</code></p></details>
+  
+  <p class="dim">No fix: not attempted: --budget was used up</p>
+  <details><summary>Why this is a bug</summary><p>VariableValue type allows int; RFC 6570 prefix applies to the string form; value[:prefix] is applied without str() conversion in variable.py.</p><p><b>Independent review:</b> `ScalarVariableValue` explicitly includes int, float and complex, and `Operator.quote` already converts non-strings with `str()` (variable.py:159). So `{a}` with `a=12` works, but `{a:1}` slices the raw int at variable.py:450 (the same pattern appears at lines 315, 368 and 417) and raises `TypeError: &#39;int&#39; object is not subscriptable`. RFC 6570 applies the prefix to the string form, so the expected result `&#39;1&#39;` is correct. The existing tests only use string values, so nothing documents the crash as intended, and a maintainer would likely accept a small `str(value)[:prefix]` fix.</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_int_prefix(
+    # The test always failed when commented parts were varied together.
+    n=&#39;a&#39;,  # or any other generated value
+    v=10,  # or any other generated value
+    p=1,  # or any other generated value
+)</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191824/bugs/PH-001-prefix-modifier-var-n-raises-typeerror-on-int-fl/BUG.md</code></p></details>
+</article>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-002</span>
+    <h3>partial() keeps {var} in the template when the supplied value expands to an empty string</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.80</span>
+      <span class="badge ok">failed 3/3</span>
+      
+    </span>
+  </header>
+  <p class="where"><code>uritemplate.api.partial</code> · <code>uritemplate/api.py</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>partial(&#39;a{x}b&#39;, {&#39;x&#39;: &#39;&#39;})</code></dd>
+    <dt>Expected</dt><dd>URITemplate(&#39;ab&#39;), same as expand</dd>
+    <dt>Actual</dt><dd>URITemplate(&#39;a{x}b&#39;)</dd>
+    <dt>Property</dt><dd>partial with all variables supplied equals expand</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from uritemplate.api import expand, partial
+
+
+def test_repro_partial_empty():
+    assert str(partial(&quot;a{x}b&quot;, {&quot;x&quot;: &quot;&quot;})) == expand(&quot;a{x}b&quot;, {&quot;x&quot;: &quot;&quot;}) == &quot;ab&quot;</code></pre>
+  <p class="err"><code>AssertionError: assert &#39;a{x}b&#39; == &#39;ab&#39;</code></p></details>
+  
+  <p class="dim">No fix: not attempted: --budget was used up</p>
+  <details><summary>Why this is a bug</summary><p>partial docs: only missing params stay in the template; x was given. template._expand uses `expanded.get(...) or var`, conflating empty expansion with absent.</p><p><b>Independent review:</b> URITemplate._expand uses `expanded.get(match_group) or var` in replace_partial. That treats an empty expansion, which is what a supplied &#39;&#39; produces for `{x}`, the same as a variable that was never supplied. So `partial(&#39;a{x}b&#39;, {&#39;x&#39;: &#39;&#39;})` returns `a{x}b` while `expand` returns `ab`. The docstring says only missing parameters should remain, and the fix is small: test whether the key is absent or the variable was supplied, instead of testing truthiness. The case is an edge one, but a maintainer would probably accept the fix.</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_partial_full_equals_expand(
+    n=&#39;a&#39;,  # or any other generated value
+    v=&#39;&#39;,
+)</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191824/bugs/PH-002-partial-keeps-var-in-the-template-when-the-suppl/BUG.md</code></p></details>
+</article>
+<article class="bug confirmed">
+  <header>
+    <span class="id">PH-003</span>
+    <h3>Reserved/fragment expansion leaves unsafe characters unencoded when the value contains any percent-escape</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-low">low</span>
+      <span class="badge">confidence 0.70</span>
+      <span class="badge ok">failed 3/3</span>
+      
+    </span>
+  </header>
+  <p class="where"><code>uritemplate.variable.Operator.quote</code> · <code>uritemplate/variable.py</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>Operator.reserved.quote(&#39;a b%41&#39;)</code></dd>
+    <dt>Expected</dt><dd>&#39;a%20b%41&#39;</dd>
+    <dt>Actual</dt><dd>&#39;a b%41&#39; (value returned unchanged because unquote(value) != value)</dd>
+    <dt>Property</dt><dd>output of {+var} contains no characters outside reserved/unreserved/pct-encoded</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from uritemplate.variable import Operator
+
+
+def test_repro_reserved_space():
+    assert Operator.reserved.quote(&quot;a b%41&quot;) == &quot;a%20b%41&quot;</code></pre>
+  <p class="err"><code>AssertionError: assert &#39;a b%41&#39; == &#39;a%20b%41&#39;</code></p></details>
+  
+  <p class="dim">No fix: not attempted: --budget was used up</p>
+  <details><summary>Why this is a bug</summary><p>RFC 6570 3.2.3: reserved expansion passes through only pct-encoded triplets and reserved/unreserved characters; every other character (e.g. space) must be percent-encoded.</p><p><b>Independent review:</b> RFC 6570 §3.2.3 lets `{+var}` and `{#var}` pass through only reserved characters, unreserved characters and existing pct-encoded triplets. `_only_quote_unquoted_characters` is all-or-nothing: if `unquote(value) != value` it returns the whole value untouched. So `&#39;a b%41&#39;` comes out with a raw space, which is not a valid URI, while `&#39;a b&#39;` correctly becomes `&#39;a%20b&#39;`. The heuristic is deliberate, and the spec fixtures only cover values with no escapes or with a bare `%`. It is still a real spec deviation, and a regex-based fix that quotes everything except valid `%XX` triplets is simple, though a maintainer might treat it as a low-priority edge case.</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_reserved_quote_encodes_spaces(
+    s=&#39; %aa&#39;,
+)</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191824/bugs/PH-003-reserved-fragment-expansion-leaves-unsafe-charac/BUG.md</code></p></details>
+</article>
+
+<h2>2 reproduced, reviewer unsure</h2><article class="bug needs-look">
+  <header>
+    <span class="id">?</span>
+    <h3>Integer 0 expands as empty value in ? / &amp; / ; expansions</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-medium">medium</span>
+      <span class="badge">confidence 0.00</span>
+      <span class="badge ok">failed 3/3</span>
+      
+    </span>
+  </header>
+  <p class="where"><code>uritemplate.variable.URIVariable.expand</code> · <code>uritemplate/variable.py</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>URIVariable(&#39;?x&#39;).expand({&#39;x&#39;: 0}); URIVariable(&#39;;x&#39;).expand({&#39;x&#39;: 0})</code></dd>
+    <dt>Expected</dt><dd>&#39;?x=0&#39; and &#39;;x=0&#39;</dd>
+    <dt>Actual</dt><dd>&#39;?x=&#39; and &#39;;x&#39; (0 is treated as empty string by a truthiness check `if value:`)</dd>
+    <dt>Property</dt><dd>a scalar int n expands to its decimal string in query and path-parameter expansion</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from uritemplate.variable import URIVariable
+
+
+def test_repro_zero():
+    assert URIVariable(&quot;?x&quot;).expand({&quot;x&quot;: 0})[&quot;?x&quot;] == &quot;?x=0&quot;
+    assert URIVariable(&quot;;x&quot;).expand({&quot;x&quot;: 0})[&quot;;x&quot;] == &quot;;x=0&quot;</code></pre>
+  <p class="err"><code>AssertionError: assert &#39;?x=&#39; == &#39;?x=0&#39;</code></p></details>
+  
+  
+  <details><summary>Why this is a bug</summary><p>ScalarVariableValue includes int; RFC 6570 only treats the empty string as empty (3.2.7/3.2.8), 0 is defined and stringifies to &#39;0&#39;; other ints like 1 expand correctly.</p><p><b>Independent review:</b> reviewer gave no reason</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_query_int_zero_and_ints(
+    n=0,
+)</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191824/bugs/needs-look/LOOK-integer-0-expands-as-empty-value-in-expansions/BUG.md</code></p></details>
+</article>
+<article class="bug needs-look">
+  <header>
+    <span class="id">?</span>
+    <h3>Integer 0 expands as empty in {?x} and {;x}</h3>
+    <span class="badges">
+      <span class="badge kind">wrong result</span>
+      <span class="badge sev-medium">medium</span>
+      <span class="badge">confidence 0.00</span>
+      <span class="badge ok">failed 3/3</span>
+      
+    </span>
+  </header>
+  <p class="where"><code>uritemplate.api.expand</code> · <code>uritemplate/api.py</code></p>
+  <dl>
+    <dt>Input</dt><dd><code>expand(&#39;{?a}&#39;, {&#39;a&#39;: 0})</code></dd>
+    <dt>Expected</dt><dd>&#39;?a=0&#39; (and &#39;;a=0&#39; for &#39;{;a}&#39;)</dd>
+    <dt>Actual</dt><dd>&#39;?a=&#39; (and &#39;;a&#39;)</dd>
+    <dt>Property</dt><dd>expanding {?a} with a=0 yields ?a=0</dd>
+  </dl>
+  <details open><summary>Repro test <button class="copy" data-copy>copy</button></summary><pre><code>from uritemplate.api import expand
+
+
+def test_repro_zero_query():
+    assert expand(&quot;{?a}&quot;, {&quot;a&quot;: 0}) == &quot;?a=0&quot;
+    assert expand(&quot;{;a}&quot;, {&quot;a&quot;: 0}) == &quot;;a=0&quot;</code></pre>
+  <p class="err"><code>AssertionError: assert &#39;?a=&#39; == &#39;?a=0&#39;</code></p></details>
+  
+  
+  <details><summary>Why this is a bug</summary><p>ScalarVariableValue includes int; RFC 6570 expands the string form of the value, &#39;0&#39; is non-empty. Code uses truthiness (`if value:`) in _query_expansion/_semi_path_expansion, so 0 is treated as empty; other operators give &#39;0&#39;.</p><p><b>Independent review:</b> reviewer gave no reason</p>
+  <p><b>Hypothesis shrank it to:</b> <code>Failing test case: test_int_query(
+    n=&#39;a&#39;,  # or any other generated value
+    v=0,
+)</code></p>
+  <p class="dim">Issue write-up: <code>.proofhound/runs/20261017-191824/bugs/needs-look/LOOK-integer-0-expands-as-empty-in-x-and-x/BUG.md</code></p></details>
+</article>
+
+<h2>Filtered out (0)</h2>
+<p class="dim">Nothing was filtered out.</p>
+
+<h2>Modules</h2>
+<table><tr><th>File</th><th>Functions</th><th>Reported</th><th>Reproduced</th><th>Time</th></tr>
+<tr><td><code>uritemplate/variable.py</code></td><td>Operator.quote, URIVariable.expand, Operator.expansion_separator, quote, URIVariable.parse, is_list_of_tuples</td><td>2</td><td>2</td><td>41s</td></tr><tr><td><code>uritemplate/api.py</code></td><td>expand, partial, variables</td><td>3</td><td>3</td><td>50s</td></tr>
+</table>
+<footer>Generated by proofhound. Raw data: <code>results.json</code> next to this file.</footer>
+</main>
+<script>
+document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();const t=b.closest('details').querySelector('pre').innerText;navigator.clipboard&&navigator.clipboard.writeText(t).then(()=>{b.textContent='copied';setTimeout(()=>b.textContent='copy',1200)})}));
+</script>
+</body></html>

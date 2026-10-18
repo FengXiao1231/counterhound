@@ -1,0 +1,14 @@
+[
+  {
+    "title": "getBaseConfiguration resolves Object.prototype keys as standards, crashing filesize() for standard: 'constructor'",
+    "function": "getBaseConfiguration",
+    "kind": "crash",
+    "property": "any standard string other than si/iec/jedec falls back to the base-driven default configuration",
+    "property_test": "base config for unknown standard falls back by base",
+    "repro_file": "repro_proto_standard.test.mjs",
+    "input": "getBaseConfiguration('constructor', -1)",
+    "expected": "{ isDecimal: true, ceil: 1000, actualStandard: 'jedec' } (the default fallback used for any unknown standard)",
+    "actual": "returns the inherited Object function (truthy lookup on a plain object literal); filesize(1000, {standard:'constructor'}) throws TypeError: Cannot read properties of undefined (reading 'bytes') in resolveSymbol",
+    "evidence": "STANDARD_CONFIGS is a plain object, so `STANDARD_CONFIGS[standard]` finds inherited keys (constructor, toString, __proto__, hasOwnProperty). The function's code path explicitly falls back to base/default for unrecognised standards (e.g. 'foo' works), so a string like 'constructor' should behave the same instead of crashing; AGENTS.md also lists prototype-related access as a forbidden pattern."
+  }
+]

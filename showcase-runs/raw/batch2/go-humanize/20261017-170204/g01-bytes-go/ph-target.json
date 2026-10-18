@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "humanize",
+  "importPath": "github.com/dustin/go-humanize"
+}

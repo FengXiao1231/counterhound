@@ -1,0 +1,1 @@
+I changed `parseDiff` in `src/diff.js` to count each hunk's body lines from the `@@` header's old and new line counts. It now consumes that many `-` and `+` lines as hunk content, so an added line like `+++ x` is no longer read as a file header. The repro passes. I didn't run the project's other tests or add a regression test.

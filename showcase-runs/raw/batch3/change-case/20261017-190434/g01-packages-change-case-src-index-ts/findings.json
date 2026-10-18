@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Capitalisation indexes by UTF-16 code unit, so words starting with astral letters are not capitalised",
+    "function": "pascalSnakeCase (via capitalCaseTransformFactory; also pascalCase/camelCase)",
+    "kind": "wrong-result",
+    "property": "the first letter of each word in pascalSnakeCase output is uppercase when the letter has an uppercase form",
+    "property_test": "pascalSnakeCase words capitalised (unicode letters)",
+    "repro_file": "repro_astral_capitalize.test.mjs",
+    "input": "pascalSnakeCase('\\u{10428}a', {locale:false})",
+    "expected": "'\\u{10400}a' (first letter uppercased)",
+    "actual": "'\\u{10428}a' (unchanged)",
+    "evidence": "split() uses \\p{L} with the u flag, so astral letters count as word letters, but capitalCaseTransformFactory does upper(word[0]) / word.slice(1), which cuts a surrogate pair in half; toUpperCase of a lone high surrogate is a no-op. Doc: 'Convert a string to pascal snake case (Foo_Bar)'."
+  }
+]

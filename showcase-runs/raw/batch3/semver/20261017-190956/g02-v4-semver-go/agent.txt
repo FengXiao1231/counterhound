@@ -1,0 +1,8 @@
+I tested 7 properties and reported 0 bugs; the final run passed all seven.
+
+An earlier run failed on numeric prerelease identifiers longer than 20 digits, which exceed `uint64`. I didn't report that, because the library stores these identifiers as `uint64` and returns an error, which I treated as a design limit rather than a bug. I then capped the generated identifiers at 9 digits.
+
+`findings.json` is `[]`.
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-190956/g02-v4-semver-go"}

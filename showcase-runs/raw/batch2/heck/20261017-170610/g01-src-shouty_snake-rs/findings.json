@@ -1,0 +1,14 @@
+[
+  {
+    "title": "to_shouty_snake_case is not idempotent: full uppercase mapping emits combining marks that are then treated as word boundaries",
+    "function": "heck::ToShoutySnakeCase::to_shouty_snake_case",
+    "kind": "inconsistency",
+    "property": "converting an already shouty-snake-case string again leaves it unchanged (f(f(x)) == f(x)); output contains only alphanumerics and '_'",
+    "property_test": "ph_idempotent",
+    "repro_file": "repro_idempotent_combining.rs",
+    "input": "\"ΐ\" (U+0390 GREEK SMALL LETTER IOTA WITH DIALYTIKA AND TONOS)",
+    "expected": "Output is a stable SHOUTY_SNAKE_CASE string; converting it again returns the same string",
+    "actual": "First call gives \"Ι\\u{308}\\u{301}\" (word containing combining marks, which are not alphanumeric); second call splits at the marks and returns \"Ι\"",
+    "evidence": "lib.rs: 'Word boundaries are defined by non-alphanumeric characters' and the library is 'intended to be unicode aware, internally consistent'. The uppercase() helper uses char::to_uppercase (full mapping) per word, producing non-alphanumeric combining characters inside a word, so the output of the conversion is itself re-segmented differently. Shouty-snake output of already-shouty input is expected to be a fixed point (cf. test6 SHOUTY_SNAKE_CASE => SHOUTY_SNAKE_CASE)."
+  }
+]

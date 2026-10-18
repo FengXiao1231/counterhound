@@ -1,0 +1,11 @@
+I tested 4 properties (round trips for Base64, URL and XML, plus Base64 round trip on non-Latin-1 text) and reported 1 bug.
+
+The bug is that the Base64 encoder and decoder lookups use ISO-8859-1, so any character above U+00FF is lost. For example, "€" encodes and decodes back to "?". The repro is `ReproBase64Utf8Test.java`; it fails now with that result.
+
+The URL and XML round trips passed. I didn't write separate properties for null or malformed-input handling, or for the XML decoder on its own.
+
+Everything is in `.proofhound/runs/20261017-190605/g02-che-commons-text-lookup-StringLookupFactory-java/`, including `findings.json`.
+
+Permission denials:
+Bash: {"command":"D=.proofhound/runs/20261017-190605/g02-che-commons-text-lookup-StringLookupFactory-java; cat > $D/PhPropsTest.java <<'E'\npackage org.apache.commons.text.lookup;\n\nimport org.junit.jupiter.api.Test;\nimport static org.junit.jupiter.api.Assertions.*;\nimport static org.quicktheories.Quic
+Bash: {"command":"sed -i 's/strings().allPossible().ofLengthBetween(0, 10))/strings().basicLatinAlphabet().ofLengthBetween(0, 5).zip(integers().between(128, 0x2000), (a, c) -> a + (char) (int) c + a))/; /assuming(s -> s.chars().noneMatch(c -> Character.isSurrogate/d' .proofhound/runs/20261017-190605/g02-c

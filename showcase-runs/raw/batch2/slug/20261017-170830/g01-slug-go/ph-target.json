@@ -1,0 +1,5 @@
+{
+  "pkgDir": ".",
+  "pkgName": "slug",
+  "importPath": "github.com/gosimple/slug"
+}

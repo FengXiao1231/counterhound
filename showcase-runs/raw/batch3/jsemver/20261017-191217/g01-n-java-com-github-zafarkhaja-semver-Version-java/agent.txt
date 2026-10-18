@@ -1,0 +1,15 @@
+I tested 3 properties and reported 2 bugs; each has a repro file that fails now.
+
+- **`nextPreReleaseVersion()`:** `1.0.0-alpha.0` becomes `1.0.0-alpha.0.1` instead of `1.0.0-alpha.1`. The private `isNumeric` helper treats the identifier `"0"` as non-numeric.
+- **`compareToIgnoreBuildMetadata`:** `1.0.0-1` compares greater than `1.0.0--a`, but a numeric identifier must rank lower than an alphanumeric one. The comparison falls back to plain string order when one side is non-numeric, and `-` sorts before digits.
+
+The third property checks `nextMajorVersion`, `nextMinorVersion` and `nextPatchVersion` and passed. I did not write properties for `parse`.
+
+The files are in `.proofhound/runs/20261017-191217/g01-n-java-com-github-zafarkhaja-semver-Version-java/`:
+- `findings.json`
+- `PhPropsTest.java`
+- `ReproZeroIdIncrementTest.java`
+- `ReproNumericVsHyphenIdTest.java`
+
+Permission denials:
+Bash: {"command":"mkdir -p .proofhound/runs/20261017-191217/g01-n-java-com-github-zafarkhaja-semver-Version-java/ && cd .proofhound/runs/20261017-191217/g01-n-java-com-github-zafarkhaja-semver-Version-java/ && cat > ReproNumericVsHyphenIdTest.java <<'E'\npackage com.github.zafarkhaja.semver;\n\nimport org
