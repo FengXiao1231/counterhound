@@ -2,7 +2,7 @@ TITLE: removeOne and remove corrupt the queue when given a negative index
 REPO: invertase/denque
 SEARCH: removeOne negative index
 BODY:
-`removeOne(index)` and `remove(index, count)` accept a negative index (both normalise it with `if (i < 0) i += size`, and `peekAt(-1)` is the documented way to address the last item), but the branch that decides which side to shift from, and the shift loops, still use the raw `index`:
+`removeOne(index)` and `remove(index, count)` accept a negative index (both normalise it with `if (i < 0) i += size`, like `peekAt`, where `-1` addresses the last item), but the branch that decides which side to shift from, and the shift loops, still use the raw `index`:
 
 ```js
 const Denque = require('denque');
