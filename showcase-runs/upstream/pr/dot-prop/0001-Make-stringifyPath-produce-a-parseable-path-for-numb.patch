@@ -1,0 +1,52 @@
+From d9fb3818a6ff07332cf471d6f470541f1bf899e9 Mon Sep 17 00:00:00 2001
+From: FengXiao <141389622+FengXiao1231@users.noreply.github.com>
+Date: Mon, 19 Oct 2026 21:44:54 +0000
+Subject: [PATCH] Make stringifyPath produce a parseable path for numbers at or
+ above 1e21
+
+Number.isInteger(1e21) is true, but String(1e21) is '1e+21', so
+stringifyPath([1e21]) returned '[1e+21]', which parsePath rejects
+("Invalid character 'e' in an index"). Treat such numbers as string keys,
+like non-integer and negative numbers, so the result round-trips.
+---
+ index.js | 4 ++--
+ test.js  | 8 ++++++++
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/index.js b/index.js
+index fd0a010..9c02e04 100644
+--- a/index.js
++++ b/index.js
+@@ -429,8 +429,8 @@ function formatPathSegment(segment, isFirst, startsOutput, preferDotForIndices)
+ 	const useDotForIndex = !isFirst && (preferDotForIndices || startsOutput);
+ 
+ 	if (typeof segment === 'number') {
+-		// Non-integer or negative numbers are treated as string keys.
+-		if (!Number.isInteger(segment) || segment < 0) {
++		// Non-integer, negative, or exponent-notation (>= 1e21) numbers are treated as string keys.
++		if (!Number.isInteger(segment) || segment < 0 || segment >= 1e21) {
+ 			const escaped = escapePath(String(segment));
+ 			return isFirst ? escaped : `.${escaped}`;
+ 		}
+diff --git a/test.js b/test.js
+index 7d9d4c5..3a3ecba 100644
+--- a/test.js
++++ b/test.js
+@@ -1487,6 +1487,14 @@ test('stringifyPath', t => {
+ 	});
+ });
+ 
++test('stringifyPath treats numbers that print in exponent notation as string keys', t => {
++	// 1e21 is an integer, but String(1e21) is '1e+21', which is not a valid index
++	t.is(stringifyPath([1e21]), '1e+21');
++	t.is(stringifyPath(['foo', 1e21]), 'foo.1e+21');
++	t.deepEqual(parsePath(stringifyPath([1e21])), ['1e+21']);
++	t.deepEqual(parsePath(stringifyPath(['foo', 1e21, 'bar'])), ['foo', '1e+21', 'bar']);
++});
++
+ test('stringifyPath and parsePath roundtrip', t => {
+ 	// Test that stringifyPath(parsePath(x)) is consistent
+ 	const testPaths = [
+-- 
+2.43.0
+

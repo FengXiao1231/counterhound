@@ -1,0 +1,57 @@
+From a07883f1ef77217cc9bc18ac26556146e5bc053c Mon Sep 17 00:00:00 2001
+From: FengXiao <141389622+FengXiao1231@users.noreply.github.com>
+Date: Mon, 19 Oct 2026 21:44:43 +0000
+Subject: [PATCH] Convert non-string map keys in ToStringMapIntE and
+ ToStringMapInt64E
+
+The reflect fallback copied each key into the map[string]T result as is,
+so a map[int]int (or any map whose keys are not strings) panicked with
+"reflect.Value.SetMapIndex: value of type int is not assignable to type
+string". Convert the key with ToStringE, as the map[any]T case does, and
+return an error when that is not possible.
+---
+ map.go      | 7 ++++++-
+ map_test.go | 2 ++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/map.go b/map.go
+index 858d4ee..991fe75 100644
+--- a/map.go
++++ b/map.go
+@@ -188,7 +188,12 @@ func toStringMapIntE[T int | int64](i any, fn func(any) T, fnE func(any) (T, err
+ 			return m, fmt.Errorf(errorMsg, i, i, m)
+ 		}
+ 
+-		mVal.SetMapIndex(keyVal, reflect.ValueOf(val))
++		key, err := ToStringE(keyVal.Interface())
++		if err != nil {
++			return m, fmt.Errorf(errorMsg, i, i, m)
++		}
++
++		mVal.SetMapIndex(reflect.ValueOf(key), reflect.ValueOf(val))
+ 	}
+ 
+ 	return m, nil
+diff --git a/map_test.go b/map_test.go
+index a66c27a..b484af9 100644
+--- a/map_test.go
++++ b/map_test.go
+@@ -233,6 +233,7 @@ func TestStringMapInt(t *testing.T) {
+ 		{map[string]uint16{"v1": uint16(33), "v2": uint16(88)}, map[string]int{"v1": 33, "v2": 88}, false},
+ 		{map[string]float64{"v1": float64(8.22), "v2": float64(43.32)}, map[string]int{"v1": 8, "v2": 43}, false},
+ 		{`{"v1": 67, "v2": 56}`, map[string]int{"v1": 67, "v2": 56}, false},
++		{map[int]int{1: 33, 2: 88}, map[string]int{"1": 33, "2": 88}, false},
+ 
+ 		// Failure cases
+ 		{nil, map[string]int{}, true},
+@@ -253,6 +254,7 @@ func TestStringMapInt64(t *testing.T) {
+ 		{map[string]uint16{"v1": uint16(33), "v2": uint16(88)}, map[string]int64{"v1": 33, "v2": 88}, false},
+ 		{map[string]float64{"v1": float64(8.22), "v2": float64(43.32)}, map[string]int64{"v1": 8, "v2": 43}, false},
+ 		{`{"v1": 67, "v2": 56}`, map[string]int64{"v1": 67, "v2": 56}, false},
++		{map[int]int64{1: 33, 2: 88}, map[string]int64{"1": 33, "2": 88}, false},
+ 
+ 		// Failure cases
+ 		{nil, map[string]int64{}, true},
+-- 
+2.43.0
+
