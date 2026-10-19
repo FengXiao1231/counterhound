@@ -11,4 +11,4 @@ git push -u origin BRANCH
 gh pr create -R REPO --base BASE --head FengXiao1231:BRANCH --title "TITLE" --body-file body.md
 ```
 
-`jsoup-NOT-FILED/` is kept for the record only: jsoup's CONTRIBUTING.md does not accept code or text produced with AI assistance, so that patch is not submitted.
+`cast/` is not sent either: [spf13/cast#359](https://github.com/spf13/cast/pull/359) already fixes the same bug the same way. `jsoup-NOT-FILED/` is kept for the record only: jsoup's CONTRIBUTING.md does not accept code or text produced with AI assistance, so that patch is not submitted.
