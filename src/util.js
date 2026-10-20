@@ -147,3 +147,8 @@ export function relPath(root, p) {
   const outside = r === '..' || r.startsWith(`..${path.sep}`) || path.isAbsolute(r); // not a child named '..foo'
   return outside ? p : r.split(path.sep).join('/');
 }
+
+/** Absolute path with symlinks resolved (macOS puts temp dirs behind /private, for example); falls back to path.resolve for paths that do not exist. */
+export function realPath(p) {
+  try { return fs.realpathSync(p); } catch { return path.resolve(p); }
+}

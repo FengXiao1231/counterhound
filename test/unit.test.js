@@ -146,6 +146,23 @@ test('javascript adapter runs fast-check tests and extracts the counterexample',
   assert.equal(c.site.file, 'lib.js');
 });
 
+test('classify locates the crash when the project path goes through a symlink', () => {
+  // macOS temp dirs are /var/... -> /private/var/...: the runtime reports real paths, the user passes the link.
+  const real = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-real-'));
+  const link = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'ph-link-')), 'project');
+  fs.symlinkSync(real, link, 'dir');
+  fs.writeFileSync(path.join(real, 'lib.js'), 'x');
+  const work = path.join(real, '.counterhound', 'w');
+  fs.mkdirSync(work, { recursive: true });
+  fs.writeFileSync(path.join(work, 't.mjs'), 'y');
+  const error = { type: 'TypeError', frames: [{ file: path.join(real, '.counterhound', 'w', 't.mjs'), line: 1 }, { file: path.join(real, 'lib.js'), line: 1 }] };
+  const c = classify(error, { repo: link, workdir: path.join(link, '.counterhound', 'w'), lang: javascript });
+  assert.equal(c.kind, 'crash');
+  assert.equal(c.site.file, 'lib.js');
+  const inTest = classify({ type: 'TypeError', frames: [{ file: path.join(real, 'lib.js'), line: 1 }, { file: path.join(real, '.counterhound', 'w', 't.mjs'), line: 1 }] }, { repo: link, workdir: path.join(link, '.counterhound', 'w'), lang: javascript });
+  assert.equal(inTest.kind, 'test-error');
+});
+
 test('rust scanner: pub fns, impl methods, FromStr, private modules, cfg(test)', async () => {
   const { rust } = await import('../src/lang/rust.js');
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ph-rs-'));

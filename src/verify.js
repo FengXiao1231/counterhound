@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { realPath } from './util.js';
 
 const VENDOR = /[/\\](site-packages|dist-packages|node_modules|\.venv|venv|lib[/\\]python\d|\.cache[/\\]counterhound|vendor|\.cargo|pkg[/\\]mod|\.counterhound)[/\\]/;
 
@@ -30,14 +31,17 @@ export function classify(error, { repo, workdir, lang }) {
   if (matchesAny(type, lang.testErrorTypes) || (code && matchesAny(code, lang.testErrorTypes))) {
     return { kind: 'test-error', reason: `${type} means the test itself is broken`, type };
   }
-  const frames = (e.frames || []).filter((f) => f.file && !f.file.startsWith('node:'));
-  const workAbs = path.resolve(workdir);
-  const inWork = (f) => path.resolve(f.file).startsWith(workAbs + path.sep);
-  const inProject = (f) => path.resolve(f.file).startsWith(path.resolve(repo) + path.sep) && !inWork(f) && !VENDOR.test(f.file);
+  // Compare real paths: a stack frame shows the file as the runtime resolved it, which differs from the
+  // path the user gave when the project sits behind a symlink (macOS temp dirs, /home -> /usr/home, ...).
+  const frames = (e.frames || []).filter((f) => f.file && !f.file.startsWith('node:')).map((f) => ({ ...f, real: realPath(f.file) }));
+  const workAbs = realPath(workdir);
+  const repoAbs = realPath(repo);
+  const inWork = (f) => f.real.startsWith(workAbs + path.sep);
+  const inProject = (f) => f.real.startsWith(repoAbs + path.sep) && !inWork(f) && !VENDOR.test(f.file);
   const projectFrames = frames.filter(inProject);
   const deepest = frames[frames.length - 1];
   const site = projectFrames[projectFrames.length - 1] || null;
-  const rel = (f) => f && { ...f, file: path.relative(repo, f.file).split(path.sep).join('/') };
+  const rel = (f) => f && { ...f, real: undefined, file: path.relative(repoAbs, f.real).split(path.sep).join('/') };
 
   // pytest.raises(...) that did not raise, or pytest.fail(), is the test's assertion failing.
   if (/AssertionError$|(^|\.)Failed$/.test(type)) {
