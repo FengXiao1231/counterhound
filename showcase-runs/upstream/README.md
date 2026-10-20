@@ -18,3 +18,18 @@ Issue texts as filed (the four header lines are stripped when filing).
 | pr/dot-prop | [sindresorhus/dot-prop#131](https://github.com/sindresorhus/dot-prop/issues/131), fix on [FengXiao1231/dot-prop:fix-stringify-path-large-numbers](https://github.com/FengXiao1231/dot-prop/tree/fix-stringify-path-large-numbers) | open, 2026-10-19 (same) |
 | pr/cast | not filed: [spf13/cast#359](https://github.com/spf13/cast/pull/359) already fixes it the same way | |
 | pr/jsoup-NOT-FILED | not filed: jsoup does not accept AI-assisted code or text | |
+
+## Wave 2 (from `wave2/`)
+
+| File | Filed as | Status |
+|---|---|---|
+| 06-parse.md | [r1chardj0n3s/parse#262](https://github.com/r1chardj0n3s/parse/issues/262) | open, 2026-10-20 |
+| 07-rfc3986-bytes-unsplit.md | [python-hyper/rfc3986#163](https://github.com/python-hyper/rfc3986/issues/163) | open, 2026-10-20 |
+| 08-rfc3986-extend-query.md | [python-hyper/rfc3986#164](https://github.com/python-hyper/rfc3986/issues/164) | open, 2026-10-20 |
+| 09-rfc3986-path-authority.md | not filed: already covered by [python-hyper/rfc3986#155](https://github.com/python-hyper/rfc3986/pull/155) | |
+| 10-qs-filter-mutation.md | [ljharb/qs#628](https://github.com/ljharb/qs/issues/628) | open, 2026-10-20 |
+| 11-qs-comma-iso.md | [ljharb/qs#629](https://github.com/ljharb/qs/issues/629) | open, 2026-10-20 |
+| 12-toolz.md | not filed: fix already open as [pytoolz/toolz#638](https://github.com/pytoolz/toolz/pull/638) | |
+| 13-uritemplate.md | to file | |
+| 14-ordered-set.md | not filed: already reported as [rspeer/ordered-set#83](https://github.com/rspeer/ordered-set/issues/83) (fix PRs #84, #106 open) | |
+| 15-denque.md | to file | |
