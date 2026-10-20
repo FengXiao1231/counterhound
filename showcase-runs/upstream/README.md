@@ -30,6 +30,6 @@ Issue texts as filed (the four header lines are stripped when filing).
 | 10-qs-filter-mutation.md | [ljharb/qs#628](https://github.com/ljharb/qs/issues/628) | open, 2026-10-20 |
 | 11-qs-comma-iso.md | [ljharb/qs#629](https://github.com/ljharb/qs/issues/629) | open, 2026-10-20 |
 | 12-toolz.md | not filed: fix already open as [pytoolz/toolz#638](https://github.com/pytoolz/toolz/pull/638) | |
-| 13-uritemplate.md | to file | |
+| 13-uritemplate.md | [python-hyper/uritemplate#163](https://github.com/python-hyper/uritemplate/issues/163) | open, 2026-10-20 |
 | 14-ordered-set.md | not filed: already reported as [rspeer/ordered-set#83](https://github.com/rspeer/ordered-set/issues/83) (fix PRs #84, #106 open) | |
-| 15-denque.md | to file | |
+| 15-denque.md | not filed: the repository is archived (read-only) | |
