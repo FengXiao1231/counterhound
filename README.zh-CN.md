@@ -17,7 +17,7 @@
 
 [English](README.md) · **简体中文** · 支持 Python、JavaScript/TypeScript、Go、Rust 和 Java · MIT
 
-<img src="assets/report.png" width="720" alt="counterhound 在 boltons 上真实运行的报告">
+<img src="https://raw.githubusercontent.com/FengXiao1231/counterhound/main/assets/report.png" width="720" alt="counterhound 在 boltons 上真实运行的报告">
 
 </div>
 

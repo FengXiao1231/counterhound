@@ -18,7 +18,7 @@ and survived an independent reviewer whose job is to refute it.
 
 **English** · [简体中文](README.zh-CN.md) · Python, JavaScript/TypeScript, Go, Rust & Java · MIT
 
-<img src="assets/report.png" width="720" alt="counterhound report for a real run on boltons">
+<img src="https://raw.githubusercontent.com/FengXiao1231/counterhound/main/assets/report.png" width="720" alt="counterhound report for a real run on boltons">
 
 </div>
 
