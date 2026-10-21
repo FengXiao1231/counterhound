@@ -166,21 +166,21 @@ All 7 were real and are fixed, with regression tests in `test/unit.test.js`. Thr
 
 ## Reported upstream
 
-Filed on 2026-10-19 and 2026-10-20, each with the minimal repro, the cause and a one-line fix (issue texts in [showcase-runs/upstream](showcase-runs/upstream)).
+Filed on 2026-10-19 and 2026-10-20, each with the minimal repro, the cause and a one-line fix (issue texts in [showcase-runs/upstream](showcase-runs/upstream)). Status as of 2026-10-21: 3 fixed upstream, 3 with a fix under review, 5 waiting.
 
-| Project | Bug | Report |
-|---|---|---|
-| lru-cache | `load()` rewrites the caller's dump, a second `load()` of it is all stale | [isaacs/node-lru-cache#421](https://github.com/isaacs/node-lru-cache/issues/421) |
-| transitions | `remove_transition` with a list of `State` objects removes nothing | [pytransitions/transitions#750](https://github.com/pytransitions/transitions/issues/750) |
-| json-server | `GET /constructor` is 200, `PUT /toString` writes a key into the database | [typicode/json-server#1780](https://github.com/typicode/json-server/issues/1780) |
-| query-string | `stringifyUrl` turns an index-format array into `a=[object Object]` | [sindresorhus/query-string#422](https://github.com/sindresorhus/query-string/issues/422), fix on a branch |
-| dot-prop | `stringifyPath([1e21])` is not parseable | [sindresorhus/dot-prop#131](https://github.com/sindresorhus/dot-prop/issues/131), fix on a branch |
-| parse | fields after a `%z` datetime format are shifted | [r1chardj0n3s/parse#262](https://github.com/r1chardj0n3s/parse/issues/262) |
-| rfc3986 | `ParseResultBytes.unsplit()` crashes without an authority | [python-hyper/rfc3986#163](https://github.com/python-hyper/rfc3986/issues/163) |
-| rfc3986 | `extend_query_with` drops parameters with an empty value | [python-hyper/rfc3986#164](https://github.com/python-hyper/rfc3986/issues/164) |
-| qs | `stringify` sorts the caller's `filter` array in place | [ljharb/qs#628](https://github.com/ljharb/qs/issues/628) |
-| qs | `comma: true` is ignored with `iso-8859-1` and `interpretNumericEntities` | [ljharb/qs#629](https://github.com/ljharb/qs/issues/629) |
-| uritemplate | prefix modifier crashes on numbers; reserved expansion stops encoding after a `%XX` | [python-hyper/uritemplate#163](https://github.com/python-hyper/uritemplate/issues/163) |
+| Project | Bug | Report | Status |
+|---|---|---|---|
+| lru-cache | `load()` rewrites the caller's dump, a second `load()` of it is all stale | [isaacs/node-lru-cache#421](https://github.com/isaacs/node-lru-cache/issues/421) | fix PR [#422](https://github.com/isaacs/node-lru-cache/pull/422) under review |
+| transitions | `remove_transition` with a list of `State` objects removes nothing | [pytransitions/transitions#750](https://github.com/pytransitions/transitions/issues/750) | fix PR [#751](https://github.com/pytransitions/transitions/pull/751) under review |
+| json-server | `GET /constructor` is 200, `PUT /toString` writes a key into the database | [typicode/json-server#1780](https://github.com/typicode/json-server/issues/1780) | fix PR [#1781](https://github.com/typicode/json-server/pull/1781) under review |
+| query-string | `stringifyUrl` turns an index-format array into `a=[object Object]` | [sindresorhus/query-string#422](https://github.com/sindresorhus/query-string/issues/422), fix on a branch | **fixed** by the maintainer in [f016142](https://github.com/sindresorhus/query-string/commit/f01614265b209743719b3195b1cc6129b82b8515) |
+| dot-prop | `stringifyPath([1e21])` is not parseable | [sindresorhus/dot-prop#131](https://github.com/sindresorhus/dot-prop/issues/131), fix on a branch | waiting |
+| parse | fields after a `%z` datetime format are shifted | [r1chardj0n3s/parse#262](https://github.com/r1chardj0n3s/parse/issues/262) | **fixed**, [PR #263](https://github.com/r1chardj0n3s/parse/pull/263) merged |
+| rfc3986 | `ParseResultBytes.unsplit()` crashes without an authority | [python-hyper/rfc3986#163](https://github.com/python-hyper/rfc3986/issues/163) | waiting |
+| rfc3986 | `extend_query_with` drops parameters with an empty value | [python-hyper/rfc3986#164](https://github.com/python-hyper/rfc3986/issues/164) | waiting |
+| qs | `stringify` sorts the caller's `filter` array in place | [ljharb/qs#628](https://github.com/ljharb/qs/issues/628) | waiting |
+| qs | `comma: true` is ignored with `iso-8859-1` and `interpretNumericEntities` | [ljharb/qs#629](https://github.com/ljharb/qs/issues/629) | **fixed**, [PR #630](https://github.com/ljharb/qs/pull/630) approved and merged by the maintainer |
+| uritemplate | prefix modifier crashes on numbers; reserved expansion stops encoding after a `%XX` | [python-hyper/uritemplate#163](https://github.com/python-hyper/uritemplate/issues/163) | waiting |
 
 Found by counterhound but already known upstream when checked: go-version `Compare` ([#216](https://github.com/hashicorp/go-version/issues/216)), slug empty output ([PR #96](https://github.com/gosimple/slug/pull/96)), cast `ToStringMapIntE` panic ([PR #359](https://github.com/spf13/cast/pull/359)), toolz `memoize` ([PR #638](https://github.com/pytoolz/toolz/pull/638)), ordered-set `pop` ([#83](https://github.com/rspeer/ordered-set/issues/83)), rfc3986 path becoming an authority ([PR #155](https://github.com/python-hyper/rfc3986/pull/155)). Not reportable: denque (repository archived), jsoup (the project does not take AI-assisted contributions).
 
